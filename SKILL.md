@@ -288,9 +288,25 @@ Step 3: 自动继续执行
 ## 6. 代码审查规则 (强制)
 【所有代码审查必须执行】
 
-### 6.1 代码规范审查 (阿里 Java 开发手册标准)
+### 6.1 代码规范审查 (根据语言选择对应规范)
 
-#### 6.1.1 命名规范
+**语言规范自动选择**: 
+- **Java**: 阿里 Java 开发手册标准 (默认)
+- **JavaScript/TypeScript**: Google JavaScript Style Guide 或 Airbnb JavaScript Style Guide
+- **Python**: PEP 8 规范
+- **Go**: Go Code Review Comments (Google)
+- **C/C++**: Google C++ Style Guide
+- **Rust**: Rust Style Guide
+- **其他语言**: 该语言的主流行业规范
+
+**审查流程**:
+1. 自动检测代码语言
+2. 根据语言选择对应规范
+3. 执行该语言的规范检查
+
+#### 6.1.1 Java 规范 (阿里 Java 开发手册标准)
+
+##### 6.1.1.1 命名规范
 **必须检查**:
 - [ ] 类名使用 UpperCamelCase (DO/BO/DTO/VO 等后缀规范)
 - [ ] 方法名使用 lowerCamelCase
@@ -315,7 +331,7 @@ public static final int maxCount = 100;  // 常量小写
 private String userName;  // ✅ 正确
 ```
 
-#### 6.1.2 代码格式
+##### 6.1.1.2 代码格式
 **必须检查**:
 - [ ] 使用 4 个空格缩进 (禁止 Tab)
 - [ ] 单行字符数不超过 120
@@ -341,7 +357,7 @@ public void method(){  // 缺少空格
 }
 ```
 
-#### 6.1.3 注释规范
+##### 6.1.1.3 注释规范
 **必须检查**:
 - [ ] 类、方法必须有 Javadoc 注释
 - [ ] 方法参数、返回值必须有说明
@@ -376,7 +392,7 @@ public class UserServiceImpl implements UserService {
 }
 ```
 
-#### 6.1.4 OOP 规范
+##### 6.1.1.4 OOP 规范
 **必须检查**:
 - [ ] 类成员访问权限控制 (private/protected/public)
 - [ ] 避免在子类中对父类成员可见性的改变
@@ -384,6 +400,169 @@ public class UserServiceImpl implements UserService {
 - [ ] 所有覆写方法必须加@Override 注解
 - [ ] 外部可以调用的方法，不允许使用 final 修饰
 - [ ] 正例：final 只用于类、方法、常量
+
+#### 6.1.2 JavaScript/TypeScript 规范 (Google/Airbnb)
+
+##### 6.1.2.1 命名规范
+**必须检查**:
+- [ ] 类名使用 UpperCamelCase
+- [ ] 方法名、变量名使用 lowerCamelCase
+- [ ] 常量名使用 UPPER_CASE (下划线分隔)
+- [ ] 私有成员使用 _ 前缀
+
+**示例**:
+```javascript
+// ✅ 正确
+class UserService {}
+const userName = 'John';
+const MAX_COUNT = 100;
+class Person {
+  _privateField = 'value';
+}
+
+// ❌ 错误
+class userService {}
+const UserName = 'John';
+```
+
+##### 6.1.2.2 代码格式
+**必须检查**:
+- [ ] 使用 2 个空格缩进 (禁止 Tab)
+- [ ] 单行字符数不超过 80-100
+- [ ] 操作符前后必须有空格
+- [ ] 大括号使用 Allman 风格或 1TBS 风格
+
+**示例**:
+```javascript
+// ✅ 正确 (1TBS 风格)
+if (condition) {
+  doSomething();
+}
+
+// ✅ 正确 (Allman 风格)
+if (condition)
+{
+  doSomething();
+}
+```
+
+#### 6.1.3 Python 规范 (PEP 8)
+
+##### 6.1.3.1 命名规范
+**必须检查**:
+- [ ] 类名使用 UpperCamelCase
+- [ ] 函数名、变量名使用 snake_case
+- [ ] 常量名使用 UPPER_SNAKE_CASE
+- [ ] 模块名使用小写蛇形命名
+
+**示例**:
+```python
+# ✅ 正确
+class UserService:
+    pass
+
+def get_user_name():
+    pass
+
+MAX_COUNT = 100
+user_name = 'John'
+
+# ❌ 错误
+class userService:
+    pass
+
+def getUser():
+    pass
+```
+
+##### 6.1.3.2 代码格式
+**必须检查**:
+- [ ] 使用 4 个空格缩进 (禁止 Tab)
+- [ ] 单行字符数不超过 79
+- [ ] 操作符前后必须有空格
+- [ ] 空行使用规范
+
+**示例**:
+```python
+# ✅ 正确
+def calculate(a, b):
+    result = a + b
+    return result
+
+# ❌ 错误
+def calculate(a,b):
+  result = a+b
+  return result
+```
+
+#### 6.1.4 Go 规范 (Google Go Code Review Comments)
+
+##### 6.1.4.1 命名规范
+**必须检查**:
+- [ ] 包名使用小写单字
+- [ ] 函数名、变量名使用 PascalCase (导出) 或 camelCase (未导出)
+- [ ] 常量名使用 PascalCase
+
+**示例**:
+```go
+// ✅ 正确
+package user
+
+func GetUser() {
+    userName := "John"
+}
+
+const MaxCount = 100
+
+// ❌ 错误
+package userService
+
+func get_user() {
+    UserName := "John"
+}
+```
+
+##### 6.1.4.2 代码格式
+**必须检查**:
+- [ ] 使用 gofmt 自动格式化
+- [ ] 大括号使用 Go 风格
+- [ ] 缩进使用 Tab
+
+**示例**:
+```go
+// ✅ 正确
+if condition {
+    doSomething()
+}
+
+// ❌ 错误
+if condition
+{
+    doSomething()
+}
+```
+
+#### 6.1.5 其他语言规范
+
+**审查原则**:
+- 自动检测代码语言
+- 选择该语言的主流行业规范
+- 执行对应规范的检查
+- 输出符合该语言习惯的审查报告
+
+**常见语言规范**:
+- **C/C++**: Google C++ Style Guide
+- **Rust**: Rust Style Guide
+- **PHP**: PSR 规范
+- **Ruby**: Ruby Style Guide
+- **Swift**: Swift API Design Guidelines
+- **Kotlin**: Kotlin Coding Conventions
+- **Scala**: Scala Style Guide
+
+**示例**:
+- 审查 Rust 代码时，使用 Rust Style Guide
+- 审查 PHP 代码时，使用 PSR-12 规范
+- 审查 Ruby 代码时，使用 Ruby Style Guide
 
 ### 6.2 安全性审查
 

@@ -141,9 +141,25 @@ Must output brief status update after each tool call (1-3 sentences):
 ## 6. Code Review Rules (Mandatory)
 【Must execute for all code reviews】
 
-### 6.1 Code Standards Review (Ali Java Manual Standards)
+### 6.1 Code Standards Review (Select appropriate standard based on language)
 
-#### 6.1.1 Naming Conventions
+**Language Standard Auto-selection**:
+- **Java**: Alibaba Java Development Manual (default)
+- **JavaScript/TypeScript**: Google JavaScript Style Guide or Airbnb JavaScript Style Guide
+- **Python**: PEP 8
+- **Go**: Go Code Review Comments (Google)
+- **C/C++**: Google C++ Style Guide
+- **Rust**: Rust Style Guide
+- **Other languages**: Industry-standard for that language
+
+**Review Process**:
+1. Auto-detect code language
+2. Select corresponding standard based on language
+3. Execute standard check for that language
+
+#### 6.1.1 Java Standards (Alibaba Java Development Manual)
+
+##### 6.1.1.1 Naming Conventions
 **Must check**:
 - [ ] Class names use UpperCamelCase (DO/BO/DTO/VO suffixes)
 - [ ] Method names use lowerCamelCase
@@ -154,7 +170,21 @@ Must output brief status update after each tool call (1-3 sentences):
 - [ ] Exception classes end with Exception
 - [ ] Test classes end with Test
 
-#### 6.1.2 Code Format
+**Example**:
+```java
+// ✅ Correct
+public class UserDO { }
+public class UserServiceImpl { }
+public static final int MAX_COUNT = 100;
+private String userName;
+
+// ❌ Incorrect
+public class userDO { }  // Class name lowercase
+public static final int maxCount = 100;  // Constant lowercase
+private String userName;  // ✅ Correct
+```
+
+##### 6.1.1.2 Code Format
 **Must check**:
 - [ ] 4 spaces indentation (no Tab)
 - [ ] Single line max 120 characters
@@ -163,7 +193,24 @@ Must output brief status update after each tool call (1-3 sentences):
 - [ ] Space between closing parenthesis and opening brace
 - [ ] Proper blank lines between classes, methods, members
 
-#### 6.1.3 Comment Standards
+**Example**:
+```java
+// ✅ Correct
+public void method() {
+    if (condition) {
+        doSomething();
+    }
+}
+
+// ❌ Incorrect
+public void method(){  // Missing space
+  if(condition){  // Tab indentation, missing space
+      doSomething();
+  }
+}
+```
+
+##### 6.1.1.3 Comment Standards
 **Must check**:
 - [ ] Classes and methods must have Javadoc
 - [ ] Method parameters and return values must be documented
@@ -171,13 +218,203 @@ Must output brief status update after each tool call (1-3 sentences):
 - [ ] Prohibit commented-out code (delete directly if not needed)
 - [ ] Prohibit meaningless comments
 
-#### 6.1.4 OOP Standards
+**Example**:
+```java
+/**
+ * User service implementation class
+ * Provides user registration, login, information query functions
+ * 
+ * @author admin
+ * @version 1.0
+ * @since 2024-01-01
+ */
+public class UserServiceImpl implements UserService {
+    
+    /**
+     * User registration method
+     * 
+     * @param user User information
+     * @return User ID
+     * @throws UserExistsException User exists exception
+     */
+    @Override
+    public Long register(User user) {
+        // Check if user exists
+        // TODO: Implement registration logic
+    }
+}
+```
+
+##### 6.1.1.4 OOP Standards
 **Must check**:
 - [ ] Class member access control (private/protected/public)
 - [ ] Avoid changing parent class member visibility in subclasses
-- [ ] All override methods must have @Override annotation
 - [ ] Externally callable methods must not use final modifier
+- [ ] All override methods must have @Override annotation
 - [ ] Example: final only for classes, methods, constants
+
+#### 6.1.2 JavaScript/TypeScript Standards (Google/Airbnb)
+
+##### 6.1.2.1 Naming Conventions
+**Must check**:
+- [ ] Class names use UpperCamelCase
+- [ ] Method names, variable names use lowerCamelCase
+- [ ] Constant names use UPPER_CASE (underscore separated)
+- [ ] Private members use _ prefix
+
+**Example**:
+```javascript
+// ✅ Correct
+class UserService {}
+const userName = 'John';
+const MAX_COUNT = 100;
+class Person {
+  _privateField = 'value';
+}
+
+// ❌ Incorrect
+class userService {}
+const UserName = 'John';
+```
+
+##### 6.1.2.2 Code Format
+**Must check**:
+- [ ] 2 spaces indentation (no Tab)
+- [ ] Single line max 80-100 characters
+- [ ] Spaces around operators
+- [ ] Braces use Allman style or 1TBS style
+
+**Example**:
+```javascript
+// ✅ Correct (1TBS style)
+if (condition) {
+  doSomething();
+}
+
+// ✅ Correct (Allman style)
+if (condition)
+{
+  doSomething();
+}
+```
+
+#### 6.1.3 Python Standards (PEP 8)
+
+##### 6.1.3.1 Naming Conventions
+**Must check**:
+- [ ] Class names use UpperCamelCase
+- [ ] Function names, variable names use snake_case
+- [ ] Constant names use UPPER_SNAKE_CASE
+- [ ] Module names use lowercase snake_case
+
+**Example**:
+```python
+# ✅ Correct
+class UserService:
+    pass
+
+def get_user_name():
+    pass
+
+MAX_COUNT = 100
+user_name = 'John'
+
+# ❌ Incorrect
+class userService:
+    pass
+
+def getUser():
+    pass
+```
+
+##### 6.1.3.2 Code Format
+**Must check**:
+- [ ] 4 spaces indentation (no Tab)
+- [ ] Single line max 79 characters
+- [ ] Spaces around operators
+- [ ] Proper blank lines
+
+**Example**:
+```python
+# ✅ Correct
+def calculate(a, b):
+    result = a + b
+    return result
+
+# ❌ Incorrect
+def calculate(a,b):
+  result = a+b
+  return result
+```
+
+#### 6.1.4 Go Standards (Google Go Code Review Comments)
+
+##### 6.1.4.1 Naming Conventions
+**Must check**:
+- [ ] Package names use lowercase single word
+- [ ] Function names, variable names use PascalCase (exported) or camelCase (unexported)
+- [ ] Constant names use PascalCase
+
+**Example**:
+```go
+// ✅ Correct
+package user
+
+func GetUser() {
+    userName := "John"
+}
+
+const MaxCount = 100
+
+// ❌ Incorrect
+package userService
+
+func get_user() {
+    UserName := "John"
+}
+```
+
+##### 6.1.4.2 Code Format
+**Must check**:
+- [ ] Use gofmt for automatic formatting
+- [ ] Braces use Go style
+- [ ] Indentation use Tab
+
+**Example**:
+```go
+// ✅ Correct
+if condition {
+    doSomething()
+}
+
+// ❌ Incorrect
+if condition
+{
+    doSomething()
+}
+```
+
+#### 6.1.5 Other Language Standards
+
+**Review Principles**:
+- Auto-detect code language
+- Select industry-standard for that language
+- Execute corresponding standard check
+- Output review report in language-appropriate style
+
+**Common Language Standards**:
+- **C/C++**: Google C++ Style Guide
+- **Rust**: Rust Style Guide
+- **PHP**: PSR standards
+- **Ruby**: Ruby Style Guide
+- **Swift**: Swift API Design Guidelines
+- **Kotlin**: Kotlin Coding Conventions
+- **Scala**: Scala Style Guide
+
+**Examples**:
+- When reviewing Rust code, use Rust Style Guide
+- When reviewing PHP code, use PSR-12 standard
+- When reviewing Ruby code, use Ruby Style Guide
 
 ### 6.2 Security Review
 
