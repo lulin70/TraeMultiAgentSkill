@@ -1,4 +1,4 @@
-<svg width="1000" height="750" viewBox="0 0 1000 750" xmlns="http://www.w3.org/2000/svg">
+<svg width="1100" height="800" viewBox="0 0 1100 800" xmlns="http://www.w3.org/2000/svg">
   <!-- 背景 -->
   <defs>
     <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -15,200 +15,198 @@
   </defs>
   
   <!-- 背景渐变 -->
-  <rect width="1000" height="750" fill="url(#bgGradient)"/>
+  <rect width="1100" height="800" fill="url(#bgGradient)"/>
   
   <!-- 标题 -->
-  <text x="500" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">
+  <text x="550" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle">
     Trae Multi-Agent Skill
   </text>
-  <text x="500" y="85" font-family="Arial, sans-serif" font-size="16" fill="rgba(255,255,255,0.9)" text-anchor="middle">
+  <text x="550" y="85" font-family="Arial, sans-serif" font-size="16" fill="rgba(255,255,255,0.9)" text-anchor="middle">
     智能多角色协作 · 完整项目生命周期管理
   </text>
   
-  <!-- 角色区域 (上半部分) -->
+  <!-- 角色区域 (上半部分 - 分两行) -->
   <g transform="translate(50, 120)">
+    <!-- 第一行：4 个角色 -->
     <!-- 角色 1: 架构师 -->
     <g transform="translate(0, 0)">
-      <rect x="0" y="0" width="180" height="160" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
-      <circle cx="90" cy="45" r="30" fill="#667eea"/>
-      <text x="90" y="55" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">Architect</text>
-      <text x="90" y="95" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">架构师</text>
-      <text x="90" y="118" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">系统架构设计</text>
-      <text x="90" y="135" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">技术选型与性能优化</text>
+      <rect x="0" y="0" width="220" height="140" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
+      <circle cx="110" cy="40" r="25" fill="#667eea"/>
+      <text x="110" y="48" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">Architect</text>
+      <text x="110" y="85" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">架构师</text>
+      <text x="110" y="105" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">系统架构设计 · 技术选型</text>
+      <text x="110" y="122" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">性能优化</text>
     </g>
     
-    <!-- 箭头 -->
-    <path d="M190 80 L220 80" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <!-- 箭头 1 -->
+    <path d="M230 70 L250 70" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
     
     <!-- 角色 2: 产品经理 -->
-    <g transform="translate(230, 0)">
-      <rect x="0" y="0" width="180" height="160" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
-      <circle cx="90" cy="45" r="30" fill="#764ba2"/>
-      <text x="90" y="55" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">Product</text>
-      <text x="90" y="95" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">产品经理</text>
-      <text x="90" y="118" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">需求分析与 PRD 编写</text>
-      <text x="90" y="135" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">定义验收标准</text>
+    <g transform="translate(260, 0)">
+      <rect x="0" y="0" width="220" height="140" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
+      <circle cx="110" cy="40" r="25" fill="#764ba2"/>
+      <text x="110" y="48" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">Product</text>
+      <text x="110" y="85" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">产品经理</text>
+      <text x="110" y="105" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">需求分析 · PRD 编写</text>
+      <text x="110" y="122" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">定义验收标准</text>
     </g>
     
-    <!-- 箭头 -->
-    <path d="M420 80 L450 80" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <!-- 箭头 2 -->
+    <path d="M490 70 L510 70" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
     
     <!-- 角色 3: UI 设计师 -->
-    <g transform="translate(460, 0)">
-      <rect x="0" y="0" width="180" height="160" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
-      <circle cx="90" cy="45" r="30" fill="#f093fb"/>
-      <text x="90" y="55" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">UI</text>
-      <text x="90" y="95" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">UI 设计师</text>
-      <text x="90" y="118" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">界面设计与视觉优化</text>
-      <text x="90" y="135" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">设计系统制定</text>
+    <g transform="translate(520, 0)">
+      <rect x="0" y="0" width="220" height="140" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
+      <circle cx="110" cy="40" r="25" fill="#f093fb"/>
+      <text x="110" y="48" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">UI</text>
+      <text x="110" y="85" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">UI 设计师</text>
+      <text x="110" y="105" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">界面设计 · 视觉优化</text>
+      <text x="110" y="122" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">设计系统制定</text>
     </g>
     
-    <!-- 箭头 -->
-    <path d="M650 80 L680 80" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <!-- 箭头 3 -->
+    <path d="M750 70 L770 70" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
     
     <!-- 角色 4: 测试专家 -->
-    <g transform="translate(690, 0)">
-      <rect x="0" y="0" width="180" height="160" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
-      <circle cx="90" cy="45" r="30" fill="#43e97b"/>
-      <text x="90" y="55" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">Test</text>
-      <text x="90" y="95" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">测试专家</text>
-      <text x="90" y="118" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">测试策略与质量保障</text>
-      <text x="90" y="135" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">自动化测试</text>
+    <g transform="translate(780, 0)">
+      <rect x="0" y="0" width="220" height="140" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
+      <circle cx="110" cy="40" r="25" fill="#43e97b"/>
+      <text x="110" y="48" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">Test</text>
+      <text x="110" y="85" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">测试专家</text>
+      <text x="110" y="105" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">测试策略 · 质量保障</text>
+      <text x="110" y="122" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">自动化测试</text>
     </g>
     
-    <!-- 箭头 -->
-    <path d="M880 80 L910 80" stroke="white" stroke-width="2" marker-end="url(#arrowhead)"/>
-    
-    <!-- 角色 5: 独立开发者 -->
-    <g transform="translate(920, 0)">
-      <rect x="0" y="0" width="180" height="160" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
-      <circle cx="90" cy="45" r="30" fill="#fa709a"/>
-      <text x="90" y="55" font-family="Arial, sans-serif" font-size="18" fill="white" text-anchor="middle" font-weight="bold">Solo</text>
-      <text x="90" y="95" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">独立开发者</text>
-      <text x="90" y="118" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">功能实现与单元测试</text>
-      <text x="90" y="135" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">代码优化</text>
+    <!-- 第二行：独立开发者（居中） -->
+    <g transform="translate(440, 170)">
+      <rect x="0" y="0" width="220" height="140" rx="12" fill="url(#cardGradient)" filter="url(#shadow)"/>
+      <circle cx="110" cy="40" r="25" fill="#fa709a"/>
+      <text x="110" y="48" font-family="Arial, sans-serif" font-size="16" fill="white" text-anchor="middle" font-weight="bold">Solo</text>
+      <text x="110" y="85" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#333" text-anchor="middle">独立开发者</text>
+      <text x="110" y="105" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">功能实现 · 单元测试</text>
+      <text x="110" y="122" font-family="Arial, sans-serif" font-size="12" fill="#666" text-anchor="middle">代码优化</text>
     </g>
   </g>
   
   <!-- 八阶段工作流程 (左下) -->
-  <g transform="translate(50, 320)">
-    <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">八阶段标准工作流程：</text>
+  <g transform="translate(50, 450)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white">八阶段标准工作流程：</text>
     
     <!-- 阶段 1 -->
-    <g transform="translate(0, 35)">
+    <g transform="translate(0, 40)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">1</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">需求分析</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">产品经理</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">需求分析</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">产品经理</text>
     </g>
     
     <!-- 阶段 2 -->
-    <g transform="translate(0, 70)">
+    <g transform="translate(0, 75)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">2</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">架构设计</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">架构师</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">架构设计</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">架构师</text>
     </g>
     
     <!-- 阶段 3 -->
-    <g transform="translate(0, 105)">
+    <g transform="translate(0, 110)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">3</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">UI 设计</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">UI 设计师</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">UI 设计</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">UI 设计师</text>
     </g>
     
     <!-- 阶段 4 -->
-    <g transform="translate(0, 140)">
+    <g transform="translate(0, 145)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">4</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">测试设计</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">测试专家</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">测试设计</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">测试专家</text>
     </g>
     
     <!-- 阶段 5 -->
-    <g transform="translate(0, 175)">
+    <g transform="translate(0, 180)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">5</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">任务分解</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">独立开发者</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">任务分解</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">独立开发者</text>
     </g>
     
     <!-- 阶段 6 -->
-    <g transform="translate(0, 210)">
+    <g transform="translate(0, 215)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">6</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">开发实现</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">独立开发者</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">开发实现</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">独立开发者</text>
     </g>
     
     <!-- 阶段 7 -->
-    <g transform="translate(0, 245)">
+    <g transform="translate(0, 250)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">7</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">测试验证</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">测试专家</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">测试验证</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">测试专家</text>
     </g>
     
     <!-- 阶段 8 -->
-    <g transform="translate(0, 280)">
+    <g transform="translate(0, 285)">
       <circle cx="15" cy="15" r="12" fill="rgba(255,255,255,0.25)"/>
       <text x="15" y="20" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white" text-anchor="middle">8</text>
-      <text x="40" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">发布评审</text>
-      <text x="150" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">多角色共识</text>
+      <text x="45" y="20" font-family="Arial, sans-serif" font-size="15" fill="white">发布评审</text>
+      <text x="160" y="20" font-family="Arial, sans-serif" font-size="13" fill="rgba(255,255,255,0.85)">多角色共识</text>
     </g>
   </g>
   
   <!-- 核心特性 (右下) -->
-  <g transform="translate(550, 320)">
-    <text x="0" y="0" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white">核心特性：</text>
+  <g transform="translate(550, 450)">
+    <text x="0" y="0" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white">核心特性：</text>
     
-    <g transform="translate(0, 35)">
+    <g transform="translate(0, 40)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">智能角色调度</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">基于关键词匹配和位置权重算法</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">基于关键词匹配和位置权重算法</text>
     </g>
     
-    <g transform="translate(0, 85)">
+    <g transform="translate(0, 80)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">规范驱动开发</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">遵循架构规范与最佳实践</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">遵循架构规范与最佳实践</text>
     </g>
     
-    <g transform="translate(0, 135)">
+    <g transform="translate(0, 120)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">代码地图生成</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">自动生成项目结构与代码文档</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">自动生成项目结构与代码文档</text>
     </g>
     
-    <g transform="translate(0, 185)">
+    <g transform="translate(0, 160)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">项目理解</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">深度理解项目上下文与依赖关系</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">深度理解项目上下文与依赖关系</text>
     </g>
     
-    <g transform="translate(0, 235)">
+    <g transform="translate(0, 200)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">多角色协同</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">5 个专业角色协同工作</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">5 个专业角色协同工作</text>
     </g>
     
-    <g transform="translate(0, 285)">
+    <g transform="translate(0, 240)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">共识机制</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">多角色共识评审确保质量</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">多角色共识评审确保质量</text>
     </g>
     
-    <g transform="translate(0, 335)">
+    <g transform="translate(0, 280)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">中英文双语</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">支持中英文双语交互</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">支持中英文双语交互</text>
     </g>
     
-    <g transform="translate(0, 385)">
+    <g transform="translate(0, 320)">
       <circle cx="12" cy="12" r="10" fill="#43e97b"/>
       <text x="32" y="17" font-family="Arial, sans-serif" font-size="15" fill="white">避免 AI slop</text>
-      <text x="32" y="37" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">生产级高质量输出</text>
+      <text x="32" y="35" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.75)">生产级高质量输出</text>
     </g>
   </g>
   
@@ -220,8 +218,8 @@
   </defs>
   
   <!-- 底部装饰 -->
-  <rect x="0" y="730" width="1000" height="20" fill="rgba(255,255,255,0.1)"/>
-  <text x="500" y="745" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.7)" text-anchor="middle">
+  <rect x="0" y="775" width="1100" height="25" fill="rgba(255,255,255,0.1)"/>
+  <text x="550" y="793" font-family="Arial, sans-serif" font-size="12" fill="rgba(255,255,255,0.8)" text-anchor="middle">
     https://github.com/weiransoft/TraeMultiAgentSkill
   </text>
 </svg>
