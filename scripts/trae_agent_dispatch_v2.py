@@ -101,6 +101,12 @@ def parse_arguments():
         help='使用 v1.0 版本逻辑（不使用新组件）'
     )
     
+    parser.add_argument(
+        '--project-full-lifecycle',
+        action='store_true',
+        help='启用项目全生命周期模式（8 阶段标准工作流程：需求→架构→UI→测试→任务→开发→测试→发布）'
+    )
+    
     return parser.parse_args()
 
 
