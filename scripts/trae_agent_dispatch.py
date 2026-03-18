@@ -7,14 +7,22 @@ Trae Multi-Agent Dispatcher (包装脚本)
 
 使用方法:
     python3 trae_agent_dispatch.py --task "任务描述" --agent auto
+    
+注意：
+    此脚本需要配置到 Trae 的 skill 系统中，通过 skills-index.json 的 triggers.manual.command 调用
 """
 
 import sys
 import os
 from pathlib import Path
 
-# 获取当前脚本目录
-script_dir = Path(__file__).parent
+# 获取当前脚本目录（skill 的 scripts 目录）
+script_dir = Path(__file__).parent.resolve()
+
+# 将 skill 的 scripts 目录添加到 Python 路径
+# 这样无论从哪个项目调用，都能正确导入 skill 的模块
+if str(script_dir) not in sys.path:
+    sys.path.insert(0, str(script_dir))
 
 # 导入 v2 版本的调度器
 try:
