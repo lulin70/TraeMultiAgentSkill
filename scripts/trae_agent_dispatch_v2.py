@@ -58,7 +58,7 @@ def parse_arguments():
     parser.add_argument(
         '--agent',
         type=str,
-        choices=['architect', 'product-manager', 'test-expert', 'solo-coder', 'ui-designer', 'auto'],
+        choices=['architect', 'product-manager', 'tester', 'developer', 'ui-designer', 'devops', 'auto'],
         default='auto',
         help='指定要调度的智能体角色（默认：auto - 自动匹配）'
     )
