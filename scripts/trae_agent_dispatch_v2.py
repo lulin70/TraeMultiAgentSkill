@@ -29,7 +29,7 @@ try:
         UserProfile
     )
     from skill_registry import SkillRegistry, SkillManifest
-    from role_matcher import RoleMatcher, TaskRequirement, create_default_roles
+    from role_matcher import RoleMatcher, TaskRequirement, MatchResult, create_default_roles
     from workflow_engine import WorkflowEngine
     NEW_COMPONENTS_AVAILABLE = True
 except ImportError as e:
@@ -211,15 +211,29 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
             if agent_type == 'auto':
                 best_match = matched_roles[0]
             else:
-                # 查找用户指定的角色
+                # 首先尝试从匹配结果中查找用户指定的角色
                 best_match = None
                 for result in matched_roles:
                     if result.role_id == agent_type:
                         best_match = result
                         break
+                
+                # 如果匹配结果中没有找到，尝试从注册的角色中直接获取
                 if not best_match:
-                    best_match = matched_roles[0]
-                    log(f'⚠️  未找到指定角色 {agent_type}，使用最佳匹配：{best_match.role_name}', 'WARNING')
+                    registered_role = matcher.roles.get(agent_type)
+                    if registered_role:
+                        # 创建一个 MatchResult 对象
+                        best_match = MatchResult(
+                            role_id=registered_role.role_id,
+                            role_name=registered_role.name,
+                            confidence=1.0,  # 直接指定，置信度为 100%
+                            reasons=["用户直接指定角色"],
+                            matched_capabilities=registered_role.capabilities
+                        )
+                        log(f'✅ 直接使用指定角色：{best_match.role_name}', 'SUCCESS')
+                    else:
+                        best_match = matched_roles[0]
+                        log(f'⚠️  未找到指定角色 {agent_type}，使用最佳匹配：{best_match.role_name}', 'WARNING')
             
             log(f'✅ 选择角色：{best_match.role_name}', 'SUCCESS')
             

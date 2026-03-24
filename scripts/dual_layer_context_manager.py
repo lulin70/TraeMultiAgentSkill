@@ -801,11 +801,14 @@ class TaskContext:
         # 确保目录存在
         artifact_dir.mkdir(parents=True, exist_ok=True)
         
-        # 确定文件名
+        # 确定文件名（清理 task_id 中的特殊字符）
         if not file_name:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            task_id_short = self.task_id[:20] if len(self.task_id) > 20 else self.task_id
-            file_name = f"{artifact_type.lower()}_{task_id_short}_{timestamp}.md"
+            # 清理 task_id：移除特殊字符，只保留安全的文件名字符
+            safe_task_id = self.task_id[:40] if len(self.task_id) > 40 else self.task_id
+            safe_task_id = ''.join(c for c in safe_task_id if c.isalnum() or c in ('_', '-', ' ')).strip()
+            safe_task_id = safe_task_id.replace(' ', '_')
+            file_name = f"{artifact_type.lower()}_{safe_task_id}_{timestamp}.md"
         
         file_path = artifact_dir / file_name
         
