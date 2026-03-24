@@ -148,9 +148,25 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
     """
     try:
         # 1. 初始化双层上下文管理器
+        # 注意：project_root 可能是实际的业务项目目录（如 /path/to/business/project）
+        # 也可能是 skill 根目录（如 /path/to/.trae/skills/trae-multi-agent）
+        # 需要根据路径结构正确设置 skill_root
+        
+        # 将 project_root 转换为 Path 对象
+        project_root_path = Path(project_root)
+        
+        # 检查 project_root 是否已经包含 .trae/skills/trae-multi-agent
+        # 如果是，说明传入的 project_root 本身就是 skill 根目录
+        if '.trae' in project_root_path.parts and 'skills' in project_root_path.parts:
+            # project_root 本身就是 skill 根目录（如 /path/to/.trae/skills/trae-multi-agent）
+            skill_root = project_root
+        else:
+            # 需要拼接 .trae/skills/trae-multi-agent
+            skill_root = str(project_root_path / '.trae' / 'skills' / 'trae-multi-agent')
+        
         context_manager = DualLayerContextManager(
             project_root=project_root,
-            skill_root=str(Path(project_root) / '.trae' / 'skills' / 'trae-multi-agent')
+            skill_root=skill_root
         )
         
         # 2. 初始化角色匹配器
@@ -220,11 +236,15 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
             
             # 9. 模拟执行（实际应该调用对应的智能体）
             log(f'▶️  执行任务...', 'INFO')
-            task_ctx.add_artifact("EXECUTION", {
-                "role": best_match.role_id,
-                "task": task,
-                "status": "completed"
-            })
+            task_ctx.add_artifact(
+                "EXECUTION",
+                {
+                    "role": best_match.role_id,
+                    "task": task,
+                    "status": "completed"
+                },
+                role=best_match.role_id
+            )
             
             # 10. 完成任务（自动沉淀经验）
             context_manager.complete_task(task_def.task_id)

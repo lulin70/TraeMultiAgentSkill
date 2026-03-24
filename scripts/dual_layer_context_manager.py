@@ -742,10 +742,247 @@ class TaskContext:
     
     # ========== 工件管理 ==========
     
-    def add_artifact(self, artifact_type: str, artifact_data: Any):
-        """添加工件"""
+    def add_artifact(self, artifact_type: str, artifact_data: Any, role: str = None, file_name: str = None):
+        """
+        添加工件
+        
+        Args:
+            artifact_type: 工件类型（如 ARCHITECTURE, PRD, TEST_PLAN, UI_DESIGN, CODE, DEV_DOC 等）
+            artifact_data: 工件数据
+            role: 角色 ID（可选，用于保存到对应角色目录）
+            file_name: 文件名（可选，如果不提供则自动生成）
+        """
         self.artifacts[artifact_type] = artifact_data
+        
+        # 如果提供了角色信息，则保存到对应的角色目录
+        if role:
+            self._save_artifact_to_role_dir(artifact_type, artifact_data, role, file_name)
+        
         self._save()
+    
+    def _save_artifact_to_role_dir(self, artifact_type: str, artifact_data: Any, role: str, file_name: str = None):
+        """
+        将工件保存到对应的角色目录
+        
+        Args:
+            artifact_type: 工件类型
+            artifact_data: 工件数据
+            role: 角色 ID
+            file_name: 文件名
+        """
+        # 角色目录映射
+        role_dir_map = {
+            'architect': 'docs/roles/architect',
+            'product-manager': 'docs/roles/product-manager',
+            'developer': 'docs/roles/solo-coder',
+            'tester': 'docs/roles/test-expert',
+            'ui-designer': 'docs/roles/ui-designer',
+            'devops': 'docs/roles/devops'
+        }
+        
+        # 获取角色目录
+        role_dir = role_dir_map.get(role)
+        if not role_dir:
+            print(f"⚠️  未找到角色目录映射：{role}")
+            return
+        
+        # 构建完整路径
+        # storage_path 格式: <skill_root>/context/tasks/<task_id>
+        # skill_root 传入时就是 <skill_root>（如 /path/to/skill）
+        # parent 1: <skill_root>/context/tasks
+        # parent 2: <skill_root>/context
+        # parent 3: <skill_root>
+        # 所以需要 parent.parent.parent 才能回到 skill_root
+        # 但由于 TaskContext 的 storage_path 已经是 skill_root / "context" / "tasks" / task_id
+        # 所以这里直接用 self.storage_path.parent.parent.parent 就能回到 skill_root
+        skill_root = self.storage_path.parent.parent.parent
+        artifact_dir = skill_root / role_dir
+        
+        # 确保目录存在
+        artifact_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 确定文件名
+        if not file_name:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            task_id_short = self.task_id[:20] if len(self.task_id) > 20 else self.task_id
+            file_name = f"{artifact_type.lower()}_{task_id_short}_{timestamp}.md"
+        
+        file_path = artifact_dir / file_name
+        
+        # 根据工件类型生成内容
+        content = self._generate_artifact_content(artifact_type, artifact_data)
+        
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            print(f"✅ 工件已保存到：{file_path}")
+        except Exception as e:
+            print(f"❌ 保存工件失败：{e}")
+    
+    def _generate_artifact_content(self, artifact_type: str, artifact_data: Any) -> str:
+        """
+        根据工件类型生成内容
+        
+        Args:
+            artifact_type: 工件类型
+            artifact_data: 工件数据
+            
+        Returns:
+            str: 格式化后的内容
+        """
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # 如果是字符串，直接返回
+        if isinstance(artifact_data, str):
+            return artifact_data
+        
+        # 如果是字典，格式化输出
+        if isinstance(artifact_data, dict):
+            content = f"# {artifact_type.replace('_', ' ').title()}\n\n"
+            content += f"**任务 ID**: {self.task_id}\n"
+            content += f"**生成时间**: {timestamp}\n\n"
+            
+            # 根据工件类型添加特定内容
+            if artifact_type == 'ARCHITECTURE':
+                content += self._format_architecture_content(artifact_data)
+            elif artifact_type == 'PRD':
+                content += self._format_prd_content(artifact_data)
+            elif artifact_type == 'TEST_PLAN':
+                content += self._format_test_plan_content(artifact_data)
+            elif artifact_type == 'UI_DESIGN':
+                content += self._format_ui_design_content(artifact_data)
+            elif artifact_type == 'CODE':
+                content += self._format_code_content(artifact_data)
+            elif artifact_type == 'DEV_DOC':
+                content += self._format_dev_doc_content(artifact_data)
+            else:
+                # 通用格式
+                content += self._format_generic_content(artifact_data)
+            
+            return content
+        
+        # 其他类型转换为字符串
+        return str(artifact_data)
+    
+    def _format_architecture_content(self, data: Dict) -> str:
+        """格式化架构设计内容"""
+        content = "## 架构设计\n\n"
+        
+        if 'style' in data:
+            content += f"**架构风格**: {data['style']}\n"
+        if 'components' in data:
+            content += "\n### 组件列表\n"
+            for comp in data['components']:
+                content += f"- {comp}\n"
+        if 'technologies' in data:
+            content += "\n### 技术选型\n"
+            for tech in data['technologies']:
+                content += f"- {tech}\n"
+        if 'description' in data:
+            content += f"\n### 描述\n{data['description']}\n"
+        
+        return content
+    
+    def _format_prd_content(self, data: Dict) -> str:
+        """格式化需求文档内容"""
+        content = "## 需求文档\n\n"
+        
+        if 'title' in data:
+            content += f"**标题**: {data['title']}\n"
+        if 'goals' in data:
+            content += "\n### 目标\n"
+            for goal in data['goals']:
+                content += f"- {goal}\n"
+        if 'requirements' in data:
+            content += "\n### 需求\n"
+            for req in data['requirements']:
+                content += f"- {req}\n"
+        if 'user_stories' in data:
+            content += "\n### 用户故事\n"
+            for story in data['user_stories']:
+                content += f"- {story}\n"
+        
+        return content
+    
+    def _format_test_plan_content(self, data: Dict) -> str:
+        """格式化测试计划内容"""
+        content = "## 测试计划\n\n"
+        
+        if 'test_cases' in data:
+            content += "\n### 测试用例\n"
+            for tc in data['test_cases']:
+                content += f"- {tc}\n"
+        if 'test_strategy' in data:
+            content += f"\n### 测试策略\n{data['test_strategy']}\n"
+        if 'coverage' in data:
+            content += f"\n### 覆盖率目标\n{data['coverage']}\n"
+        
+        return content
+    
+    def _format_ui_design_content(self, data: Dict) -> str:
+        """格式化 UI 设计内容"""
+        content = "## UI 设计\n\n"
+        
+        if 'layout' in data:
+            content += f"**布局**: {data['layout']}\n"
+        if 'color_scheme' in data:
+            content += f"**配色方案**: {data['color_scheme']}\n"
+        if 'components' in data:
+            content += "\n### 组件\n"
+            for comp in data['components']:
+                content += f"- {comp}\n"
+        if 'description' in data:
+            content += f"\n### 描述\n{data['description']}\n"
+        
+        return content
+    
+    def _format_code_content(self, data: Dict) -> str:
+        """格式化代码内容"""
+        content = "## 代码实现\n\n"
+        
+        if 'language' in data:
+            content += f"**语言**: {data['language']}\n"
+        if 'files' in data:
+            content += "\n### 文件\n"
+            for file in data['files']:
+                content += f"- {file}\n"
+        if 'description' in data:
+            content += f"\n### 描述\n{data['description']}\n"
+        
+        return content
+    
+    def _format_dev_doc_content(self, data: Dict) -> str:
+        """格式化开发文档内容"""
+        content = "## 开发文档\n\n"
+        
+        if 'title' in data:
+            content += f"**标题**: {data['title']}\n"
+        if 'overview' in data:
+            content += f"\n### 概述\n{data['overview']}\n"
+        if 'installation' in data:
+            content += f"\n### 安装\n{data['installation']}\n"
+        if 'usage' in data:
+            content += f"\n### 使用\n{data['usage']}\n"
+        if 'api' in data:
+            content += f"\n### API\n{data['api']}\n"
+        
+        return content
+    
+    def _format_generic_content(self, data: Dict) -> str:
+        """格式化通用内容"""
+        content = ""
+        for key, value in data.items():
+            if isinstance(value, (list, dict)):
+                content += f"\n### {key.replace('_', ' ').title()}\n"
+                if isinstance(value, list):
+                    for item in value:
+                        content += f"- {item}\n"
+                else:
+                    for k, v in value.items():
+                        content += f"- {k}: {v}\n"
+            else:
+                content += f"**{key.replace('_', ' ').title()}**: {value}\n"
+        return content
     
     def get_artifact(self, artifact_type: str) -> Optional[Any]:
         """获取工件"""
