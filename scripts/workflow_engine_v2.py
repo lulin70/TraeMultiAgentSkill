@@ -130,7 +130,7 @@ class WorkflowEngineV2:
     engine.save_checkpoint(instance.instance_id)
     
     # 交接班（模拟 Agent 换岗）
-    engine.handoff(instance.instance_id, from_agent="architect", to_agent="developer")
+    engine.handoff(instance.instance_id, from_agent="architect", to_agent="solo-coder")
     
     # 恢复执行
     engine.resume_workflow(instance.instance_id)
@@ -425,7 +425,7 @@ class WorkflowEngineV2:
                 step_id=f"step_{step_id}",
                 name="开发实现",
                 description="实现功能代码",
-                role_id="developer",
+                role_id="solo-coder",
                 action="develop",
                 conditions={}
             ))
@@ -460,7 +460,7 @@ class WorkflowEngineV2:
                 step_id="step_1",
                 name="任务执行",
                 description=task_description or task_title,
-                role_id=target_agent or "developer",
+                role_id=target_agent or "solo-coder",
                 action="execute",
                 conditions={}
             ))

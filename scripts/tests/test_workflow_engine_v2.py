@@ -69,7 +69,7 @@ class TestWorkflowEngineV2(unittest.TestCase):
         # 验证步骤包含正确的角色
         roles = [step.role_id for step in workflow.steps]
         self.assertIn("architect", roles)
-        self.assertIn("developer", roles)
+        self.assertIn("solo-coder", roles)
         
         # 验证关联了任务清单
         self.assertIn('tasklist_id', workflow.variables)
@@ -130,7 +130,7 @@ class TestWorkflowEngineV2(unittest.TestCase):
         handoff = self.engine.handoff(
             instance_id,
             from_agent="architect",
-            to_agent="developer",
+            to_agent="solo-coder",
             completed_work=["架构设计完成"],
             next_steps=["用户模块开发", "订单模块开发"],
             pending_issues=["需要确定数据库选型"],
@@ -140,13 +140,13 @@ class TestWorkflowEngineV2(unittest.TestCase):
         # 验证交接
         self.assertIsNotNone(handoff)
         self.assertEqual(handoff.from_agent, "architect")
-        self.assertEqual(handoff.to_agent, "developer")
+        self.assertEqual(handoff.to_agent, "solo-coder")
         self.assertIn("架构设计完成", handoff.completed_work)
         
         # 验证交接历史
         updated_instance = self.engine.get_instance(instance_id)
         self.assertEqual(len(updated_instance.handoff_history), 1)
-        self.assertEqual(updated_instance.current_agent_id, "developer")
+        self.assertEqual(updated_instance.current_agent_id, "solo-coder")
     
     def test_tasklist_integration(self):
         """测试任务清单集成"""
@@ -213,11 +213,11 @@ class TestCheckpointAndHandoffIntegration(unittest.TestCase):
         # 2. 架构师完成架构设计，保存检查点
         self.engine.save_checkpoint(instance_id, "架构设计完成")
         
-        # 3. 架构师交接给开发者
+        # 3. 架构师交接给独立开发者
         handoff1 = self.engine.handoff(
             instance_id,
             from_agent="architect",
-            to_agent="developer",
+            to_agent="solo-coder",
             completed_work=[
                 "完成需求分析",
                 "完成系统架构设计",
@@ -237,13 +237,13 @@ class TestCheckpointAndHandoffIntegration(unittest.TestCase):
             ]
         )
         
-        # 4. 开发者完成用户模块，保存检查点
+        # 4. 独立开发者完成用户模块，保存检查点
         self.engine.save_checkpoint(instance_id, "用户模块完成")
         
-        # 5. 开发者交接给测试工程师
+        # 5. 独立开发者交接给测试工程师
         handoff2 = self.engine.handoff(
             instance_id,
-            from_agent="developer",
+            from_agent="solo-coder",
             to_agent="tester",
             completed_work=[
                 "用户模块开发完成",

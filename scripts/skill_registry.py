@@ -397,8 +397,8 @@ def main():
                 output_schema={"type": "object", "properties": {"architecture": {"type": "object"}}}
             ),
             SkillCapability(
-                name="developer",
-                description="开发者角色，负责代码实现",
+                name="solo-coder",
+                description="独立开发者角色，负责代码实现",
                 input_schema={"type": "object", "properties": {"design": {"type": "object"}}},
                 output_schema={"type": "object", "properties": {"code": {"type": "string"}}}
             ),

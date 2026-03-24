@@ -131,7 +131,7 @@ class TestCheckpointManager(unittest.TestCase):
             task_id="workflow_001",
             step_id="step_3",
             step_name="当前步骤",
-            agent_id="developer",
+            agent_id="solo-coder",
             workflow_state=workflow_state
         )
         
@@ -152,7 +152,7 @@ class TestHandoffDocument(unittest.TestCase):
             handoff = manager.create_handoff_document(
                 task_id="task_handoff_001",
                 from_agent="architect",
-                to_agent="developer",
+                to_agent="solo-coder",
                 completed_work=["架构设计完成", "技术选型完成"],
                 current_state={"架构文档": "已完成"},
                 next_steps=["用户模块开发", "订单模块开发"],
@@ -163,7 +163,7 @@ class TestHandoffDocument(unittest.TestCase):
             
             self.assertIsNotNone(handoff)
             self.assertEqual(handoff.from_agent, "architect")
-            self.assertEqual(handoff.to_agent, "developer")
+            self.assertEqual(handoff.to_agent, "solo-coder")
             self.assertEqual(len(handoff.completed_work), 2)
     
     def test_handoff_markdown_conversion(self):
@@ -172,7 +172,7 @@ class TestHandoffDocument(unittest.TestCase):
             handoff_id="hf_001",
             task_id="task_001",
             from_agent="architect",
-            to_agent="developer",
+            to_agent="solo-coder",
             completed_work=["架构设计完成"],
             current_state={"status": "设计中"},
             next_steps=["开发阶段"],
@@ -184,7 +184,7 @@ class TestHandoffDocument(unittest.TestCase):
         
         self.assertIn("交接文档", md)
         self.assertIn("architect", md)
-        self.assertIn("developer", md)
+        self.assertIn("solo-coder", md)
         self.assertIn("架构设计完成", md)
     
     def test_save_and_load_handoff(self):

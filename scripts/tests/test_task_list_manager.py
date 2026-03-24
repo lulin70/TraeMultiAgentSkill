@@ -73,7 +73,7 @@ class TestTaskListManager(unittest.TestCase):
             title="测试任务",
             description="任务描述",
             priority=TaskPriority.HIGH,
-            assigned_agent="developer",
+            assigned_agent="solo-coder",
             estimated_hours=8.0,
             tags=["测试", "开发"],
             category="开发"

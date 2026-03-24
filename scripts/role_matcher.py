@@ -775,8 +775,8 @@ def create_default_roles() -> List[RoleDefinition]:
         ),
         
         RoleDefinition(
-            role_id="developer",
-            name="开发工程师",
+            role_id="solo-coder",
+            name="独立开发者",
             description="负责代码实现和功能开发",
             capabilities=[
                 "代码实现",

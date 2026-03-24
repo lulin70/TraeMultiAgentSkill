@@ -679,7 +679,7 @@ if __name__ == "__main__":
         title="用户模块开发",
         description="实现用户注册、登录、权限管理",
         priority=TaskPriority.MEDIUM,
-        assigned_agent="developer",
+        assigned_agent="solo-coder",
         estimated_hours=40.0,
         depends_on=[task2.task_id] if task2 else [],
         category="开发"

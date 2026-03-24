@@ -625,7 +625,7 @@ if __name__ == "__main__":
     handoff = manager.create_handoff_document(
         task_id="task_demo",
         from_agent="architect",
-        to_agent="developer",
+        to_agent="solo-coder",
         completed_work=["需求分析完成", "架构设计完成"],
         current_state={"架构文档": "已完成", "技术选型": "Spring Cloud + Docker"},
         next_steps=["用户模块开发", "订单模块开发"],

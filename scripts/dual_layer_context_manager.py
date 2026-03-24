@@ -774,7 +774,7 @@ class TaskContext:
         role_dir_map = {
             'architect': 'docs/roles/architect',
             'product-manager': 'docs/roles/product-manager',
-            'developer': 'docs/roles/solo-coder',
+            'solo-coder': 'docs/roles/solo-coder',
             'tester': 'docs/roles/test-expert',
             'ui-designer': 'docs/roles/ui-designer',
             'devops': 'docs/roles/devops'

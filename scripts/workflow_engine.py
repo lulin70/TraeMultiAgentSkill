@@ -508,7 +508,7 @@ class WorkflowEngine:
                     step_id="development",
                     name="代码开发",
                     description="实现功能代码",
-                    role_id="developer",
+                    role_id="solo-coder",
                     action="implement_code",
                     inputs={"design": "${architecture}"},
                     outputs={"code": None}
@@ -537,7 +537,7 @@ class WorkflowEngine:
                     step_id="quick-design",
                     name="快速设计",
                     description="快速设计和实现",
-                    role_id="developer",
+                    role_id="solo-coder",
                     action="rapid_implementation",
                     inputs={"approach": "prototype"},
                     outputs={"prototype": None}
