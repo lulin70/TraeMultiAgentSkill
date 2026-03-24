@@ -150,7 +150,7 @@
 ```python
 ✅ product-manager: 产品经理
 ✅ architect: 架构师
-✅ developer: 开发工程师
+✅ solo-coder: 独立开发者
 ✅ tester: 测试工程师
 ✅ ui-designer: UI 设计师
 ✅ devops: DevOps 工程师

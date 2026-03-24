@@ -65,7 +65,7 @@
 │   ├── architect/       # 架构师文档
 │   ├── product-manager/ # 产品经理文档
 │   ├── tester/          # 测试专家文档
-│   ├── developer/       # 开发工程师文档
+│   ├── solo-coder/       # 独立开发者文档
 │   ├── ui-designer/     # UI 设计师文档
 │   └── devops/          # DevOps 工程师文档
 ├── scripts/             # 脚本目录

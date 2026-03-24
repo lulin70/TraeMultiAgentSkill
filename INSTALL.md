@@ -51,7 +51,7 @@ trae-agent --task "分析需求" --agent product-manager
 trae-agent --task "制定测试策略" --agent tester
 
 # 调用开发工程师
-trae-agent --task "实现功能" --agent developer
+trae-agent --task "实现功能" --agent solo-coder
 
 # 调用 UI 设计师
 trae-agent --task "设计登录页面" --agent ui-designer
@@ -67,7 +67,7 @@ trae-agent --task "配置 CI/CD" --agent devops
   - `architect` - 架构师
   - `product-manager` - 产品经理
   - `tester` - 测试专家
-  - `developer` - 开发工程师
+  - `solo-coder` - 独立开发者
   - `ui-designer` - UI 设计师
   - `devops` - DevOps 工程师
 - `--project-root`: 项目根目录（可选，默认：当前目录）

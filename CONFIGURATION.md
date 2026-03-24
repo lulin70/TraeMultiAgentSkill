@@ -82,7 +82,7 @@ trae-agent --task "美化登录界面" --agent auto
 ./trae_agent_dispatch.sh --task "设计系统架构" --agent architect
 ./trae_agent_dispatch.sh --task "编写 PRD" --agent product-manager
 ./trae_agent_dispatch.sh --task "编写测试用例" --agent tester
-./trae_agent_dispatch.sh --task "实现功能代码" --agent developer
+./trae_agent_dispatch.sh --task "实现功能代码" --agent solo-coder
 ```
 
 ### 可用参数
@@ -92,7 +92,7 @@ trae-agent --task "美化登录界面" --agent auto
   - `architect`: 架构师
   - `product-manager`: 产品经理
   - `tester`: 测试专家
-  - `developer`: 开发工程师
+  - `solo-coder`: 独立开发者
   - `ui-designer`: UI 设计师
   - `devops`: DevOps 工程师
   - `auto`: 自动匹配（默认）
@@ -115,8 +115,8 @@ trae-agent --task "美化登录界面" --agent auto
 # 指定测试专家编写测试
 ./trae_agent_dispatch.sh --task "为用户服务编写单元测试和集成测试" --agent tester
 
-# 指定开发工程师编写代码
-./trae_agent_dispatch.sh --task "实现 RESTful API 端点" --agent developer
+# 指定独立开发者编写代码
+./trae_agent_dispatch.sh --task "实现 RESTful API 端点" --agent solo-coder
 
 # 指定 UI 设计师设计界面
 ./trae_agent_dispatch.sh --task "设计现代化的登录页面" --agent ui-designer

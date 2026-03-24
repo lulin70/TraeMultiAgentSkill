@@ -178,7 +178,7 @@
 - 6 个核心能力定义
   - product-manager
   - architect
-  - developer
+  - solo-coder
   - tester
   - ui-designer
   - devops
@@ -207,7 +207,7 @@ python3 scripts/trae_agent_dispatch_v2.py \
 # 指定角色
 python3 scripts/trae_agent_dispatch_v2.py \
   --task "TASK-002 - 实现用户服务" \
-  --agent developer
+  --agent solo-coder
 
 # 使用旧版本
 python3 scripts/trae_agent_dispatch_v2.py \
@@ -382,7 +382,7 @@ python3 scripts/trae_agent_dispatch_v2.py \
 # 指定角色
 python3 scripts/trae_agent_dispatch_v2.py \
   --task "TASK-002 - 实现用户服务" \
-  --agent developer
+  --agent solo-coder
 ```
 
 3. **使用循环控制器**

@@ -624,7 +624,7 @@ python3 scripts/trae_agent_dispatch.py [参数]
 | 参数 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | `--task` | string | ✅ | - | 任务描述 |
-| `--agent` | string | ❌ | auto | 指定角色：architect, product-manager, tester, developer, ui-designer, devops, auto |
+| `--agent` | string | ❌ | auto | 指定角色：architect, product-manager, tester, solo-coder, ui-designer, devops, auto |
 | `--project-root` | string | ❌ | . | 项目根目录路径 |
 | `--task-file` | string | ❌ | - | 任务文件路径（从文件读取任务） |
 | `--output` | string | ❌ | - | 输出文件路径 |
@@ -640,7 +640,7 @@ python3 scripts/trae_agent_dispatch.py [参数]
 - `architect`: 架构师 - 负责系统架构设计、技术选型
 - `product-manager`: 产品经理 - 负责需求分析、产品规划
 - `tester`: 测试专家 - 负责测试策略、质量保障
-- `developer`: 开发工程师 - 负责功能开发、代码实现
+- `solo-coder`: 独立开发者 - 负责功能开发、代码实现
 - `ui-designer`: UI 设计师 - 负责界面设计、用户体验
 - `devops`: DevOps 工程师 - 负责部署、运维
 - `auto`: 自动匹配 - 根据任务内容自动识别最适合的角色（默认）
@@ -657,7 +657,7 @@ python3 scripts/trae_agent_dispatch.py \
 ```bash
 python3 scripts/trae_agent_dispatch.py \
     --task "实现用户登录功能" \
-    --agent developer
+    --agent solo-coder
 ```
 
 #### 3. 项目全生命周期模式（8 阶段）
