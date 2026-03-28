@@ -1368,6 +1368,556 @@ class CodeMapGenerator:
 *最后更新: {timestamp}*
 """
 
+    def generate_visualization_json(self, output_path: Optional[str] = None) -> Dict[str, Any]:
+        """生成用于 3D 可视化的 JSON 数据结构（新版）
+
+        返回的 JSON 结构:
+        {
+            "version": "2.0",
+            "project": { 项目信息，包含前后端分类 },
+            "layers": [ 层级列表，包含 side 属性区分前后端 ],
+            "nodes": [ 节点列表，包含真实调用关系 ],
+            "edges": [ 调用关系列表，连接到实际节点 ]
+        }
+
+        节点结构:
+        {
+            "id": str,           # 唯一标识，格式: type:path 或 type:path:name
+            "type": str,          # "module" | "file" | "class" | "function"
+            "name": str,          # 显示名称
+            "fullName": str,      # 完整名称
+            "layerId": str,       # 所属层级 ID
+            "side": str,          # "frontend" | "backend" | "shared"
+            "filePath": str,      # 文件路径
+            "language": str,       # 编程语言
+            "size": int,          # 节点大小
+            "calls": [str],       # 直接调用的节点 ID 列表
+            "calledBy": [str],    # 被调用的节点 ID 列表
+            "parentId": str,       # 父节点 ID
+            "children": [str],    # 子节点 ID 列表
+            "metrics": {}         # 额外指标
+        }
+
+        边结构:
+        {
+            "id": str,           # 唯一标识
+            "source": str,       # 源节点 ID
+            "target": str,       # 目标节点 ID
+            "type": str,         # "calls" | "imports" | "http" | "extends"
+            "protocol": str,     # "local" | "http" | "https" | "websocket"
+            "layer": str         # 层级关系描述
+        }
+        """
+        print("开始生成可视化 JSON 数据 (v2.0)...")
+
+        nodes = []
+        edges = []
+        node_id_map = {}  # 用于去重和快速查找
+
+        # 定义层级（包含前后端分类）
+        layers_def = [
+            {"id": "frontend-ui", "name": "前端UI层", "side": "frontend", "color": 0x58a6ff},
+            {"id": "frontend-service", "name": "前端服务层", "side": "frontend", "color": 0xa371f7},
+            {"id": "frontend-store", "name": "前端状态层", "side": "frontend", "color": 0x39c5cf},
+            {"id": "api", "name": "API层", "side": "backend", "color": 0xf85149},
+            {"id": "service", "name": "业务逻辑层", "side": "backend", "color": 0x3fb950},
+            {"id": "domain", "name": "领域层", "side": "backend", "color": 0xd97706},
+            {"id": "data", "name": "数据访问层", "side": "backend", "color": 0xdb61a2},
+            {"id": "middleware", "name": "中间件层", "side": "backend", "color": 0xff7b72},
+            {"id": "util", "name": "工具层", "side": "shared", "color": 0x8b949e},
+            {"id": "config", "name": "配置层", "side": "shared", "color": 0xe3b341}
+        ]
+        layers_map = {l["id"]: l for l in layers_def}
+
+        # 生成项目信息
+        project_info = {
+            "name": self.project_info["name"],
+            "workspace": self.project_info["workspace_name"],
+            "totalFiles": self.project_info["total_files"],
+            "totalLines": self.project_info["total_lines"],
+            "languages": self.project_info["languages"],
+            "frameworks": self.project_info["frameworks"],
+            "frontend": {
+                "name": "前端",
+                "languages": [l for l in self.project_info["languages"] if l in ["javascript", "typescript", "vue", "react"]],
+                "layers": ["frontend-ui", "frontend-service", "frontend-store"]
+            },
+            "backend": {
+                "name": "后端",
+                "languages": [l for l in self.project_info["languages"] if l not in ["javascript", "typescript", "vue", "react"]],
+                "layers": ["api", "service", "domain", "data", "middleware"]
+            }
+        }
+
+        # 1. 生成模块节点
+        modules = self.group_by_module()
+        for module_name, files in modules.items():
+            module_id = f"module:{module_name}"
+            file_count = len(files)
+            total_lines = sum(f.lines for f in files)
+
+            # 计算模块大小
+            size = min(5, max(1, int(file_count / 3) + int(total_lines / 1000)))
+
+            # 确定模块所属层级和前后端
+            module_layer_id, module_side = self._detect_module_layer_and_side(files)
+
+            module_node = {
+                "id": module_id,
+                "type": "module",
+                "name": module_name,
+                "fullName": f"{module_name} ({file_count} 文件)",
+                "layerId": module_layer_id,
+                "side": module_side,
+                "filePath": "",
+                "language": ",".join(set(f.language for f in files)),
+                "size": size,
+                "calls": [],
+                "calledBy": [],
+                "children": [],
+                "metrics": {
+                    "fileCount": file_count,
+                    "totalLines": total_lines,
+                    "classCount": sum(len(f.classes) for f in files),
+                    "functionCount": sum(len(f.functions) for f in files)
+                }
+            }
+            nodes.append(module_node)
+            node_id_map[module_id] = module_node
+
+        # 2. 生成文件节点
+        for file_info in self.files:
+            file_id = f"file:{file_info.relative_path}"
+
+            # 确定文件所属模块
+            module_name = self._get_file_module(file_info.relative_path)
+            module_id = f"module:{module_name}"
+
+            # 确定文件层级和前后端
+            layer_id, side = self._detect_file_layer_and_side(file_info.relative_path)
+
+            # 计算文件大小
+            size = min(4, max(1, int(file_info.lines / 100) + 1))
+
+            file_node = {
+                "id": file_id,
+                "type": "file",
+                "name": os.path.basename(file_info.relative_path),
+                "fullName": file_info.relative_path,
+                "layerId": layer_id,
+                "side": side,
+                "filePath": file_info.relative_path,
+                "language": file_info.language,
+                "size": size,
+                "calls": [],
+                "calledBy": [],
+                "children": [],
+                "parentId": module_id,
+                "metrics": {
+                    "lines": file_info.lines,
+                    "classCount": len(file_info.classes),
+                    "functionCount": len(file_info.functions),
+                    "complexity": file_info.complexity
+                }
+            }
+            nodes.append(file_node)
+            node_id_map[file_id] = file_node
+
+            # 更新模块的 children
+            if module_id in node_id_map:
+                node_id_map[module_id]["children"].append(file_id)
+
+        # 3. 生成类节点
+        for file_info in self.files:
+            file_id = f"file:{file_info.relative_path}"
+            layer_id, side = self._detect_file_layer_and_side(file_info.relative_path)
+
+            for cls in file_info.classes:
+                class_id = f"class:{file_info.relative_path}:{cls.name}"
+
+                # 计算类大小
+                size = min(3, max(1, len(cls.methods) + 1))
+
+                class_node = {
+                    "id": class_id,
+                    "type": "class",
+                    "name": cls.name,
+                    "fullName": f"{cls.name} ({len(cls.methods)} 方法)",
+                    "layerId": layer_id,
+                    "side": side,
+                    "filePath": file_info.relative_path,
+                    "language": file_info.language,
+                    "size": size,
+                    "calls": [],
+                    "calledBy": [],
+                    "children": [],
+                    "parentId": file_id,
+                    "metrics": {
+                        "methodCount": len(cls.methods),
+                        "propertyCount": len(cls.properties),
+                        "baseClasses": cls.base_classes,
+                        "lines": cls.line_end - cls.line_start
+                    }
+                }
+                nodes.append(class_node)
+                node_id_map[class_id] = class_node
+
+                # 更新文件的 children
+                if file_id in node_id_map:
+                    node_id_map[file_id]["children"].append(class_id)
+
+                # 为每个方法生成函数节点
+                for method in cls.methods:
+                    method_id = f"method:{file_info.relative_path}:{cls.name}:{method.name}"
+                    method_full_name = f"{cls.name}.{method.name}"
+
+                    method_node = {
+                        "id": method_id,
+                        "type": "function",
+                        "name": method.name,
+                        "fullName": method_full_name,
+                        "layerId": layer_id,
+                        "side": side,
+                        "filePath": file_info.relative_path,
+                        "language": file_info.language,
+                        "size": 1,
+                        "calls": [],
+                        "calledBy": [],
+                        "children": [],
+                        "parentId": class_id,
+                        "metrics": {
+                            "params": method.params,
+                            "returnType": method.return_type,
+                            "lines": method.line_end - method.line_start
+                        }
+                    }
+                    nodes.append(method_node)
+                    node_id_map[method_id] = method_node
+
+                    # 更新类的 children
+                    node_id_map[class_id]["children"].append(method_id)
+
+        # 4. 生成独立函数节点（不在类中的函数）
+        for file_info in self.files:
+            file_id = f"file:{file_info.relative_path}"
+            layer_id, side = self._detect_file_layer_and_side(file_info.relative_path)
+
+            for func in file_info.functions:
+                func_id = f"func:{file_info.relative_path}:{func.name}"
+
+                func_node = {
+                    "id": func_id,
+                    "type": "function",
+                    "name": func.name,
+                    "fullName": func.name,
+                    "layerId": layer_id,
+                    "side": side,
+                    "filePath": file_info.relative_path,
+                    "language": file_info.language,
+                    "size": 1,
+                    "calls": [],
+                    "calledBy": [],
+                    "children": [],
+                    "parentId": file_id,
+                    "metrics": {
+                        "params": func.params,
+                        "returnType": func.return_type,
+                        "lines": func.line_end - func.line_start
+                    }
+                }
+                nodes.append(func_node)
+                node_id_map[func_id] = func_node
+
+                # 更新文件的 children
+                if file_id in node_id_map:
+                    node_id_map[file_id]["children"].append(func_id)
+
+        # 5. 生成真实调用关系边（基于导入和方法调用分析）
+        edge_id_set = set()  # 用于去重
+
+        for file_info in self.files:
+            file_id = f"file:{file_info.relative_path}"
+
+            # 文件级别的导入关系 -> 生成 calls 边
+            for imp in file_info.imports:
+                # 尝试匹配导入的模块/文件
+                for other_file in self.files:
+                    if other_file == file_info:
+                        continue
+
+                    if self._is_import_match(imp, other_file):
+                        edge_id = f"edge:{file_id}->{other_file.relative_path}"
+                        if edge_id not in edge_id_set:
+                            source_layer_id, _ = self._detect_file_layer_and_side(file_info.relative_path)
+                            target_layer_id, _ = self._detect_file_layer_and_side(other_file.relative_path)
+
+                            edge = {
+                                "id": edge_id,
+                                "source": file_id,
+                                "target": f"file:{other_file.relative_path}",
+                                "type": "imports",
+                                "protocol": "local",
+                                "layer": f"{source_layer_id}->{target_layer_id}"
+                            }
+                            edges.append(edge)
+                            edge_id_set.add(edge_id)
+
+                            # 更新节点的调用和被调用关系
+                            if file_id in node_id_map:
+                                if f"file:{other_file.relative_path}" not in node_id_map[file_id]["calls"]:
+                                    node_id_map[file_id]["calls"].append(f"file:{other_file.relative_path}")
+                            if f"file:{other_file.relative_path}" in node_id_map:
+                                if file_id not in node_id_map[f"file:{other_file.relative_path}"]["calledBy"]:
+                                    node_id_map[f"file:{other_file.relative_path}"]["calledBy"].append(file_id)
+
+            # 类中的方法调用 -> 生成 calls 边
+            for cls in file_info.classes:
+                class_id = f"class:{file_info.relative_path}:{cls.name}"
+
+                for method in cls.methods:
+                    method_id = f"method:{file_info.relative_path}:{cls.name}:{method.name}"
+
+                    # 分析方法调用
+                    for called_func in method.calls:
+                        # 匹配同类中的其他方法
+                        for other_method in cls.methods:
+                            if other_method.name == called_func:
+                                edge_id = f"edge:{method_id}->{cls.name}:{other_method.name}"
+                                if edge_id not in edge_id_set:
+                                    edge = {
+                                        "id": edge_id,
+                                        "source": method_id,
+                                        "target": f"method:{file_info.relative_path}:{cls.name}:{other_method.name}",
+                                        "type": "calls",
+                                        "protocol": "local",
+                                        "layer": "intra-class"
+                                    }
+                                    edges.append(edge)
+                                    edge_id_set.add(edge_id)
+
+                        # 匹配其他类的方法
+                        for other_file in self.files:
+                            for other_cls in other_file.classes:
+                                for other_method in other_cls.methods:
+                                    if other_method.name == called_func:
+                                        edge_id = f"edge:{method_id}->method:{other_file.relative_path}:{other_cls.name}:{other_method.name}"
+                                        if edge_id not in edge_id_set:
+                                            edge = {
+                                                "id": edge_id,
+                                                "source": method_id,
+                                                "target": f"method:{other_file.relative_path}:{other_cls.name}:{other_method.name}",
+                                                "type": "calls",
+                                                "protocol": "local",
+                                                "layer": "inter-class"
+                                            }
+                                            edges.append(edge)
+                                            edge_id_set.add(edge_id)
+
+        # 6. 生成层级间的调用关系（基于架构模式的典型调用链）
+        layers_group = LayerDetector.group_by_layer(self.files)
+        layer_order = ["frontend-ui", "frontend-service", "frontend-store", "api", "service", "domain", "data", "middleware", "util", "config"]
+
+        # 典型的跨层级调用模式
+        layer_call_patterns = [
+            ("frontend-ui", "frontend-service"),
+            ("frontend-service", "api"),
+            ("api", "service"),
+            ("api", "middleware"),
+            ("service", "domain"),
+            ("service", "data"),
+            ("service", "util"),
+            ("domain", "data"),
+            ("data", "util"),
+            ("middleware", "service"),
+            ("middleware", "config")
+        ]
+
+        for source_layer_id, target_layer_id in layer_call_patterns:
+            if source_layer_id not in layers_group or target_layer_id not in layers_group:
+                continue
+
+            # 取前3个代表文件
+            source_files = layers_group.get(source_layer_id, [])[:3]
+            target_files = layers_group.get(target_layer_id, [])[:3]
+
+            for source_file in source_files:
+                for target_file in target_files:
+                    source_id = f"file:{source_file.relative_path}"
+                    target_id = f"file:{target_file.relative_path}"
+
+                    # 检查是否已存在相同边
+                    existing = False
+                    for e in edges:
+                        if e["source"] == source_id and e["target"] == target_id:
+                            existing = True
+                            break
+
+                    if not existing and source_id in node_id_map and target_id in node_id_map:
+                        edge = {
+                            "id": f"edge:{source_layer_id}->{target_layer_id}:{len(edges)}",
+                            "source": source_id,
+                            "target": target_id,
+                            "type": "layer-calls",
+                            "protocol": "local",
+                            "layer": f"{source_layer_id}->{target_layer_id}"
+                        }
+                        edges.append(edge)
+
+        visualization_data = {
+            "version": "2.0",
+            "project": project_info,
+            "layers": layers_def,
+            "nodes": nodes,
+            "edges": edges,
+            "stats": {
+                "totalNodes": len(nodes),
+                "totalEdges": len(edges),
+                "nodeTypes": {
+                    "module": len([n for n in nodes if n["type"] == "module"]),
+                    "file": len([n for n in nodes if n["type"] == "file"]),
+                    "class": len([n for n in nodes if n["type"] == "class"]),
+                    "function": len([n for n in nodes if n["type"] == "function"])
+                },
+                "sideStats": {
+                    "frontend": len([n for n in nodes if n.get("side") == "frontend"]),
+                    "backend": len([n for n in nodes if n.get("side") == "backend"]),
+                    "shared": len([n for n in nodes if n.get("side") == "shared"])
+                }
+            }
+        }
+
+        if output_path:
+            output_file = output_path if output_path.endswith('.json') else f"{output_path}.json"
+            Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+            with open(output_file, 'w', encoding='utf-8') as f:
+                json.dump(visualization_data, f, ensure_ascii=False, indent=2)
+            print(f"可视化 JSON v2.0 已保存到: {output_file}")
+
+        return visualization_data
+
+    def _detect_file_layer_and_side(self, file_path: str) -> Tuple[str, str]:
+        """检测文件所属层级和前后端
+
+        Returns:
+            Tuple[str, str]: (layer_id, side)
+            side: "frontend" | "backend" | "shared"
+        """
+        normalized_path = file_path.lower().replace('\\', '/')
+        segments = normalized_path.split('/')
+
+        # 检测前端文件
+        frontend_indicators = ['component', 'view', 'page', 'screen', 'ui', 'template',
+                                'assets', 'public', 'src/pages', 'src/components', 'src/views',
+                                'src/store', 'src/hooks', 'src/utils']
+        frontend_languages = ['javascript', 'typescript', 'vue', 'react', 'jsx', 'tsx', 'svelte']
+
+        # 根据路径检测前后端
+        if any(indicator in normalized_path for indicator in ['/src/pages', '/src/components', '/src/views',
+                                                              '/src/assets', '/public/', '/src/store',
+                                                              '/pages/', '/components/', '/views/']):
+            # 根据层级检测具体层
+            if any(x in segments for x in ['store', 'redux', 'vuex', 'pinia']):
+                return "frontend-store", "frontend"
+            elif any(x in segments for x in ['service', 'api', 'fetch']):
+                return "frontend-service", "frontend"
+            else:
+                return "frontend-ui", "frontend"
+
+        # 后端检测
+        backend_indicators = ['src/main/java', 'src/main/python', 'src/main/go', 'src/main/rust',
+                             'internal/', 'cmd/', 'pkg/', 'service/', 'controller/',
+                             'handler/', 'repository/', 'dao/', 'model/', 'entity/']
+        backend_languages = ['java', 'python', 'go', 'rust', 'c', 'cpp', 'csharp', 'ruby', 'php', 'scala']
+
+        # Spring/Django/Flask 等后端框架检测
+        if any(indicator in normalized_path for indicator in backend_indicators):
+            if any(x in segments for x in ['controller', 'handler', 'route', 'router', 'endpoint', 'api']):
+                return "api", "backend"
+            elif any(x in segments for x in ['service', 'usecase', 'business']):
+                return "service", "backend"
+            elif any(x in segments for x in ['domain', 'model', 'entity']):
+                return "domain", "backend"
+            elif any(x in segments for x in ['repository', 'repo', 'dao', 'dal', 'mapper']):
+                return "data", "backend"
+            elif any(x in segments for x in ['middleware', 'filter', 'interceptor', 'guard']):
+                return "middleware", "backend"
+            else:
+                return "service", "backend"
+
+        # 工具层检测（前后端共享）
+        if any(x in segments for x in ['util', 'helper', 'lib', 'common', 'shared', 'tool']):
+            return "util", "shared"
+
+        # 配置层检测
+        if any(x in segments for x in ['config', 'setting', 'settings', 'env']):
+            return "config", "shared"
+
+        # 默认根据语言判断
+        for file_info in self.files:
+            if file_info.relative_path == file_path:
+                if file_info.language in frontend_languages:
+                    return "frontend-service", "frontend"
+                else:
+                    return "service", "backend"
+
+        # 默认返回
+        return "service", "backend"
+
+    def _detect_module_layer_and_side(self, files: List[FileInfo]) -> Tuple[str, str]:
+        """检测模块的主要层级和前后端
+
+        Returns:
+            Tuple[str, str]: (layer_id, side)
+        """
+        layer_counts = {}
+        side_counts = {"frontend": 0, "backend": 0, "shared": 0}
+
+        for f in files:
+            layer_id, side = self._detect_file_layer_and_side(f.relative_path)
+            layer_counts[layer_id] = layer_counts.get(layer_id, 0) + 1
+            side_counts[side] = side_counts.get(side, 0) + 1
+
+        # 返回最多的层级和前后端
+        if layer_counts:
+            main_layer = max(layer_counts, key=layer_counts.get)
+        else:
+            main_layer = "service"
+
+        main_side = max(side_counts, key=side_counts.get) if side_counts else "backend"
+
+        return main_layer, main_side
+
+    def _get_file_module(self, file_path: str) -> str:
+        """获取文件所属的模块名"""
+        parts = file_path.split(os.sep)
+        if len(parts) > 1 and parts[0] in ['src', 'app', 'lib', 'pkg', 'internal', 'cmd']:
+            return parts[1] if len(parts) > 1 else 'root'
+        return parts[0] if parts else 'root'
+
+    def _is_import_match(self, import_str: str, target_file: FileInfo) -> bool:
+        """判断导入语句是否匹配目标文件"""
+        import_lower = import_str.lower().replace('.', '/')
+
+        # 直接匹配文件名
+        if import_lower.endswith(os.path.basename(target_file.relative_path).lower().replace('.py', '')):
+            return True
+
+        # 匹配模块路径
+        if import_lower in target_file.relative_path.lower().replace('\\', '/'):
+            return True
+
+        return False
+
+    def _get_import_layer_relation(self, source_file: FileInfo, target_file: FileInfo) -> str:
+        """获取导入的层级关系"""
+        source_layer = LayerDetector.detect_layer(source_file.relative_path).name
+        target_layer = LayerDetector.detect_layer(target_file.relative_path).name
+
+        if source_layer == target_layer:
+            return "intra-layer"
+
+        return f"{source_layer}->{target_layer}"
+
 
 def main():
     """主函数"""
@@ -1379,9 +1929,11 @@ def main():
     python code_map_generator_v2.py .
     python code_map_generator_v2.py /path/to/project --output code-map.md
     python code_map_generator_v2.py . --scope src/api
+    python code_map_generator_v2.py . --visual  # 生成可视化 JSON
 
 输出:
     生成的代码地图为 Markdown 格式，可直接作为 agent 记忆或项目规则使用。
+    --visual 参数生成 3D 可视化所需的 JSON 数据。
         """
     )
 
@@ -1389,6 +1941,7 @@ def main():
     parser.add_argument("--workspace", "-w", default=None, help="工作空间根目录路径 (用于多项目 workspace)")
     parser.add_argument("--output", "-o", default=None, help="输出文件路径 (默认: <project_root>/CODE_MAP.md)")
     parser.add_argument("--scope", "-s", default=None, help="分析范围 (子目录路径)")
+    parser.add_argument("--visual", "-v", action="store_true", help="生成 3D 可视化 JSON 数据")
 
     args = parser.parse_args()
 
@@ -1409,16 +1962,26 @@ def main():
 
     generator.scan()
 
-    output_path = args.output
-    if not output_path:
+    if args.visual:
+        # 生成可视化 JSON
         project_name = os.path.basename(args.project_root)
-        output_path = os.path.join(args.project_root, f"{project_name}-CODE_MAP.md")
+        visual_output_path = os.path.join(args.project_root, f"{project_name}-VISUAL-MAP.json")
+        generator.generate_visualization_json(visual_output_path)
+    else:
+        # 生成 Markdown 代码地图
+        output_path = args.output
+        if not output_path:
+            project_name = os.path.basename(args.project_root)
+            output_path = os.path.join(args.project_root, f"{project_name}-CODE_MAP.md")
 
-    generator.generate_markdown(output_path)
+        generator.generate_markdown(output_path)
 
     print("=" * 60)
     print("代码地图生成完成!")
-    print(f"输出文件: {output_path}")
+    if args.visual:
+        print(f"可视化 JSON: {args.project_root}/{os.path.basename(args.project_root)}-VISUAL-MAP.json")
+    else:
+        print(f"Markdown: {args.output or os.path.join(args.project_root, f'{os.path.basename(args.project_root)}-CODE_MAP.md')}")
     print("=" * 60)
 
     return 0

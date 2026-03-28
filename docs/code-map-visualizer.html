@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>代码地图可视化</title>
+    <title>代码地图 3D 可视化</title>
     <style>
         :root {
             --bg-primary: #0a0e14;
             --bg-secondary: #1a1f2e;
             --bg-tertiary: #252b3d;
+            --bg-card: rgba(26, 31, 46, 0.95);
             --text-primary: #e6edf3;
             --text-secondary: #8b949e;
             --accent-blue: #58a6ff;
@@ -16,9 +17,8 @@
             --accent-purple: #a371f7;
             --accent-orange: #d97706;
             --accent-red: #f85149;
-            --edge-default: #30363d;
-            --edge-active: #58a6ff;
-            --panel-bg: rgba(26, 31, 46, 0.95);
+            --accent-cyan: #39c5cf;
+            --border-color: #30363d;
             --panel-border: #252b3d;
         }
 
@@ -26,19 +26,20 @@
             --bg-primary: #f0f4f8;
             --bg-secondary: #ffffff;
             --bg-tertiary: #e2e8f0;
+            --bg-card: rgba(255, 255, 255, 0.95);
             --text-primary: #1a202c;
             --text-secondary: #4a5568;
-            --edge-default: #a0aec0;
-            --edge-active: #3182ce;
-            --panel-bg: rgba(255, 255, 255, 0.95);
+            --accent-blue: #3182ce;
+            --accent-green: #38a169;
+            --accent-purple: #805ad5;
+            --accent-orange: #dd6b20;
+            --accent-red: #e53e3e;
+            --accent-cyan: #00b5d8;
+            --border-color: #cbd5e0;
             --panel-border: #e2e8f0;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -58,99 +59,170 @@
             z-index: 1;
         }
 
-        .control-panel {
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .header-panel {
             position: fixed;
             top: 20px;
             left: 20px;
             z-index: 100;
-            background: var(--panel-bg);
+            background: var(--bg-card);
             border: 1px solid var(--panel-border);
             border-radius: 12px;
             padding: 16px;
-            min-width: 280px;
+            min-width: 300px;
             backdrop-filter: blur(10px);
-            transition: background 0.3s, border-color 0.3s;
         }
 
-        .panel-title {
-            font-size: 14px;
+        .project-title {
+            font-size: 18px;
             font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .project-meta {
+            font-size: 12px;
             color: var(--text-secondary);
             margin-bottom: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        .search-box {
-            position: relative;
-            margin-bottom: 16px;
+        .layer-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
-        .search-box input {
-            width: 100%;
-            padding: 10px 14px;
-            padding-left: 36px;
-            background: var(--bg-primary);
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .layer-item:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .layer-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .layer-color.module { background: var(--accent-blue); }
+        .layer-color.file { background: var(--accent-purple); }
+        .layer-color.class { background: var(--accent-green); }
+        .layer-color.function { background: var(--accent-orange); }
+
+        .stats-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: var(--bg-card);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 16px;
+            min-width: 180px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .stat-row:last-child { border-bottom: none; }
+
+        .stat-label { font-size: 12px; color: var(--text-secondary); }
+        .stat-value { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+
+        .control-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 8px;
+        }
+
+        .toolbar-btn {
+            padding: 10px 16px;
+            background: var(--bg-card);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             color: var(--text-primary);
-            font-size: 13px;
-            outline: none;
-            transition: border-color 0.2s, background 0.3s, color 0.3s;
-        }
-
-        .search-box input:focus {
-            border-color: var(--accent-blue);
-        }
-
-        .search-box::before {
-            content: "🔍";
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 14px;
-            opacity: 0.6;
-        }
-
-        .legend {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .legend-item {
+            font-size: 12px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 10px;
-            font-size: 12px;
-            color: var(--text-secondary);
+            gap: 6px;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
         }
 
-        .legend-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            transition: box-shadow 0.3s;
+        .toolbar-btn:hover {
+            border-color: var(--accent-blue);
+            background: rgba(88, 166, 255, 0.1);
         }
 
-        .legend-dot.module { background: var(--accent-blue); box-shadow: 0 0 8px var(--accent-blue); }
-        .legend-dot.class { background: var(--accent-purple); box-shadow: 0 0 8px var(--accent-purple); }
-        .legend-dot.function { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
-        .legend-dot.call { background: var(--accent-orange); }
+        .toolbar-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: #000;
+        }
 
         .theme-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid var(--panel-border);
-        }
-
-        .theme-toggle-label {
-            font-size: 12px;
-            color: var(--text-secondary);
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
         }
 
         .theme-switch {
@@ -180,111 +252,55 @@
             background: var(--accent-orange);
         }
 
-        .stats-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 100;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            padding: 16px;
-            min-width: 200px;
-            backdrop-filter: blur(10px);
-            transition: background 0.3s, border-color 0.3s;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid var(--panel-border);
-            transition: border-color 0.3s;
-        }
-
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-secondary);
-        }
-
-        .stat-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
         .detail-panel {
             position: fixed;
-            bottom: 20px;
-            left: 20px;
+            bottom: 80px;
+            right: 80px;
             z-index: 100;
-            background: var(--panel-bg);
+            background: var(--bg-card);
             border: 1px solid var(--panel-border);
             border-radius: 12px;
             padding: 20px;
-            min-width: 360px;
-            max-width: 480px;
-            max-height: 400px;
+            min-width: 320px;
+            max-width: 400px;
+            max-height: 350px;
             overflow-y: auto;
             backdrop-filter: blur(10px);
             display: none;
-            transition: background 0.3s, border-color 0.3s;
         }
 
-        .detail-panel.active {
-            display: block;
-        }
+        .detail-panel.active { display: block; }
 
         .detail-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
             padding-bottom: 12px;
             border-bottom: 1px solid var(--panel-border);
-            transition: border-color 0.3s;
         }
 
-        .detail-type {
+        .detail-type-badge {
             padding: 4px 10px;
             border-radius: 6px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
         }
 
-        .detail-type.module { background: var(--accent-blue); color: #000; }
-        .detail-type.class { background: var(--accent-purple); color: #000; }
-        .detail-type.function { background: var(--accent-green); color: #000; }
+        .detail-type-badge.module { background: var(--accent-blue); color: #000; }
+        .detail-type-badge.file { background: var(--accent-purple); color: #000; }
+        .detail-type-badge.class { background: var(--accent-green); color: #000; }
+        .detail-type-badge.function { background: var(--accent-orange); color: #000; }
 
-        .detail-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .detail-path {
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 12px;
-            word-break: break-all;
-        }
-
-        .detail-section {
-            margin-bottom: 12px;
-        }
+        .detail-name { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .detail-path { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; word-break: break-all; }
 
         .detail-section-title {
             font-size: 11px;
             font-weight: 600;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
             margin-bottom: 8px;
         }
 
@@ -302,16 +318,12 @@
             font-size: 11px;
             color: var(--text-secondary);
             cursor: pointer;
-            transition: all 0.2s, background 0.3s, border-color 0.3s, color 0.3s;
+            transition: all 0.2s;
         }
 
-        .call-tag:hover {
-            border-color: var(--accent-blue);
-            color: var(--accent-blue);
-        }
-
-        .call-tag.called { border-color: var(--accent-green); color: var(--accent-green); }
+        .call-tag:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
         .call-tag.calls { border-color: var(--accent-orange); color: var(--accent-orange); }
+        .call-tag.called { border-color: var(--accent-green); color: var(--accent-green); }
 
         .close-btn {
             position: absolute;
@@ -324,155 +336,15 @@
             border-radius: 6px;
             color: var(--text-secondary);
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: all 0.2s, background 0.3s;
-        }
-
-        .close-btn:hover {
-            background: var(--bg-tertiary);
-            color: var(--text-primary);
-        }
-
-        .toolbar {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 100;
-            display: flex;
-            gap: 8px;
-        }
-
-        .toolbar-btn {
-            padding: 10px 16px;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 8px;
-            color: var(--text-primary);
-            font-size: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s, background 0.3s, border-color 0.3s;
-            backdrop-filter: blur(10px);
-        }
-
-        .toolbar-btn:hover {
-            border-color: var(--accent-blue);
-            background: rgba(88, 166, 255, 0.1);
-        }
-
-        .toolbar-btn.active {
-            background: var(--accent-blue);
-            border-color: var(--accent-blue);
-            color: #000;
-        }
-
-        .call-chain-panel {
-            position: fixed;
-            left: 320px;
-            top: 20px;
-            z-index: 100;
-            background: var(--panel-bg);
-            border: 1px solid var(--panel-border);
-            border-radius: 12px;
-            padding: 16px;
-            min-width: 300px;
-            max-height: calc(100vh - 100px);
-            overflow-y: auto;
-            backdrop-filter: blur(10px);
-            display: none;
-            transition: background 0.3s, border-color 0.3s;
-        }
-
-        .call-chain-panel.active {
-            display: block;
-        }
-
-        .call-chain-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 12px;
-        }
-
-        .call-chain-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid var(--panel-border);
-            font-size: 12px;
-            color: var(--text-secondary);
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-
-        .call-chain-item:hover {
-            color: var(--accent-blue);
-        }
-
-        .call-chain-item:last-child {
-            border-bottom: none;
-        }
-
-        .call-chain-node {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 500;
-        }
-
-        .call-chain-arrow {
-            margin: 0 10px;
-            color: var(--accent-orange);
-        }
-
-        .loading-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--bg-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: opacity 0.5s, background 0.3s;
-        }
-
-        .loading-overlay.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 3px solid var(--bg-tertiary);
-            border-top-color: var(--accent-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        .loading-text {
-            margin-top: 20px;
             font-size: 14px;
-            color: var(--text-secondary);
         }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+        .close-btn:hover { background: var(--accent-red); color: #fff; }
 
         .tooltip {
             position: fixed;
             padding: 8px 14px;
-            background: var(--panel-bg);
+            background: var(--bg-card);
             border: 1px solid var(--panel-border);
             border-radius: 8px;
             font-size: 12px;
@@ -480,44 +352,61 @@
             pointer-events: none;
             z-index: 200;
             opacity: 0;
-            transition: opacity 0.2s, background 0.3s, border-color 0.3s;
-            backdrop-filter: blur(10px);
-            max-width: 200px;
+            transition: opacity 0.2s;
+            max-width: 250px;
         }
 
-        .tooltip.visible {
-            opacity: 1;
-        }
+        .tooltip.visible { opacity: 1; }
 
-        .view-mode-indicator {
+        .load-panel {
             position: fixed;
-            bottom: 80px;
+            top: 50%;
             left: 50%;
-            transform: translateX(-50%);
-            padding: 8px 16px;
-            background: var(--panel-bg);
+            transform: translate(-50%, -50%);
+            z-index: 500;
+            background: var(--bg-card);
             border: 1px solid var(--panel-border);
-            border-radius: 20px;
-            font-size: 12px;
-            color: var(--text-secondary);
-            z-index: 100;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
             backdrop-filter: blur(10px);
-            transition: background 0.3s, border-color 0.3s;
         }
 
-        .flow-indicator {
-            position: fixed;
-            bottom: 130px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 6px 12px;
-            background: var(--accent-orange);
-            border-radius: 12px;
-            font-size: 11px;
+        .load-panel h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .load-panel input {
+            width: 300px;
+            padding: 10px 14px;
+            background: var(--bg-primary);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 13px;
+            margin-bottom: 16px;
+        }
+
+        .load-panel input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .load-panel button {
+            padding: 10px 24px;
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 8px;
             color: #000;
-            font-weight: 600;
-            z-index: 100;
-            opacity: 0.8;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .load-panel button:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -526,67 +415,102 @@
 
     <div class="loading-overlay" id="loading">
         <div class="loading-spinner"></div>
-        <div class="loading-text">正在构建代码地图...</div>
+        <div class="loading-text">正在加载代码地图...</div>
     </div>
 
-    <div class="control-panel">
-        <div class="panel-title">代码地图导航</div>
-        <div class="search-box">
-            <input type="text" id="search-input" placeholder="搜索函数、类、模块...">
-        </div>
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-dot module"></div>
-                <span>模块 (Module)</span>
+    <div class="load-panel" id="load-panel">
+        <h3>加载代码地图 JSON</h3>
+        <input type="text" id="json-path" placeholder="输入 JSON 文件路径，或留空使用示例数据">
+        <br>
+        <button onclick="loadJSON()">加载</button>
+    </div>
+
+    <div class="header-panel" id="header-panel" style="display: none;">
+        <div class="project-title" id="project-title">项目名称</div>
+        <div class="project-meta" id="project-meta"></div>
+        <div class="layer-legend" id="layer-legend">
+            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">前端层</div>
+            <div class="layer-item">
+                <div class="layer-color" style="background: var(--accent-blue);"></div>
+                <span>前端UI</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-dot class"></div>
-                <span>类 (Class)</span>
+            <div class="layer-item">
+                <div class="layer-color" style="background: var(--accent-purple);"></div>
+                <span>前端服务</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-dot function"></div>
-                <span>函数 (Function)</span>
+            <div class="layer-item">
+                <div class="layer-color" style="background: var(--accent-cyan);"></div>
+                <span>前端状态</span>
             </div>
-            <div class="legend-item">
-                <div class="legend-dot call"></div>
-                <span>调用关系</span>
+            <div style="font-size: 11px; color: var(--text-secondary); margin: 8px 0 6px;">后端层</div>
+            <div class="layer-item">
+                <div class="layer-color" style="background: var(--accent-red);"></div>
+                <span>API层</span>
             </div>
-        </div>
-        <div class="theme-toggle">
-            <span class="theme-toggle-label">深色/浅色</span>
-            <div class="theme-switch" onclick="toggleTheme()"></div>
+            <div class="layer-item">
+                <div class="layer-color" style="background: var(--accent-green);"></div>
+                <span>业务逻辑</span>
+            </div>
+            <div class="layer-item">
+                <div class="layer-color" style="background: var(--accent-orange);"></div>
+                <span>领域层</span>
+            </div>
+            <div style="font-size: 11px; color: var(--text-secondary); margin: 8px 0 6px;">共享层</div>
+            <div class="layer-item">
+                <div class="layer-color" style="background: var(--text-secondary);"></div>
+                <span>工具/配置</span>
+            </div>
         </div>
     </div>
 
-    <div class="stats-panel">
-        <div class="panel-title">统计信息</div>
+    <div class="stats-panel" id="stats-panel" style="display: none;">
+        <div class="panel-title" style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 12px;">统计信息</div>
         <div class="stat-row">
-            <span class="stat-label">模块数量</span>
-            <span class="stat-value" id="stat-modules">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">类数量</span>
-            <span class="stat-value" id="stat-classes">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="stat-label">函数数量</span>
-            <span class="stat-value" id="stat-functions">0</span>
+            <span class="stat-label">总节点</span>
+            <span class="stat-value" id="stat-nodes">0</span>
         </div>
         <div class="stat-row">
             <span class="stat-label">调用关系</span>
-            <span class="stat-value" id="stat-calls">0</span>
+            <span class="stat-value" id="stat-edges">0</span>
+        </div>
+        <div class="stat-row" id="stat-frontend-row" style="display:none;">
+            <span class="stat-label">前端</span>
+            <span class="stat-value" id="stat-frontend">0</span>
+        </div>
+        <div class="stat-row" id="stat-backend-row" style="display:none;">
+            <span class="stat-label">后端</span>
+            <span class="stat-value" id="stat-backend">0</span>
+        </div>
+        <div class="stat-row" id="stat-shared-row" style="display:none;">
+            <span class="stat-label">共享</span>
+            <span class="stat-value" id="stat-shared">0</span>
         </div>
     </div>
 
+    <div class="control-panel" id="control-panel" style="display: none;">
+        <button class="toolbar-btn" onclick="resetView()">🔄 重置视图</button>
+        <button class="toolbar-btn active" id="btn-expand" onclick="toggleExpand()">📂 展开层级</button>
+        <button class="toolbar-btn active" id="btn-flow" onclick="toggleFlow()">✨ 流动效果</button>
+        <button class="toolbar-btn" id="btn-hierarchy" onclick="toggleHierarchy()">🏗️ 分层布局</button>
+    </div>
+
+    <div class="theme-toggle" id="theme-toggle" style="display: none;">
+        <div class="theme-switch" onclick="toggleTheme()"></div>
+    </div>
+
     <div class="detail-panel" id="detail-panel">
-        <button class="close-btn" onclick="closeDetailPanel()">✕</button>
+        <button class="close-btn" onclick="closeDetail()">✕</button>
         <div class="detail-header">
-            <span class="detail-type" id="detail-type">MODULE</span>
+            <span class="detail-type-badge" id="detail-type">MODULE</span>
             <span class="detail-name" id="detail-name">-</span>
         </div>
         <div class="detail-path" id="detail-path">-</div>
+        <div class="detail-section" id="detail-metrics-section">
+            <div class="detail-section-title">指标</div>
+            <div id="detail-metrics"></div>
+        </div>
         <div class="detail-section" id="detail-calls-section">
-            <div class="detail-section-title">调用关系</div>
+            <div class="detail-section-title">调用</div>
             <div class="detail-calls" id="detail-calls"></div>
         </div>
         <div class="detail-section" id="detail-called-section">
@@ -595,178 +519,145 @@
         </div>
     </div>
 
-    <div class="call-chain-panel" id="call-chain-panel">
-        <div class="call-chain-title">调用链路</div>
-        <div id="call-chain-list"></div>
-    </div>
-
-    <div class="toolbar">
-        <button class="toolbar-btn" id="btn-reset" onclick="resetView()">
-            🔄 重置视图
-        </button>
-        <button class="toolbar-btn" id="btn-expand" onclick="expandAll()">
-            📂 展开全部
-        </button>
-        <button class="toolbar-btn" id="btn-collapse" onclick="collapseAll()">
-            📁 折叠全部
-        </button>
-        <button class="toolbar-btn" id="btn-chain" onclick="toggleCallChain()">
-            🔗 调用链路
-        </button>
-        <button class="toolbar-btn active" id="btn-animate" onclick="toggleAnimation()">
-            ✨ 流动效果
-        </button>
-    </div>
-
-    <div class="flow-indicator" id="flow-indicator">数据流向</div>
-
     <div class="tooltip" id="tooltip"></div>
-
-    <div class="view-mode-indicator" id="view-mode">3D 代码地图视图 - 拖拽旋转 | 滚轮缩放</div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script>
-        // 代码地图数据 - 可从外部 JSON 加载
-        const CODE_MAP_DATA = {
-            "project_name": "示例项目",
-            "workspace_name": "/path/to/workspace",
-            "modules": [
-                {
-                    "name": "api",
-                    "file_count": 12,
-                    "children": ["controller", "handler", "route"]
-                },
-                {
-                    "name": "service",
-                    "file_count": 8,
-                    "children": ["business", "logic"]
-                },
-                {
-                    "name": "data",
-                    "file_count": 15,
-                    "children": ["repository", "model", "dao"]
-                },
-                {
-                    "name": "util",
-                    "file_count": 6,
-                    "children": ["helper", "common"]
-                }
-            ],
-            "classes": [
-                { "name": "UserController", "module": "api", "file_path": "api/controller/UserController.java" },
-                { "name": "OrderController", "module": "api", "file_path": "api/controller/OrderController.java" },
-                { "name": "UserService", "module": "service", "file_path": "service/UserService.java" },
-                { "name": "OrderService", "module": "service", "file_path": "service/OrderService.java" },
-                { "name": "ProductRepository", "module": "data", "file_path": "data/repository/ProductRepository.java" },
-                { "name": "UserRepository", "module": "data", "file_path": "data/repository/UserRepository.java" },
-                { "name": "ValidationHelper", "module": "util", "file_path": "util/ValidationHelper.java" },
-                { "name": "DateUtils", "module": "util", "file_path": "util/DateUtils.java" }
-            ],
-            "functions": [
-                { "name": "createUser", "class": "UserController", "file_path": "api/controller/UserController.java", "calls": ["UserService.createUser", "ValidationHelper.validate"] },
-                { "name": "getUserById", "class": "UserController", "file_path": "api/controller/UserController.java", "calls": ["UserRepository.findById"] },
-                { "name": "createOrder", "class": "OrderController", "file_path": "api/controller/OrderController.java", "calls": ["OrderService.createOrder", "ValidationHelper.validate"] },
-                { "name": "createUser", "class": "UserService", "file_path": "service/UserService.java", "calls": ["UserRepository.save", "DateUtils.now"] },
-                { "name": "getUserOrders", "class": "UserService", "file_path": "service/UserService.java", "calls": ["OrderRepository.findByUserId"] },
-                { "name": "createOrder", "class": "OrderService", "file_path": "service/OrderService.java", "calls": ["ProductRepository.findById", "OrderRepository.save"] },
-                { "name": "findById", "class": "UserRepository", "file_path": "data/repository/UserRepository.java", "calls": [] },
-                { "name": "save", "class": "UserRepository", "file_path": "data/repository/UserRepository.java", "calls": [] },
-                { "name": "findByUserId", "class": "OrderRepository", "file_path": "data/repository/OrderRepository.java", "calls": [] },
-                { "name": "findById", "class": "ProductRepository", "file_path": "data/repository/ProductRepository.java", "calls": [] },
-                { "name": "validate", "class": "ValidationHelper", "file_path": "util/ValidationHelper.java", "calls": [] },
-                { "name": "now", "class": "DateUtils", "file_path": "util/DateUtils.java", "calls": [] }
-            ],
-            "callChains": [
-                ["UserController.createUser", "UserService.createUser", "UserRepository.save"],
-                ["UserController.getUserById", "UserRepository.findById"],
-                ["OrderController.createOrder", "OrderService.createOrder", "ProductRepository.findById", "OrderRepository.save"],
-                ["UserService.getUserOrders", "OrderRepository.findByUserId"]
-            ]
-        };
-
-        // Three.js 全局变量
+        // 全局变量
         let scene, camera, renderer, controls;
-        let nodes = new Map();
-        let edges = [];
-        let flowParticles = [];
         let nodeGroup, edgeGroup, particleGroup;
+        let nodesMap = new Map();
+        let edgesList = [];
+        let flowParticles = [];
         let raycaster, mouse;
-        let selectedNode = null;
         let hoveredNode = null;
-        let animationEnabled = true;
-        let callChainVisible = false;
-        let animationFrame = 0;
+        let selectedNode = null;
         let currentTheme = 'dark';
+        let animationEnabled = true;
+        let hierarchyLayout = true;
+        let animationFrame = 0;
 
-        // 颜色配置 - 深色主题
-        const COLORS_DARK = {
+        // 颜色配置
+        const COLORS = {
+            frontend: 0x58a6ff,
+            backend: 0xf85149,
+            shared: 0x8b949e,
             module: 0x58a6ff,
-            class: 0xa371f7,
-            function: 0x3fb950,
-            edgeDefault: 0x30363d,
+            file: 0xa371f7,
+            class: 0x3fb950,
+            function: 0xd97706,
+            edge: 0x30363d,
             edgeActive: 0x58a6ff,
             edgeCall: 0xd97706,
-            background: 0x0a0e14,
-            ambient: 0xffffff
+            background: 0x0a0e14
         };
 
-        // 颜色配置 - 浅色主题
         const COLORS_LIGHT = {
+            frontend: 0x3182ce,
+            backend: 0xe53e3e,
+            shared: 0x718096,
             module: 0x3182ce,
-            class: 0x805ad5,
-            function: 0x38a169,
-            edgeDefault: 0xa0aec0,
+            file: 0x805ad5,
+            class: 0x38a169,
+            function: 0xdd6b20,
+            edge: 0xa0aec0,
             edgeActive: 0x3182ce,
             edgeCall: 0xdd6b20,
-            background: 0xf0f4f8,
-            ambient: 0xffffff
+            background: 0xf0f4f8
         };
 
-        let COLORS = COLORS_DARK;
+        // 示例数据 (JSON v2.0 格式)
+        const SAMPLE_DATA = {
+            "version": "2.0",
+            "project": {
+                "name": "示例项目",
+                "workspace": "/path/to/workspace",
+                "totalFiles": 25,
+                "totalLines": 15200,
+                "languages": ["Python", "JavaScript", "TypeScript"],
+                "frameworks": ["FastAPI", "React", "Spring Boot"],
+                "frontend": {
+                    "name": "前端",
+                    "languages": ["JavaScript", "TypeScript"],
+                    "layers": ["frontend-ui", "frontend-service", "frontend-store"]
+                },
+                "backend": {
+                    "name": "后端",
+                    "languages": ["Python"],
+                    "layers": ["api", "service", "domain", "data", "middleware"]
+                }
+            },
+            "layers": [
+                {"id": "frontend-ui", "name": "前端UI层", "side": "frontend", "color": 0x58a6ff},
+                {"id": "frontend-service", "name": "前端服务层", "side": "frontend", "color": 0xa371f7},
+                {"id": "frontend-store", "name": "前端状态层", "side": "frontend", "color": 0x39c5cf},
+                {"id": "api", "name": "API层", "side": "backend", "color": 0xf85149},
+                {"id": "service", "name": "业务逻辑层", "side": "backend", "color": 0x3fb950},
+                {"id": "domain", "name": "领域层", "side": "backend", "color": 0xd97706},
+                {"id": "data", "name": "数据访问层", "side": "backend", "color": 0xdb61a2},
+                {"id": "middleware", "name": "中间件层", "side": "backend", "color": 0xff7b72},
+                {"id": "util", "name": "工具层", "side": "shared", "color": 0x8b949e},
+                {"id": "config", "name": "配置层", "side": "shared", "color": 0xe3b341}
+            ],
+            "nodes": [
+                // 模块节点
+                {"id": "module:frontend", "type": "module", "name": "frontend", "fullName": "frontend (5 文件)", "layerId": "frontend-ui", "side": "frontend", "filePath": "", "language": "TypeScript", "size": 4, "calls": [], "calledBy": []},
+                {"id": "module:backend", "type": "module", "name": "backend", "fullName": "backend (15 文件)", "layerId": "service", "side": "backend", "filePath": "", "language": "Python", "size": 5, "calls": [], "calledBy": []},
 
-        // 主题切换
-        function toggleTheme() {
-            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            document.body.setAttribute('data-theme', currentTheme === 'light' ? 'light' : '');
-            COLORS = currentTheme === 'dark' ? COLORS_DARK : COLORS_LIGHT;
-            updateThemeColors();
-        }
+                // 前端文件节点
+                {"id": "file:frontend/src/App.tsx", "type": "file", "name": "App.tsx", "fullName": "frontend/src/App.tsx", "layerId": "frontend-ui", "side": "frontend", "filePath": "frontend/src/App.tsx", "language": "TypeScript", "size": 3, "calls": ["file:frontend/src/pages/HomePage.tsx", "file:frontend/src/services/api.ts"], "calledBy": [], "parentId": "module:frontend"},
+                {"id": "file:frontend/src/pages/HomePage.tsx", "type": "file", "name": "HomePage.tsx", "fullName": "frontend/src/pages/HomePage.tsx", "layerId": "frontend-ui", "side": "frontend", "filePath": "frontend/src/pages/HomePage.tsx", "language": "TypeScript", "size": 2, "calls": ["file:frontend/src/services/api.ts"], "calledBy": [], "parentId": "module:frontend"},
+                {"id": "file:frontend/src/services/api.ts", "type": "file", "name": "api.ts", "fullName": "frontend/src/services/api.ts", "layerId": "frontend-service", "side": "frontend", "filePath": "frontend/src/services/api.ts", "language": "TypeScript", "size": 2, "calls": [], "calledBy": [], "parentId": "module:frontend"},
+                {"id": "file:frontend/src/store/userStore.ts", "type": "file", "name": "userStore.ts", "fullName": "frontend/src/store/userStore.ts", "layerId": "frontend-store", "side": "frontend", "filePath": "frontend/src/store/userStore.ts", "language": "TypeScript", "size": 2, "calls": [], "calledBy": [], "parentId": "module:frontend"},
 
-        function updateThemeColors() {
-            scene.background = new THREE.Color(COLORS.background);
-            scene.fog = new THREE.Fog(COLORS.background, 50, 200);
+                // 后端文件节点
+                {"id": "file:backend/api/main.py", "type": "file", "name": "main.py", "fullName": "backend/api/main.py", "layerId": "api", "side": "backend", "filePath": "backend/api/main.py", "language": "Python", "size": 3, "calls": ["file:backend/api/routes.py", "file:backend/service/user_service.py"], "calledBy": [], "parentId": "module:backend"},
+                {"id": "file:backend/api/routes.py", "type": "file", "name": "routes.py", "fullName": "backend/api/routes.py", "layerId": "api", "side": "backend", "filePath": "backend/api/routes.py", "language": "Python", "size": 2, "calls": ["file:backend/service/user_service.py"], "calledBy": [], "parentId": "module:backend"},
+                {"id": "file:backend/service/user_service.py", "type": "file", "name": "user_service.py", "fullName": "backend/service/user_service.py", "layerId": "service", "side": "backend", "filePath": "backend/service/user_service.py", "language": "Python", "size": 3, "calls": ["file:backend/domain/user_model.py", "file:backend/data/user_repository.py"], "calledBy": [], "parentId": "module:backend"},
+                {"id": "file:backend/domain/user_model.py", "type": "file", "name": "user_model.py", "fullName": "backend/domain/user_model.py", "layerId": "domain", "side": "backend", "filePath": "backend/domain/user_model.py", "language": "Python", "size": 2, "calls": [], "calledBy": [], "parentId": "module:backend"},
+                {"id": "file:backend/data/user_repository.py", "type": "file", "name": "user_repository.py", "fullName": "backend/data/user_repository.py", "layerId": "data", "side": "backend", "filePath": "backend/data/user_repository.py", "language": "Python", "size": 2, "calls": [], "calledBy": [], "parentId": "module:backend"},
+                {"id": "file:backend/middleware/auth.py", "type": "file", "name": "auth.py", "fullName": "backend/middleware/auth.py", "layerId": "middleware", "side": "backend", "filePath": "backend/middleware/auth.py", "language": "Python", "size": 2, "calls": [], "calledBy": [], "parentId": "module:backend"},
 
-            nodes.forEach((group) => {
-                const type = group.userData.type;
-                let color = COLORS.module;
-                if (type === 'class') color = COLORS.class;
-                else if (type === 'function') color = COLORS.function;
+                // 后端类节点
+                {"id": "class:backend/service/user_service.py:UserService", "type": "class", "name": "UserService", "fullName": "UserService (4 方法)", "layerId": "service", "side": "backend", "filePath": "backend/service/user_service.py", "language": "Python", "size": 2, "calls": ["class:backend/data/user_repository.py:UserRepository"], "calledBy": [], "parentId": "file:backend/service/user_service.py"},
+                {"id": "class:backend/data/user_repository.py:UserRepository", "type": "class", "name": "UserRepository", "fullName": "UserRepository (3 方法)", "layerId": "data", "side": "backend", "filePath": "backend/data/user_repository.py", "language": "Python", "size": 2, "calls": [], "calledBy": [], "parentId": "file:backend/data/user_repository.py"},
 
-                group.children.forEach((child) => {
-                    if (child.material) {
-                        if (Array.isArray(child.material)) {
-                            child.material.forEach((mat) => {
-                                if (mat.color) mat.color.setHex(color);
-                                if (mat.emissive) mat.emissive.setHex(color);
-                            });
-                        } else {
-                            if (child.material.color) child.material.color.setHex(color);
-                            if (child.material.emissive) child.material.emissive.setHex(color);
-                        }
-                    }
-                });
-            });
+                // 后端方法节点
+                {"id": "method:backend/service/user_service.py:UserService:createUser", "type": "function", "name": "createUser", "fullName": "UserService.createUser", "layerId": "service", "side": "backend", "filePath": "backend/service/user_service.py", "language": "Python", "size": 1, "calls": ["method:backend/data/user_repository.py:UserRepository:save"], "calledBy": [], "parentId": "class:backend/service/user_service.py:UserService"},
+                {"id": "method:backend/service/user_service.py:UserService:getUserById", "type": "function", "name": "getUserById", "fullName": "UserService.getUserById", "layerId": "service", "side": "backend", "filePath": "backend/service/user_service.py", "language": "Python", "size": 1, "calls": [], "calledBy": [], "parentId": "class:backend/service/user_service.py:UserService"},
+                {"id": "method:backend/data/user_repository.py:UserRepository:save", "type": "function", "name": "save", "fullName": "UserRepository.save", "layerId": "data", "side": "backend", "filePath": "backend/data/user_repository.py", "language": "Python", "size": 1, "calls": [], "calledBy": [], "parentId": "class:backend/data/user_repository.py:UserRepository"}
+            ],
+            "edges": [
+                // 前端到前端
+                {"id": "e1", "source": "file:frontend/src/App.tsx", "target": "file:frontend/src/pages/HomePage.tsx", "type": "calls", "protocol": "local", "layer": "frontend-ui->frontend-ui"},
+                {"id": "e2", "source": "file:frontend/src/App.tsx", "target": "file:frontend/src/services/api.ts", "type": "calls", "protocol": "local", "layer": "frontend-ui->frontend-service"},
+                {"id": "e3", "source": "file:frontend/src/pages/HomePage.tsx", "target": "file:frontend/src/services/api.ts", "type": "calls", "protocol": "local", "layer": "frontend-ui->frontend-service"},
 
-            edges.forEach((edge) => {
-                const isCallChain = edge.userData.isCallChain;
-                edge.material.color.setHex(isCallChain ? COLORS.edgeCall : COLORS.edgeDefault);
-            });
+                // 前端调用后端 API
+                {"id": "e4", "source": "file:frontend/src/services/api.ts", "target": "file:backend/api/main.py", "type": "http", "protocol": "http", "layer": "frontend-service->api"},
 
-            flowParticles.forEach((particle) => {
-                particle.material.color.setHex(COLORS.edgeCall);
-            });
-        }
+                // 后端内部调用
+                {"id": "e5", "source": "file:backend/api/main.py", "target": "file:backend/api/routes.py", "type": "calls", "protocol": "local", "layer": "api->api"},
+                {"id": "e6", "source": "file:backend/api/main.py", "target": "file:backend/service/user_service.py", "type": "calls", "protocol": "local", "layer": "api->service"},
+                {"id": "e7", "source": "file:backend/api/routes.py", "target": "file:backend/service/user_service.py", "type": "calls", "protocol": "local", "layer": "api->service"},
+                {"id": "e8", "source": "file:backend/service/user_service.py", "target": "file:backend/domain/user_model.py", "type": "calls", "protocol": "local", "layer": "service->domain"},
+                {"id": "e9", "source": "file:backend/service/user_service.py", "target": "file:backend/data/user_repository.py", "type": "calls", "protocol": "local", "layer": "service->data"},
+
+                // 类间调用
+                {"id": "e10", "source": "class:backend/service/user_service.py:UserService", "target": "class:backend/data/user_repository.py:UserRepository", "type": "calls", "protocol": "local", "layer": "service->data"},
+                {"id": "e11", "source": "method:backend/service/user_service.py:UserService:createUser", "target": "method:backend/data/user_repository.py:UserRepository:save", "type": "calls", "protocol": "local", "layer": "intra-layer"},
+
+                // 中间件调用
+                {"id": "e12", "source": "file:backend/api/main.py", "target": "file:backend/middleware/auth.py", "type": "calls", "protocol": "local", "layer": "api->middleware"}
+            ],
+            "stats": {
+                "totalNodes": 18,
+                "totalEdges": 12,
+                "nodeTypes": {"module": 2, "file": 12, "class": 2, "function": 3},
+                "sideStats": {"frontend": 6, "backend": 10, "shared": 2}
+            }
+        };
 
         // 初始化场景
         function initScene() {
@@ -774,10 +665,10 @@
 
             scene = new THREE.Scene();
             scene.background = new THREE.Color(COLORS.background);
-            scene.fog = new THREE.Fog(COLORS.background, 50, 200);
+            scene.fog = new THREE.Fog(COLORS.background, 80, 300);
 
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 30, 60);
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+            camera.position.set(0, 40, 80);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
@@ -788,25 +679,24 @@
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.minDistance = 20;
-            controls.maxDistance = 150;
+            controls.maxDistance = 300;
 
             raycaster = new THREE.Raycaster();
-            raycaster.params.Points.threshold = 2;
             mouse = new THREE.Vector2();
 
-            // 添加光源
-            const ambientLight = new THREE.AmbientLight(COLORS.ambient, 0.4);
+            // 光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
             scene.add(ambientLight);
 
             const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
             directionalLight.position.set(50, 50, 50);
             scene.add(directionalLight);
 
-            const pointLight = new THREE.PointLight(COLORS.module, 0.5, 100);
-            pointLight.position.set(-30, 30, -30);
+            const pointLight = new THREE.PointLight(0x58a6ff, 0.5, 150);
+            pointLight.position.set(-50, 30, -30);
             scene.add(pointLight);
 
-            // 创建节点和边的组
+            // 组
             nodeGroup = new THREE.Group();
             edgeGroup = new THREE.Group();
             particleGroup = new THREE.Group();
@@ -814,796 +704,589 @@
             scene.add(edgeGroup);
             scene.add(particleGroup);
 
-            // 添加地面网格
-            const gridHelper = new THREE.GridHelper(100, 50, 0x1a1f2e, 0x1a1f2e);
-            gridHelper.position.y = -15;
+            // 星空背景
+            addStars();
+
+            // 地面网格
+            const gridHelper = new THREE.GridHelper(200, 50, 0x1a1f2e, 0x1a1f2e);
+            gridHelper.position.y = -10;
             scene.add(gridHelper);
 
-            // 添加星空背景
-            addStars();
+            window.addEventListener('resize', onWindowResize);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('click', onClick);
         }
 
-        // 添加星空背景
         function addStars() {
-            const starsGeometry = new THREE.BufferGeometry();
-            const starsMaterial = new THREE.PointsMaterial({
-                color: currentTheme === 'dark' ? 0xffffff : 0x4a5568,
-                size: 0.1,
+            const geometry = new THREE.BufferGeometry();
+            const material = new THREE.PointsMaterial({
+                color: 0xffffff,
+                size: 0.15,
                 transparent: true,
-                opacity: currentTheme === 'dark' ? 0.6 : 0.3
+                opacity: 0.6
             });
 
-            const starsVertices = [];
+            const vertices = [];
             for (let i = 0; i < 2000; i++) {
-                const x = (Math.random() - 0.5) * 400;
-                const y = (Math.random() - 0.5) * 400;
-                const z = (Math.random() - 0.5) * 400;
-                starsVertices.push(x, y, z);
+                vertices.push(
+                    (Math.random() - 0.5) * 500,
+                    (Math.random() - 0.5) * 500,
+                    (Math.random() - 0.5) * 500
+                );
             }
 
-            starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
-            const stars = new THREE.Points(starsGeometry, starsMaterial);
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const stars = new THREE.Points(geometry, material);
             stars.name = 'stars';
             scene.add(stars);
         }
 
-        // 创建模块节点
-        function createModuleNode(moduleData, position) {
-            // 创建带文字标签的长方形框
+        // 创建节点
+        function createNode(nodeData) {
             const group = new THREE.Group();
-            group.position.copy(position);
 
-            // 长方形框尺寸
-            const boxWidth = 6;
-            const boxHeight = 2;
-            const boxDepth = 1;
+            // 根据层级和类型确定尺寸和颜色
+            let width, height, depth, color;
+            const isDark = currentTheme === 'dark';
 
-            const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-            const material = new THREE.MeshPhongMaterial({
-                color: COLORS.module,
-                emissive: COLORS.module,
-                emissiveIntensity: 0.3,
-                shininess: 100,
-                transparent: true,
-                opacity: 0.9
-            });
-            const mesh = new THREE.Mesh(geometry, material);
+            // 获取层级信息
+            const layerId = nodeData._layerId || nodeData.layerId || 'service';
+            const side = nodeData._side || nodeData.side || 'backend';
 
-            // 创建文字贴图
+            // 根据 side 和类型确定颜色
+            if (side === 'frontend') {
+                color = isDark ? COLORS.frontend : COLORS_LIGHT.frontend;
+            } else if (side === 'backend') {
+                color = isDark ? COLORS.backend : COLORS_LIGHT.backend;
+            } else {
+                color = isDark ? COLORS.shared : COLORS_LIGHT.shared;
+            }
+
+            // 根据类型确定尺寸
+            switch (nodeData.type) {
+                case 'module':
+                    width = 8 + nodeData.size * 2;
+                    height = 2.5;
+                    depth = 1.5;
+                    break;
+                case 'file':
+                    width = 6 + nodeData.size;
+                    height = 2;
+                    depth = 1;
+                    break;
+                case 'class':
+                    width = 5 + nodeData.size;
+                    height = 1.8;
+                    depth = 0.8;
+                    break;
+                case 'function':
+                    width = 4;
+                    height = 1.5;
+                    depth = 0.6;
+                    break;
+                default:
+                    width = 4;
+                    height = 1.5;
+                    depth = 0.6;
+                    color = 0x888888;
+            }
+
+            // 创建长方形几何体
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+
+            // 创建 Canvas 贴图
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 512;
             canvas.height = 256;
 
-            // 绘制背景
-            ctx.fillStyle = '#1a1f2e';
+            const bgColor = isDark ? '#1a1f2e' : '#f0f4f8';
+            const textColor = isDark ? '#ffffff' : '#1a202c';
+            const subTextColor = isDark ? '#8b949e' : '#4a5568';
+            const borderColor = '#' + color.toString(16).padStart(6, '0');
+
+            // 背景
+            ctx.fillStyle = bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // 绘制边框
-            ctx.strokeStyle = '#58a6ff';
+            // 边框
+            ctx.strokeStyle = borderColor;
             ctx.lineWidth = 8;
             ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
 
-            // 绘制模块名称（上方）
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 36px Microsoft YaHei';
+            // 主名称
+            ctx.fillStyle = textColor;
+            ctx.font = 'bold 40px Microsoft YaHei';
             ctx.textAlign = 'center';
-            ctx.fillText(moduleData.name, canvas.width / 2, 80);
+            const mainText = nodeData.name.length > 20 ? nodeData.name.substring(0, 18) + '...' : nodeData.name;
+            ctx.fillText(mainText, canvas.width / 2, 80);
 
-            // 绘制文件数量（下方）
-            ctx.fillStyle = '#8b949e';
-            ctx.font = '24px Microsoft YaHei';
-            ctx.fillText(`文件数: ${moduleData.file_count}`, canvas.width / 2, 160);
+            // 副名称（显示层级）
+            ctx.fillStyle = subTextColor;
+            ctx.font = '28px Microsoft YaHei';
+            const layerName = nodeData.layerId || nodeData.layer || '';
+            ctx.fillText(layerName, canvas.width / 2, 140);
 
-            // 绘制子目录
-            if (moduleData.children && moduleData.children.length > 0) {
-                ctx.fillStyle = '#58a6ff';
-                ctx.font = '20px Microsoft YaHei';
-                ctx.fillText(moduleData.children.slice(0, 3).join(', '), canvas.width / 2, 210);
+            // 路径
+            ctx.fillStyle = subTextColor;
+            ctx.font = '20px Microsoft YaHei';
+            const pathText = nodeData.filePath || '';
+            const shortPath = pathText.length > 40 ? '...' + pathText.slice(-40) : pathText;
+            ctx.fillText(shortPath, canvas.width / 2, 200);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            // 材质
+            const materials = [
+                new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.5 }),
+                new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.5 }),
+                new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.5 }),
+                new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.5 }),
+                new THREE.MeshBasicMaterial({ map: texture, transparent: true }),
+                new THREE.MeshPhongMaterial({ color: color, transparent: true, opacity: 0.3 })
+            ];
+
+            const mesh = new THREE.Mesh(geometry, materials);
+            group.add(mesh);
+
+            // 边框线
+            const edgesGeo = new THREE.EdgesGeometry(geometry);
+            const edgesMat = new THREE.LineBasicMaterial({ color: color });
+            const edges = new THREE.LineSegments(edgesGeo, edgesMat);
+            group.add(edges);
+
+            group.userData = {
+                ...nodeData,
+                isGroup: true,
+                mesh: mesh,
+                width: width,
+                height: height,
+                depth: depth
+            };
+
+            return group;
+        }
+
+        // 创建边
+        function createEdge(edgeData, sourceNode, targetNode) {
+            if (!sourceNode || !targetNode) return null;
+
+            const startPos = sourceNode.position.clone();
+            const endPos = targetNode.position.clone();
+
+            // 计算连接点（考虑节点大小）
+            const direction = new THREE.Vector3().subVectors(endPos, startPos).normalize();
+            const halfWidthS = sourceNode.userData.width / 2 + 0.5;
+            const halfWidthT = targetNode.userData.width / 2 + 0.5;
+
+            const adjustedStart = startPos.clone().add(direction.clone().multiplyScalar(halfWidthS));
+            const adjustedEnd = endPos.clone().sub(direction.clone().multiplyScalar(halfWidthT));
+
+            // 创建曲线（根据边的类型选择不同样式）
+            const midPoint = new THREE.Vector3().addVectors(adjustedStart, adjustedEnd).multiplyScalar(0.5);
+
+            // http 类型的边使用更高的弧度
+            const yOffset = edgeData.type === 'http' ? 8 : (edgeData.type === 'layer-calls' ? 5 : 3);
+            midPoint.y += yOffset;
+
+            const curve = new THREE.QuadraticBezierCurve3(adjustedStart, midPoint, adjustedEnd);
+            const points = curve.getPoints(30);
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+
+            // 根据边类型选择颜色
+            let color;
+            if (edgeData.type === 'http') {
+                // HTTP 调用使用特殊颜色
+                color = currentTheme === 'dark' ? 0x58a6ff : 0x3182ce;
+            } else if (edgeData.type === 'calls') {
+                color = currentTheme === 'dark' ? COLORS.edgeCall : COLORS_LIGHT.edgeCall;
+            } else if (edgeData.type === 'layer-calls') {
+                color = currentTheme === 'dark' ? 0x3fb950 : 0x38a169;
+            } else {
+                color = currentTheme === 'dark' ? COLORS.edge : COLORS_LIGHT.edge;
             }
 
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true;
-
-            // 前面贴图
-            const frontMaterial = new THREE.MeshBasicMaterial({
-                map: texture,
-                transparent: true
-            });
-
-            // 所有面材质
-            const materials = [
-                new THREE.MeshPhongMaterial({ color: COLORS.module, transparent: true, opacity: 0.6 }), // right
-                new THREE.MeshPhongMaterial({ color: COLORS.module, transparent: true, opacity: 0.6 }), // left
-                new THREE.MeshPhongMaterial({ color: COLORS.module, transparent: true, opacity: 0.6 }), // top
-                new THREE.MeshPhongMaterial({ color: COLORS.module, transparent: true, opacity: 0.6 }), // bottom
-                frontMaterial, // front
-                new THREE.MeshPhongMaterial({ color: COLORS.module, transparent: true, opacity: 0.3 })  // back
-            ];
-
-            const boxMesh = new THREE.Mesh(geometry, materials);
-            group.add(boxMesh);
-
-            // 添加发光边框
-            const edgesGeometry = new THREE.EdgesGeometry(geometry);
-            const edgesMaterial = new THREE.LineBasicMaterial({ color: COLORS.module, linewidth: 2 });
-            const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-            group.add(edges);
-
-            group.userData = {
-                type: 'module',
-                name: moduleData.name,
-                fileCount: moduleData.file_count,
-                children: moduleData.children || [],
-                expanded: false,
-                originalScale: 1,
-                isGroup: true,
-                mesh: mesh
-            };
-
-            nodeGroup.add(group);
-            nodes.set(moduleData.name, group);
-
-            return group;
-        }
-
-        // 创建类节点
-        function createClassNode(classData, position) {
-            const group = new THREE.Group();
-            group.position.copy(position);
-
-            // 长方形框尺寸
-            const boxWidth = 5;
-            const boxHeight = 1.5;
-            const boxDepth = 0.8;
-
-            const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-
-            // 创建文字贴图
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 512;
-            canvas.height = 256;
-
-            // 绘制背景
-            ctx.fillStyle = '#1a1f2e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 绘制边框
-            ctx.strokeStyle = '#a371f7';
-            ctx.lineWidth = 6;
-            ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
-
-            // 绘制类名称（上方）
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 32px Microsoft YaHei';
-            ctx.textAlign = 'center';
-            ctx.fillText(classData.name, canvas.width / 2, 80);
-
-            // 绘制文件路径（下方）
-            ctx.fillStyle = '#8b949e';
-            ctx.font = '20px Microsoft YaHei';
-            const filePath = classData.file_path || '';
-            const shortPath = filePath.length > 35 ? '...' + filePath.slice(-35) : filePath;
-            ctx.fillText(shortPath, canvas.width / 2, 160);
-
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true;
-
-            // 前面贴图
-            const frontMaterial = new THREE.MeshBasicMaterial({
-                map: texture,
-                transparent: true
-            });
-
-            // 所有面材质
-            const materials = [
-                new THREE.MeshPhongMaterial({ color: COLORS.class, transparent: true, opacity: 0.6 }),
-                new THREE.MeshPhongMaterial({ color: COLORS.class, transparent: true, opacity: 0.6 }),
-                new THREE.MeshPhongMaterial({ color: COLORS.class, transparent: true, opacity: 0.6 }),
-                new THREE.MeshPhongMaterial({ color: COLORS.class, transparent: true, opacity: 0.6 }),
-                frontMaterial,
-                new THREE.MeshPhongMaterial({ color: COLORS.class, transparent: true, opacity: 0.3 })
-            ];
-
-            const boxMesh = new THREE.Mesh(geometry, materials);
-            group.add(boxMesh);
-
-            // 添加发光边框
-            const edgesGeometry = new THREE.EdgesGeometry(geometry);
-            const edgesMaterial = new THREE.LineBasicMaterial({ color: COLORS.class, linewidth: 2 });
-            const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-            group.add(edges);
-
-            group.visible = false;
-
-            group.userData = {
-                type: 'class',
-                name: classData.name,
-                module: classData.module,
-                filePath: classData.file_path,
-                expanded: false,
-                originalScale: 1,
-                isGroup: true,
-                mesh: boxMesh
-            };
-
-            nodeGroup.add(group);
-            nodes.set(classData.name, group);
-
-            return group;
-        }
-
-        // 创建函数节点
-        function createFunctionNode(funcData, position) {
-            const group = new THREE.Group();
-            group.position.copy(position);
-
-            // 长方形框尺寸
-            const boxWidth = 4;
-            const boxHeight = 1.2;
-            const boxDepth = 0.6;
-
-            const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
-
-            // 创建文字贴图
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = 512;
-            canvas.height = 256;
-
-            // 绘制背景
-            ctx.fillStyle = '#1a1f2e';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 绘制边框
-            ctx.strokeStyle = '#3fb950';
-            ctx.lineWidth = 5;
-            ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
-
-            // 绘制函数名称（上方）
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 32px Microsoft YaHei';
-            ctx.textAlign = 'center';
-            ctx.fillText(funcData.name, canvas.width / 2, 80);
-
-            // 绘制所属类名（中间）
-            ctx.fillStyle = '#3fb950';
-            ctx.font = '24px Microsoft YaHei';
-            ctx.fillText(funcData.class, canvas.width / 2, 130);
-
-            // 绘制文件路径（下方）
-            ctx.fillStyle = '#8b949e';
-            ctx.font = '18px Microsoft YaHei';
-            const filePath = funcData.file_path || '';
-            const shortPath = filePath.length > 40 ? '...' + filePath.slice(-40) : filePath;
-            ctx.fillText(shortPath, canvas.width / 2, 180);
-
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.needsUpdate = true;
-
-            // 前面贴图
-            const frontMaterial = new THREE.MeshBasicMaterial({
-                map: texture,
-                transparent: true
-            });
-
-            // 所有面材质
-            const materials = [
-                new THREE.MeshPhongMaterial({ color: COLORS.function, transparent: true, opacity: 0.6 }),
-                new THREE.MeshPhongMaterial({ color: COLORS.function, transparent: true, opacity: 0.6 }),
-                new THREE.MeshPhongMaterial({ color: COLORS.function, transparent: true, opacity: 0.6 }),
-                new THREE.MeshPhongMaterial({ color: COLORS.function, transparent: true, opacity: 0.6 }),
-                frontMaterial,
-                new THREE.MeshPhongMaterial({ color: COLORS.function, transparent: true, opacity: 0.3 })
-            ];
-
-            const boxMesh = new THREE.Mesh(geometry, materials);
-            group.add(boxMesh);
-
-            // 添加发光边框
-            const edgesGeometry = new THREE.EdgesGeometry(geometry);
-            const edgesMaterial = new THREE.LineBasicMaterial({ color: COLORS.function, linewidth: 2 });
-            const edges = new THREE.LineSegments(edgesGeometry, edgesMaterial);
-            group.add(edges);
-
-            group.visible = false;
-
-            group.userData = {
-                type: 'function',
-                name: funcData.name,
-                className: funcData.class,
-                filePath: funcData.file_path,
-                calls: funcData.calls || [],
-                originalScale: 1,
-                isGroup: true,
-                mesh: boxMesh
-            };
-
-            nodeGroup.add(group);
-            nodes.set(`${funcData.class}.${funcData.name}`, group);
-
-            return group;
-        }
-
-        // 创建边（调用关系）- 使用虚线材质实现流动效果
-        function createEdge(startNode, endNode, isCallChain = false) {
-            const startPos = startNode.position.clone();
-            const endPos = endNode.position.clone();
-
-            // 创建曲线而非直线，添加弧度
-            const midPoint = new THREE.Vector3().addVectors(startPos, endPos).multiplyScalar(0.5);
-            midPoint.y += 2; // 向上偏移形成弧度
-
-            const curve = new THREE.QuadraticBezierCurve3(startPos, midPoint, endPos);
-            const curveGeometry = new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
-
-            // 使用虚线材质实现流动效果
-            const dashSize = isCallChain ? 0.8 : 0.5;
-            const gapSize = isCallChain ? 0.3 : 0.2;
             const material = new THREE.LineDashedMaterial({
-                color: isCallChain ? COLORS.edgeCall : COLORS.edgeDefault,
-                dashSize: dashSize,
-                gapSize: gapSize,
+                color: color,
+                dashSize: edgeData.type === 'http' ? 1.0 : 0.5,
+                gapSize: edgeData.type === 'http' ? 0.5 : 0.3,
                 transparent: true,
-                opacity: isCallChain ? 0.9 : 0.4,
-                linewidth: 1
+                opacity: 0.7
             });
 
-            const line = new THREE.Line(curveGeometry, material);
+            const line = new THREE.Line(geometry, material);
             line.computeLineDistances();
 
             line.userData = {
-                startNode: startNode,
-                endNode: endNode,
-                isCallChain: isCallChain,
-                originalOpacity: material.opacity,
+                id: edgeData.id,
+                source: edgeData.source,
+                target: edgeData.target,
+                type: edgeData.type,
+                protocol: edgeData.protocol,
+                layer: edgeData.layer,
                 curve: curve,
-                dashOffset: 0
+                originalOpacity: 0.7
             };
-
-            edgeGroup.add(line);
-            edges.push(line);
-
-            // 为调用链创建流动粒子
-            if (isCallChain || startNode.userData.type === 'function') {
-                createFlowParticle(line, startNode, endNode);
-            }
 
             return line;
         }
 
         // 创建流动粒子
-        function createFlowParticle(edge, startNode, endNode) {
-            const particleCount = 3;
-            const particleGeometry = new THREE.SphereGeometry(0.15, 8, 8);
-            const particleMaterial = new THREE.MeshBasicMaterial({
-                color: COLORS.edgeCall,
+        function createFlowParticle(edgeData, sourceNode, targetNode) {
+            if (!sourceNode || !targetNode) return null;
+
+            const curve = edgeData.userData?.curve;
+            if (!curve) return null;
+
+            const geometry = new THREE.SphereGeometry(0.15, 8, 8);
+            const color = currentTheme === 'dark' ? COLORS.edgeCall : COLORS_LIGHT.edgeCall;
+            const material = new THREE.MeshBasicMaterial({
+                color: color,
                 transparent: true,
-                opacity: 0.8
+                opacity: 0.9
             });
 
-            for (let i = 0; i < particleCount; i++) {
-                const particle = new THREE.Mesh(particleGeometry, particleMaterial.clone());
-                particle.userData = {
-                    edge: edge,
-                    progress: i / particleCount,
-                    speed: 0.005 + Math.random() * 0.003,
-                    startNode: startNode,
-                    endNode: endNode
-                };
-                particleGroup.add(particle);
-                flowParticles.push(particle);
-            }
-        }
-
-        // 布局算法 - 力导向布局
-        function layoutNodes() {
-            const modulePositions = {
-                'api': new THREE.Vector3(-20, 8, 0),
-                'service': new THREE.Vector3(0, 8, 0),
-                'data': new THREE.Vector3(20, 8, 0),
-                'util': new THREE.Vector3(0, -8, 15)
+            const particle = new THREE.Mesh(geometry, material);
+            particle.userData = {
+                progress: Math.random(),
+                speed: 0.008 + Math.random() * 0.005,
+                curve: curve
             };
 
-            // 创建模块节点
-            CODE_MAP_DATA.modules.forEach((module, index) => {
-                const pos = modulePositions[module.name] || new THREE.Vector3(
-                    (Math.random() - 0.5) * 40,
-                    5,
-                    (Math.random() - 0.5) * 40
-                );
-                createModuleNode(module, pos);
-            });
-
-            // 为每个模块创建类节点
-            const classPerModule = {};
-            CODE_MAP_DATA.classes.forEach((cls, index) => {
-                if (!classPerModule[cls.module]) {
-                    classPerModule[cls.module] = [];
-                }
-                classPerModule[cls.module].push(cls);
-            });
-
-            Object.entries(classPerModule).forEach(([moduleName, classes]) => {
-                const moduleNode = nodes.get(moduleName);
-                if (!moduleNode) return;
-
-                const basePos = moduleNode.position.clone();
-                const spreadRadius = 8;
-                const angleStep = (2 * Math.PI) / classes.length;
-
-                classes.forEach((cls, i) => {
-                    const angle = i * angleStep;
-                    const offsetX = Math.cos(angle) * spreadRadius;
-                    const offsetZ = Math.sin(angle) * spreadRadius;
-                    const pos = new THREE.Vector3(
-                        basePos.x + offsetX,
-                        basePos.y - 5,
-                        basePos.z + offsetZ
-                    );
-                    createClassNode(cls, pos);
-                });
-            });
-
-            // 为每个类创建函数节点
-            const funcPerClass = {};
-            CODE_MAP_DATA.functions.forEach((func) => {
-                const key = func.class;
-                if (!funcPerClass[key]) {
-                    funcPerClass[key] = [];
-                }
-                funcPerClass[key].push(func);
-            });
-
-            Object.entries(funcPerClass).forEach(([className, funcs]) => {
-                const classNode = nodes.get(className);
-                if (!classNode) return;
-
-                const basePos = classNode.position.clone();
-                const spreadRadius = 4;
-                const angleStep = (2 * Math.PI) / Math.max(funcs.length, 1);
-
-                funcs.forEach((func, i) => {
-                    const angle = i * angleStep;
-                    const offsetX = Math.cos(angle) * spreadRadius;
-                    const offsetZ = Math.sin(angle) * spreadRadius;
-                    const pos = new THREE.Vector3(
-                        basePos.x + offsetX,
-                        basePos.y - 4,
-                        basePos.z + offsetZ
-                    );
-                    createFunctionNode(func, pos);
-                });
-            });
-
-            // 创建调用边
-            CODE_MAP_DATA.functions.forEach((func) => {
-                const sourceNode = nodes.get(`${func.class}.${func.name}`);
-                if (!sourceNode) return;
-
-                func.calls.forEach((callTarget) => {
-                    const [targetClass, targetFunc] = callTarget.split('.');
-                    const targetNode = nodes.get(`${targetClass}.${targetFunc}`);
-                    if (targetNode) {
-                        createEdge(sourceNode, targetNode);
-                    }
-                });
-            });
-
-            // 创建模块到类的边
-            CODE_MAP_DATA.classes.forEach((cls) => {
-                const moduleNode = nodes.get(cls.module);
-                const classNode = nodes.get(cls.name);
-                if (moduleNode && classNode) {
-                    createEdge(moduleNode, classNode);
-                }
-            });
+            return particle;
         }
 
-        // 高亮调用链路
-        function highlightCallChain(chain) {
-            hideAllCallChains();
+        // 分层布局 - 基于前后端分层
+        function layoutNodes(data) {
+            // 定义层级位置（前后端分开，中间是API边界）
+            const layerPositions = {
+                // 前端层（左侧）
+                'frontend-ui': { y: 35, x: -50, radius: 25 },
+                'frontend-service': { y: 15, x: -45, radius: 22 },
+                'frontend-store': { y: -5, x: -40, radius: 18 },
+                // API 边界层（中间）
+                'api': { y: 5, x: 0, radius: 25 },
+                // 后端层（右侧）
+                'service': { y: 25, x: 45, radius: 22 },
+                'domain': { y: 5, x: 50, radius: 20 },
+                'data': { y: -15, x: 55, radius: 18 },
+                'middleware': { y: -35, x: 45, radius: 15 },
+                // 共享层（底部）
+                'util': { y: -55, x: 0, radius: 15 },
+                'config': { y: -70, x: 0, radius: 12 }
+            };
 
-            for (let i = 0; i < chain.length - 1; i++) {
-                const startNode = nodes.get(chain[i]);
-                const endNode = nodes.get(chain[i + 1]);
+            // 兼容旧的 layer 属性
+            const legacyLayerMap = {
+                'API Layer': 'api',
+                'Service Layer': 'service',
+                'Data Layer': 'data',
+                'UI Layer': 'frontend-ui',
+                'Middleware Layer': 'middleware',
+                'Utility Layer': 'util',
+                'Config Layer': 'config'
+            };
 
-                if (startNode && endNode) {
-                    edges.forEach((edge) => {
-                        if (edge.userData.startNode === startNode && edge.userData.endNode === endNode) {
-                            edge.material.color.setHex(COLORS.edgeCall);
-                            edge.material.opacity = 1;
-                            edge.material.dashSize = 1.2;
-                            edge.userData.isCallChain = true;
-                        }
-                    });
+            const nodesByLayer = {};
+            const nodesBySide = { frontend: [], backend: [], shared: [] };
 
-                    // 高亮节点
-                    [startNode, endNode].forEach(node => {
-                        const mesh = node.userData.mesh || node.children.find(c => c.material && !Array.isArray(c.material));
-                        if (mesh && mesh.material) {
-                            if (Array.isArray(mesh.material)) {
-                                mesh.material.forEach(m => m.emissiveIntensity = 0.8);
-                            } else {
-                                mesh.material.emissiveIntensity = 0.8;
-                            }
-                        }
-                    });
-                }
+            data.nodes.forEach(node => {
+                // 获取 layerId（兼容新旧格式）
+                let layerId = node.layerId || legacyLayerMap[node.layer] || node.layer || 'service';
+                node._layerId = layerId;
+
+                // 获取 side
+                let side = node.side || (layerId.startsWith('frontend-') ? 'frontend' :
+                                          ['util', 'config'].includes(layerId) ? 'shared' : 'backend');
+                node._side = side;
+
+                if (!nodesByLayer[layerId]) nodesByLayer[layerId] = [];
+                nodesByLayer[layerId].push(node);
+                nodesBySide[side].push(node);
+            });
+
+            // 获取 layers 定义
+            const layersMap = {};
+            if (data.layers) {
+                data.layers.forEach(l => layersMap[l.id] = l);
             }
-        }
 
-        // 隐藏所有调用链路高亮
-        function hideAllCallChains() {
-            edges.forEach((edge) => {
-                if (!edge.userData.isCallChain) {
-                    edge.material.color.setHex(COLORS.edgeDefault);
-                    edge.material.opacity = edge.userData.originalOpacity;
-                }
-            });
+            // 布局节点
+            Object.entries(nodesByLayer).forEach(([layerId, nodes]) => {
+                const config = layerPositions[layerId] || { y: 0, x: 0, radius: 20 };
+                const layerInfo = layersMap[layerId] || {};
+                const side = layerInfo.side || (layerId.startsWith('frontend-') ? 'frontend' :
+                                                ['util', 'config'].includes(layerId) ? 'shared' : 'backend');
 
-            nodes.forEach((group) => {
-                const mesh = group.userData.mesh || group.children.find(c => c.material && !Array.isArray(c.material));
-                if (mesh && mesh.material) {
-                    if (Array.isArray(mesh.material)) {
-                        mesh.material.forEach(m => m.emissiveIntensity = 0.3);
+                const angleStep = (2 * Math.PI) / Math.max(nodes.length, 1);
+
+                nodes.forEach((node, i) => {
+                    const angle = i * angleStep - Math.PI / 2;
+                    const group = createNode(node);
+
+                    if (hierarchyLayout) {
+                        // 同层圆形分布
+                        group.position.x = config.x + config.radius * Math.cos(angle) * 0.6;
+                        group.position.y = config.y;
+                        group.position.z = config.radius * Math.sin(angle) * 0.6;
                     } else {
-                        mesh.material.emissiveIntensity = 0.3;
+                        group.position.x = config.x + (Math.random() - 0.5) * 40;
+                        group.position.y = config.y + (Math.random() - 0.5) * 8;
+                        group.position.z = (Math.random() - 0.5) * 40;
                     }
-                }
-            });
-        }
 
-        // 更新统计信息
-        function updateStats() {
-            document.getElementById('stat-modules').textContent = CODE_MAP_DATA.modules.length;
-            document.getElementById('stat-classes').textContent = CODE_MAP_DATA.classes.length;
-            document.getElementById('stat-functions').textContent = CODE_MAP_DATA.functions.length;
-
-            let callCount = 0;
-            CODE_MAP_DATA.functions.forEach((func) => {
-                callCount += func.calls.length;
-            });
-            document.getElementById('stat-calls').textContent = callCount;
-        }
-
-        // 显示节点详情
-        function showNodeDetail(node) {
-            const panel = document.getElementById('detail-panel');
-            const typeEl = document.getElementById('detail-type');
-            const nameEl = document.getElementById('detail-name');
-            const pathEl = document.getElementById('detail-path');
-            const callsEl = document.getElementById('detail-calls');
-            const calledEl = document.getElementById('detail-called');
-            const callsSection = document.getElementById('detail-calls-section');
-            const calledSection = document.getElementById('detail-called-section');
-
-            typeEl.textContent = node.userData.type.toUpperCase();
-            typeEl.className = `detail-type ${node.userData.type}`;
-            nameEl.textContent = node.userData.name;
-            pathEl.textContent = node.userData.filePath || '-';
-
-            // 显示调用关系
-            callsEl.innerHTML = '';
-            calledEl.innerHTML = '';
-
-            if (node.userData.type === 'function') {
-                const calls = node.userData.calls || [];
-                if (calls.length > 0) {
-                    calls.forEach((call) => {
-                        const tag = document.createElement('span');
-                        tag.className = 'call-tag calls';
-                        tag.textContent = call;
-                        tag.onclick = () => {
-                            const targetNode = nodes.get(call);
-                            if (targetNode) {
-                                selectNode(targetNode);
-                                camera.target.copy(targetNode.position);
-                            }
-                        };
-                        callsEl.appendChild(tag);
-                    });
-                } else {
-                    callsEl.innerHTML = '<span class="call-tag">无</span>';
-                }
-
-                // 显示被调用关系
-                const calledBy = [];
-                edges.forEach((edge) => {
-                    if (edge.userData.endNode === node && edge.userData.startNode !== node) {
-                        calledBy.push(edge.userData.startNode.userData.name);
-                    }
+                    nodeGroup.add(group);
+                    nodesMap.set(node.id, group);
                 });
+            });
+        }
 
-                if (calledBy.length > 0) {
-                    calledBy.forEach((name) => {
-                        const tag = document.createElement('span');
-                        tag.className = 'call-tag called';
-                        tag.textContent = name;
-                        calledEl.appendChild(tag);
-                    });
-                } else {
-                    calledEl.innerHTML = '<span class="call-tag">无</span>';
+        // 创建所有边
+        function createAllEdges(data) {
+            data.edges.forEach(edgeData => {
+                const sourceNode = nodesMap.get(edgeData.source);
+                const targetNode = nodesMap.get(edgeData.target);
+
+                if (sourceNode && targetNode) {
+                    const line = createEdge(edgeData, sourceNode, targetNode);
+                    if (line) {
+                        edgeGroup.add(line);
+                        edgesList.push(line);
+
+                        const particle = createFlowParticle({ userData: { curve: line.userData.curve } });
+                        if (particle) {
+                            particleGroup.add(particle);
+                            flowParticles.push(particle);
+                        }
+                    }
                 }
+            });
+        }
 
-                callsSection.style.display = 'block';
-                calledSection.style.display = 'block';
+        // 加载数据
+        function loadData(data) {
+            // 清除旧数据
+            while (nodeGroup.children.length > 0) {
+                nodeGroup.remove(nodeGroup.children[0]);
+            }
+            while (edgeGroup.children.length > 0) {
+                edgeGroup.remove(edgeGroup.children[0]);
+            }
+            while (particleGroup.children.length > 0) {
+                particleGroup.remove(particleGroup.children[0]);
+            }
+            nodesMap.clear();
+            edgesList = [];
+            flowParticles = [];
+
+            // 更新 UI
+            document.getElementById('project-title').textContent = data.project.name;
+
+            // 构建项目元信息
+            let metaText = '';
+            if (data.project.languages) {
+                metaText += data.project.languages.join(', ') + ' | ';
+            }
+            if (data.project.frameworks && data.project.frameworks.length > 0) {
+                metaText += data.project.frameworks.join(', ') + ' | ';
+            }
+            metaText += `${data.project.totalFiles} 文件 | ${data.project.totalLines} 行`;
+            document.getElementById('project-meta').textContent = metaText;
+
+            // 更新统计信息
+            document.getElementById('stat-nodes').textContent = data.stats.totalNodes || 0;
+            document.getElementById('stat-edges').textContent = data.stats.totalEdges || 0;
+
+            // 显示前后端统计（如果存在）
+            if (data.stats.sideStats) {
+                document.getElementById('stat-frontend').textContent = data.stats.sideStats.frontend || 0;
+                document.getElementById('stat-backend').textContent = data.stats.sideStats.backend || 0;
+                document.getElementById('stat-shared').textContent = data.stats.sideStats.shared || 0;
+                document.getElementById('stat-frontend-row').style.display = 'flex';
+                document.getElementById('stat-backend-row').style.display = 'flex';
+                document.getElementById('stat-shared-row').style.display = 'flex';
+            } else if (data.stats.nodeTypes) {
+                // 兼容旧的统计格式
+                document.getElementById('stat-frontend').textContent = data.stats.nodeTypes.file || 0;
+                document.getElementById('stat-backend').textContent = data.stats.nodeTypes.class || 0;
+                document.getElementById('stat-shared').textContent = data.stats.nodeTypes.function || 0;
+            }
+
+            // 布局节点
+            layoutNodes(data);
+
+            // 创建边
+            createAllEdges(data);
+
+            // 显示面板
+            document.getElementById('header-panel').style.display = 'block';
+            document.getElementById('stats-panel').style.display = 'block';
+            document.getElementById('control-panel').style.display = 'flex';
+            document.getElementById('theme-toggle').style.display = 'block';
+            document.getElementById('load-panel').style.display = 'none';
+            document.getElementById('loading').classList.add('hidden');
+        }
+
+        // 加载 JSON
+        async function loadJSON() {
+            const path = document.getElementById('json-path').value.trim();
+            let data;
+
+            if (path) {
+                try {
+                    const response = await fetch(path);
+                    data = await response.json();
+                } catch (e) {
+                    alert('加载失败: ' + e.message);
+                    return;
+                }
             } else {
-                callsSection.style.display = 'none';
-                calledSection.style.display = 'none';
+                data = SAMPLE_DATA;
             }
 
-            panel.classList.add('active');
+            loadData(data);
         }
 
-        // 关闭详情面板
-        function closeDetailPanel() {
-            document.getElementById('detail-panel').classList.remove('active');
-            selectedNode = null;
-        }
+        // 主题切换
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', currentTheme === 'light' ? 'light' : '');
 
-        // 选择节点
-        function selectNode(node) {
-            if (selectedNode) {
-                const prevMesh = selectedNode.userData.mesh || selectedNode.children.find(c => c.material && !Array.isArray(c.material));
-                if (prevMesh && prevMesh.material) {
-                    if (Array.isArray(prevMesh.material)) {
-                        prevMesh.material.forEach(m => m.emissiveIntensity = 0.3);
-                    } else {
-                        prevMesh.material.emissiveIntensity = 0.3;
-                    }
-                }
+            const colors = currentTheme === 'dark' ? COLORS : COLORS_LIGHT;
+            scene.background = new THREE.Color(colors.background);
+            scene.fog = new THREE.Fog(colors.background, 80, 300);
+
+            // 更新星空
+            const stars = scene.getObjectByName('stars');
+            if (stars) {
+                stars.material.color.setHex(currentTheme === 'dark' ? 0xffffff : 0x4a5568);
+                stars.material.opacity = currentTheme === 'dark' ? 0.6 : 0.3;
             }
 
-            selectedNode = node;
-            const mesh = node.userData.mesh || node.children.find(c => c.material && !Array.isArray(c.material));
-            if (mesh && mesh.material) {
-                if (Array.isArray(mesh.material)) {
-                    mesh.material.forEach(m => m.emissiveIntensity = 0.8);
+            // 更新所有节点
+            nodesMap.forEach(group => {
+                const nodeData = group.userData;
+                const side = nodeData._side || nodeData.side || 'backend';
+
+                // 根据 side 获取颜色
+                let color;
+                if (side === 'frontend') {
+                    color = currentTheme === 'dark' ? COLORS.frontend : COLORS_LIGHT.frontend;
+                } else if (side === 'backend') {
+                    color = currentTheme === 'dark' ? COLORS.backend : COLORS_LIGHT.backend;
                 } else {
-                    mesh.material.emissiveIntensity = 0.8;
+                    color = currentTheme === 'dark' ? COLORS.shared : COLORS_LIGHT.shared;
                 }
-            }
 
-            showNodeDetail(node);
-            highlightRelatedEdges(node);
-        }
-
-        // 高亮相关边
-        function highlightRelatedEdges(node) {
-            edges.forEach((edge) => {
-                if (edge.userData.startNode === node || edge.userData.endNode === node) {
-                    edge.material.color.setHex(COLORS.edgeActive);
-                    edge.material.opacity = 0.8;
-                } else {
-                    edge.material.color.setHex(COLORS.edgeDefault);
-                    edge.material.opacity = edge.userData.originalOpacity;
-                }
-            });
-        }
-
-        // 搜索功能
-        function searchNodes(query) {
-            const lowerQuery = query.toLowerCase();
-
-            nodes.forEach((group, name) => {
-                const mesh = group.userData.mesh || group.children.find(c => c.material && !Array.isArray(c.material));
-                if (name.toLowerCase().includes(lowerQuery) || query === '') {
-                    if (mesh && mesh.material) {
-                        if (Array.isArray(mesh.material)) {
-                            mesh.material.forEach(m => m.emissiveIntensity = 0.8);
-                        } else {
-                            mesh.material.emissiveIntensity = 0.8;
+                // 更新材质颜色
+                group.children.forEach(child => {
+                    if (child.material) {
+                        if (Array.isArray(child.material)) {
+                            child.material.forEach((mat, idx) => {
+                                if (idx !== 4) mat.color.setHex(color);
+                            });
                         }
                     }
-                    group.scale.setScalar(1.3);
-                } else {
-                    if (mesh && mesh.material) {
-                        if (Array.isArray(mesh.material)) {
-                            mesh.material.forEach(m => m.emissiveIntensity = 0.1);
-                        } else {
-                            mesh.material.emissiveIntensity = 0.1;
-                        }
-                    }
-                    group.scale.setScalar(0.8);
-                }
-            });
-        }
-
-        // 显示调用链路面板
-        function showCallChainPanel() {
-            const panel = document.getElementById('call-chain-panel');
-            const list = document.getElementById('call-chain-list');
-
-            list.innerHTML = '';
-
-            CODE_MAP_DATA.callChains.forEach((chain, index) => {
-                const item = document.createElement('div');
-                item.className = 'call-chain-item';
-
-                chain.forEach((nodeName, i) => {
-                    const nodeSpan = document.createElement('span');
-                    nodeSpan.className = 'call-chain-node';
-                    nodeSpan.style.background = nodeName.includes('Controller') ? COLORS.module :
-                                                  nodeName.includes('Service') ? COLORS.class :
-                                                  nodeName.includes('Repository') ? COLORS.function : COLORS.edgeCall;
-                    nodeSpan.style.color = '#000';
-                    nodeSpan.textContent = nodeName.split('.').pop();
-                    item.appendChild(nodeSpan);
-
-                    if (i < chain.length - 1) {
-                        const arrow = document.createElement('span');
-                        arrow.className = 'call-chain-arrow';
-                        arrow.textContent = '→';
-                        item.appendChild(arrow);
+                    if (child instanceof THREE.LineSegments) {
+                        child.material.color.setHex(color);
                     }
                 });
 
-                item.onclick = () => highlightCallChain(chain);
-                list.appendChild(item);
+                // 重新创建贴图
+                if (group.children[0]) {
+                    const mesh = group.children[0];
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = 512;
+                    canvas.height = 256;
+
+                    const isDark = currentTheme === 'dark';
+                    ctx.fillStyle = isDark ? '#1a1f2e' : '#f0f4f8';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    const borderColor = '#' + color.toString(16).padStart(6, '0');
+                    ctx.strokeStyle = borderColor;
+                    ctx.lineWidth = 8;
+                    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+
+                    ctx.fillStyle = isDark ? '#ffffff' : '#1a202c';
+                    ctx.font = 'bold 40px Microsoft YaHei';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(nodeData.name, canvas.width / 2, 80);
+
+                    ctx.fillStyle = isDark ? '#8b949e' : '#4a5568';
+                    ctx.font = '28px Microsoft YaHei';
+                    ctx.fillText(nodeData.layerId || nodeData.layer || '', canvas.width / 2, 140);
+
+                    ctx.font = '20px Microsoft YaHei';
+                    ctx.fillText(nodeData.filePath || '', canvas.width / 2, 200);
+
+                    const texture = new THREE.CanvasTexture(canvas);
+                    if (Array.isArray(mesh.material)) {
+                        mesh.material[4].map = texture;
+                        mesh.material[4].needsUpdate = true;
+                    }
+                }
             });
 
-            panel.classList.add('active');
+            // 更新边
+            edgesList.forEach(edge => {
+                const isCall = edge.userData.type === 'calls' || edge.userData.type === 'http';
+                const color = isCall ?
+                    (currentTheme === 'dark' ? COLORS.edgeCall : COLORS_LIGHT.edgeCall) :
+                    (currentTheme === 'dark' ? COLORS.edge : COLORS_LIGHT.edge);
+                edge.material.color.setHex(color);
+            });
+
+            // 更新粒子
+            flowParticles.forEach(particle => {
+                particle.material.color.setHex(currentTheme === 'dark' ? COLORS.edgeCall : COLORS_LIGHT.edgeCall);
+            });
         }
 
-        // 隐藏调用链路面板
-        function hideCallChainPanel() {
-            document.getElementById('call-chain-panel').classList.remove('active');
-            hideAllCallChains();
-        }
-
-        // 工具函数
         function resetView() {
-            camera.position.set(0, 30, 60);
+            camera.position.set(0, 40, 80);
             controls.target.set(0, 0, 0);
             controls.update();
         }
 
-        function expandAll() {
-            nodes.forEach((node) => {
-                if (node.userData.type === 'class' || node.userData.type === 'function') {
-                    node.visible = true;
-                }
-            });
+        function toggleExpand() {
+            const btn = document.getElementById('btn-expand');
+            btn.classList.toggle('active');
+            // TODO: 实现展开/折叠逻辑
         }
 
-        function collapseAll() {
-            nodes.forEach((node) => {
-                if (node.userData.type === 'class' || node.userData.type === 'function') {
-                    node.visible = false;
-                }
-            });
-        }
-
-        function toggleCallChain() {
-            callChainVisible = !callChainVisible;
-            const btn = document.getElementById('btn-chain');
-
-            if (callChainVisible) {
-                btn.classList.add('active');
-                showCallChainPanel();
-            } else {
-                btn.classList.remove('active');
-                hideCallChainPanel();
-            }
-        }
-
-        function toggleAnimation() {
+        function toggleFlow() {
             animationEnabled = !animationEnabled;
-            const btn = document.getElementById('btn-animate');
-            const indicator = document.getElementById('flow-indicator');
+            const btn = document.getElementById('btn-flow');
+            btn.classList.toggle('active', animationEnabled);
+        }
 
-            if (animationEnabled) {
-                btn.classList.add('active');
-                indicator.style.display = 'block';
-            } else {
-                btn.classList.remove('active');
-                indicator.style.display = 'none';
+        function toggleHierarchy() {
+            hierarchyLayout = !hierarchyLayout;
+            const btn = document.getElementById('btn-hierarchy');
+            btn.classList.toggle('active', hierarchyLayout);
+
+            // 重新布局
+            const data = window.currentData;
+            if (data) {
+                layoutNodes(data);
+                // 重建边
+                edgesList.forEach(edge => edgeGroup.remove(edge));
+                edgesList = [];
+                flowParticles.forEach(p => particleGroup.remove(p));
+                flowParticles = [];
+                createAllEdges(data);
             }
         }
 
-        // 鼠标事件处理
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
         function onMouseMove(event) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -1615,133 +1298,148 @@
 
             if (intersects.length > 0) {
                 let obj = intersects[0].object;
-                // 如果点击的是 group 内的子对象，获取 group 的 userData
                 while (obj.parent && !obj.userData.type && obj.parent !== scene) {
                     obj = obj.parent;
                 }
+
                 if (obj.userData.type) {
                     document.body.style.cursor = 'pointer';
-
-                    tooltip.innerHTML = `<strong>${obj.userData.name}</strong><br>${obj.userData.type}`;
+                    tooltip.innerHTML = `<strong>${obj.userData.name}</strong><br>${obj.userData.layer || ''} | ${obj.userData.type}`;
                     tooltip.style.left = event.clientX + 15 + 'px';
                     tooltip.style.top = event.clientY + 15 + 'px';
                     tooltip.classList.add('visible');
 
                     if (hoveredNode !== obj) {
-                        if (hoveredNode) {
-                            // 恢复之前的高亮
-                            const prevMesh = hoveredNode.userData.mesh || hoveredNode.children.find(c => c.material && !Array.isArray(c.material));
-                            if (prevMesh && prevMesh.material) {
-                                if (Array.isArray(prevMesh.material)) {
-                                    prevMesh.material.forEach(m => m.emissiveIntensity = 0.3);
-                                } else {
-                                    prevMesh.material.emissiveIntensity = 0.3;
-                                }
-                            }
-                        }
                         hoveredNode = obj;
-                        const mesh = obj.userData.mesh || obj.children.find(c => c.material && !Array.isArray(c.material));
-                        if (mesh && mesh.material) {
-                            if (Array.isArray(mesh.material)) {
-                                mesh.material.forEach(m => m.emissiveIntensity = 0.6);
-                            } else {
-                                mesh.material.emissiveIntensity = 0.6;
-                            }
-                        }
                     }
                 }
             } else {
                 document.body.style.cursor = 'default';
                 tooltip.classList.remove('visible');
-
-                if (hoveredNode) {
-                    const mesh = hoveredNode.userData.mesh || hoveredNode.children.find(c => c.material && !Array.isArray(c.material));
-                    if (mesh && mesh.material) {
-                        if (Array.isArray(mesh.material)) {
-                            mesh.material.forEach(m => m.emissiveIntensity = 0.3);
-                        } else {
-                            mesh.material.emissiveIntensity = 0.3;
-                        }
-                    }
-                    hoveredNode = null;
-                }
+                hoveredNode = null;
             }
         }
 
         function onClick(event) {
-            if (event.target.tagName === 'INPUT' || event.target.tagName === 'BUTTON') return;
+            if (event.target.tagName === 'BUTTON' || event.target.tagName === 'INPUT') return;
 
             raycaster.setFromCamera(mouse, camera);
             const intersects = raycaster.intersectObjects(nodeGroup.children, true);
 
             if (intersects.length > 0) {
                 let obj = intersects[0].object;
-                // 如果点击的是 group 内的子对象，获取 group 的 userData
                 while (obj.parent && !obj.userData.type && obj.parent !== scene) {
                     obj = obj.parent;
                 }
+
                 if (obj.userData.type) {
                     selectNode(obj);
-
-                    // 如果是模块节点，切换子节点可见性
-                    if (obj.userData.type === 'module') {
-                        const moduleName = obj.userData.name;
-                        let anyVisible = false;
-
-                        CODE_MAP_DATA.classes.forEach((cls) => {
-                            if (cls.module === moduleName) {
-                                const classNode = nodes.get(cls.name);
-                                if (classNode) {
-                                    classNode.visible = !classNode.visible;
-                                    anyVisible = classNode.visible;
-                                }
-                            }
-                        });
-
-                        obj.userData.expanded = anyVisible;
-                    }
-
-                    // 如果是类节点，切换函数节点可见性
-                    if (obj.userData.type === 'class') {
-                        const className = obj.userData.name;
-                        let anyVisible = false;
-
-                        CODE_MAP_DATA.functions.forEach((func) => {
-                            if (func.class === className) {
-                                const funcNode = nodes.get(`${func.class}.${func.name}`);
-                                if (funcNode) {
-                                    funcNode.visible = !funcNode.visible;
-                                    anyVisible = funcNode.visible;
-                                }
-                            }
-                        });
-
-                        obj.userData.expanded = anyVisible;
-                    }
                 }
             }
         }
 
-        function onDoubleClick(event) {
-            raycaster.setFromCamera(mouse, camera);
-            const intersects = raycaster.intersectObjects(nodeGroup.children, true);
+        function selectNode(node) {
+            selectedNode = node;
+            showDetail(node.userData);
+            highlightEdges(node.userData.id);
+        }
 
-            if (intersects.length > 0) {
-                let obj = intersects[0].object;
-                // 如果点击的是 group 内的子对象，获取 group 的 userData
-                while (obj.parent && !obj.userData.type && obj.parent !== scene) {
-                    obj = obj.parent;
+        function highlightEdges(nodeId) {
+            edgesList.forEach(edge => {
+                if (edge.userData.source === nodeId || edge.userData.target === nodeId) {
+                    edge.material.opacity = 1;
+                    edge.material.dashSize = 1;
+                } else {
+                    edge.material.opacity = edge.userData.originalOpacity;
+                    edge.material.dashSize = 0.5;
                 }
-                if (obj.userData.type === 'function') {
-                    // 聚焦到该函数并高亮其调用链路
-                    const funcName = `${obj.userData.className}.${obj.userData.name}`;
-                    CODE_MAP_DATA.callChains.forEach((chain) => {
-                        if (chain.includes(funcName)) {
-                            highlightCallChain(chain);
-                        }
-                    });
-                }
+            });
+        }
+
+        function showDetail(nodeData) {
+            const panel = document.getElementById('detail-panel');
+            const typeBadge = document.getElementById('detail-type');
+            const nameEl = document.getElementById('detail-name');
+            const pathEl = document.getElementById('detail-path');
+            const metricsEl = document.getElementById('detail-metrics');
+            const callsEl = document.getElementById('detail-calls');
+            const calledEl = document.getElementById('detail-called');
+
+            typeBadge.textContent = (nodeData.side ? nodeData.side.toUpperCase() + ' | ' : '') + (nodeData.type || 'NODE').toUpperCase();
+            typeBadge.className = `detail-type-badge ${nodeData.type || 'file'}`;
+            nameEl.textContent = nodeData.name || '-';
+            pathEl.textContent = nodeData.filePath || nodeData.fullName || '-';
+
+            // 指标
+            let metricsHtml = '';
+            if (nodeData.metrics) {
+                Object.entries(nodeData.metrics).forEach(([key, value]) => {
+                    if (Array.isArray(value)) {
+                        metricsHtml += `<span style="margin-right:8px">${key}: ${value.length}</span>`;
+                    } else if (typeof value === 'object') {
+                        metricsHtml += `<span style="margin-right:8px">${key}: ${JSON.stringify(value)}</span>`;
+                    } else {
+                        metricsHtml += `<span style="margin-right:8px">${key}: ${value}</span>`;
+                    }
+                });
             }
+            // 显示层级信息
+            if (nodeData.layerId) {
+                metricsHtml += `<span style="margin-right:8px">层级: ${nodeData.layerId}</span>`;
+            }
+            if (nodeData.side) {
+                metricsHtml += `<span style="margin-right:8px">端: ${nodeData.side === 'frontend' ? '前端' : nodeData.side === 'backend' ? '后端' : '共享'}</span>`;
+            }
+            metricsEl.innerHTML = metricsHtml || '-';
+
+            // 调用
+            callsEl.innerHTML = '';
+            if (nodeData.calls && nodeData.calls.length > 0) {
+                nodeData.calls.forEach(callId => {
+                    const tag = document.createElement('span');
+                    tag.className = 'call-tag calls';
+                    tag.textContent = callId.split(':').pop();
+                    tag.onclick = () => {
+                        const targetNode = nodesMap.get(callId);
+                        if (targetNode) {
+                            selectNode(targetNode);
+                        }
+                    };
+                    callsEl.appendChild(tag);
+                });
+            } else {
+                callsEl.innerHTML = '<span class="call-tag">无</span>';
+            }
+
+            // 被调用
+            calledEl.innerHTML = '';
+            if (nodeData.calledBy && nodeData.calledBy.length > 0) {
+                nodeData.calledBy.forEach(callId => {
+                    const tag = document.createElement('span');
+                    tag.className = 'call-tag called';
+                    tag.textContent = callId.split(':').pop();
+                    tag.onclick = () => {
+                        const targetNode = nodesMap.get(callId);
+                        if (targetNode) {
+                            selectNode(targetNode);
+                        }
+                    };
+                    calledEl.appendChild(tag);
+                });
+            } else {
+                calledEl.innerHTML = '<span class="call-tag">无</span>';
+            }
+
+            panel.classList.add('active');
+        }
+
+        function closeDetail() {
+            document.getElementById('detail-panel').classList.remove('active');
+            selectedNode = null;
+
+            edgesList.forEach(edge => {
+                edge.material.opacity = edge.userData.originalOpacity;
+            });
         }
 
         // 动画循环
@@ -1751,78 +1449,32 @@
 
             controls.update();
 
-            // 节点脉动动画
+            // 流动动画
             if (animationEnabled) {
-                nodeGroup.children.forEach((group, i) => {
-                    if (group.userData.type && group.visible) {
-                        const pulse = Math.sin(animationFrame * 0.02 + i * 0.5) * 0.05 + 1;
-                        group.scale.setScalar(group.userData.originalScale * pulse);
-                    }
+                edgesList.forEach(edge => {
+                    edge.material.dashOffset = -animationFrame * 0.05;
                 });
 
-                // 边流动动画 - 虚线偏移
-                edges.forEach((edge) => {
-                    if (edge.material.dashSize > 0) {
-                        edge.material.dashOffset = -animationFrame * 0.05;
-                    }
-                });
-
-                // 流动粒子动画
-                flowParticles.forEach((particle) => {
+                flowParticles.forEach(particle => {
                     particle.userData.progress += particle.userData.speed;
-
                     if (particle.userData.progress > 1) {
                         particle.userData.progress = 0;
                     }
 
-                    const curve = particle.userData.edge.userData.curve;
-                    if (curve) {
-                        const point = curve.getPoint(particle.userData.progress);
-                        particle.position.copy(point);
-
-                        // 脉动效果
-                        const scale = Math.sin(particle.userData.progress * Math.PI) * 0.3 + 0.7;
-                        particle.scale.setScalar(scale);
-                    }
+                    const point = particle.userData.curve.getPoint(particle.userData.progress);
+                    particle.position.copy(point);
                 });
             }
 
             renderer.render(scene, camera);
         }
 
-        // 窗口大小调整
-        function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        }
-
         // 初始化
         function init() {
             initScene();
-            layoutNodes();
-            updateStats();
-
-            // 事件监听
-            window.addEventListener('resize', onWindowResize);
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('click', onClick);
-            window.addEventListener('dblclick', onDoubleClick);
-
-            // 搜索功能
-            document.getElementById('search-input').addEventListener('input', (e) => {
-                searchNodes(e.target.value);
-            });
-
-            // 隐藏加载动画
-            setTimeout(() => {
-                document.getElementById('loading').classList.add('hidden');
-            }, 1000);
-
             animate();
         }
 
-        // 启动
         init();
     </script>
 </body>

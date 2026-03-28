@@ -331,19 +331,73 @@ python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /wor
 
 **功能特性**:
 - **Three.js 3D 引擎**：完整 3D 场景渲染，支持拖拽旋转、滚轮缩放
-- **节点类型区分**：模块（蓝色）、类（紫色）、函数（绿色）
-- **调用关系可视化**：节点间的连线表示调用关系
+- **前后端分层展示**：前端层（蓝色）、后端层（红色）、共享层（灰色）
+- **真实调用链路**：节点间的连线连接到实际代码节点
 - **动态流动效果**：边使用虚线动画 + 流动粒子
 - **深色/浅色主题**：一键切换
+
+**JSON v2.0 数据结构**:
+
+生成命令：
+```bash
+python3 scripts/code_map_generator_v2.py /path/to/project --visual
+```
+
+输出文件：`{project-name}-VISUAL-MAP.json`
+
+```json
+{
+  "version": "2.0",
+  "project": {
+    "name": "项目名",
+    "frontend": { "layers": ["frontend-ui", "frontend-service", "frontend-store"] },
+    "backend": { "layers": ["api", "service", "domain", "data", "middleware"] }
+  },
+  "layers": [
+    { "id": "frontend-ui", "name": "前端UI层", "side": "frontend" },
+    { "id": "api", "name": "API层", "side": "backend" },
+    { "id": "service", "name": "业务逻辑层", "side": "backend" }
+  ],
+  "nodes": [
+    {
+      "id": "file:path/to/file.py",
+      "type": "file",
+      "name": "文件名",
+      "layerId": "service",
+      "side": "backend",
+      "calls": ["file:other.py"],
+      "calledBy": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "file:a.py",
+      "target": "file:b.py",
+      "type": "calls",
+      "protocol": "local"
+    }
+  ]
+}
+```
+
+**节点类型**:
+- `module`: 模块节点
+- `file`: 文件节点
+- `class`: 类节点
+- `function`: 函数/方法节点
+
+**边类型**:
+- `calls`: 方法调用
+- `imports`: 导入关系
+- `http`: HTTP API 调用（前后端通信）
+- `layer-calls`: 层级间典型调用
 
 **交互功能**:
 - 点击展开/折叠模块、类、函数
 - 双击函数高亮调用链路
-- 搜索过滤节点
 - 调用链路面板展示关键流程
-
-**Workspace 安装说明**:
-安装 skill 后，可视化文件会自动符号链接到 `~/.trae/skills/docs/` 目录，在任意 workspace 中都可直接打开使用。
+- 点击节点显示详情（层级、端、调用关系）
 
 ### 任务可视化页面 (v2.3)
 
