@@ -217,7 +217,13 @@ class RolePromptLoader:
         """获取角色的任务模板"""
         template = cls.PROMPT_TEMPLATES.get(role, {})
         task_template = template.get("task_template", "")
-        return task_template.format(project_path=project_path, workspace=workspace)
+        task_template = task_template.replace("{{", "[[DOUBLE_BRACE_OPEN]]")
+        task_template = task_template.replace("}}", "[[DOUBLE_BRACE_CLOSE]]")
+        task_template = task_template.format(project_path=project_path, workspace=workspace)
+        task_template = task_template.replace('\"', '"')
+        task_template = task_template.replace("[[DOUBLE_BRACE_OPEN]]", "{")
+        task_template = task_template.replace("[[DOUBLE_BRACE_CLOSE]]", "}")
+        return task_template
 
 
 class TraeAgentExecutor:

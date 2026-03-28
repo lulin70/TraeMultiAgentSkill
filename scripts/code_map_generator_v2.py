@@ -92,6 +92,7 @@ class FileInfo:
     classes: List[ClassInfo] = field(default_factory=list)
     imports: List[str] = field(default_factory=list)
     exports: List[str] = field(default_factory=list)
+    complexity: str = "low"
 
 
 class AICallRelationAnalyzer:
