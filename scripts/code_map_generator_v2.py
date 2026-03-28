@@ -270,15 +270,42 @@ class PythonAnalyzer:
         return func_info
 
     def _extract_calls(self, node: ast.FunctionDef) -> List[str]:
-        """提取函数调用"""
+        """提取函数调用
+
+        返回调用列表，格式为:
+        - "function_name" - 本地函数调用
+        - "obj.method" - 对象方法调用
+        - "ClassName.method" - 类方法调用
+        """
         calls = []
         for child in ast.walk(node):
             if isinstance(child, ast.Call):
-                if isinstance(child.func, ast.Name):
+                # 处理方法调用如 self.xxx()
+                if isinstance(child.func, ast.Attribute):
+                    # 获取完整的方法链
+                    method_chain = self._get_attribute_chain(child.func)
+                    if method_chain:
+                        calls.append(method_chain)
+                elif isinstance(child.func, ast.Name):
+                    # 简单函数调用
                     calls.append(child.func.id)
-                elif isinstance(child.func, ast.Attribute):
-                    calls.append(child.func.attr)
         return list(set(calls))
+
+    def _get_attribute_chain(self, node: ast.Attribute) -> str:
+        """获取属性的完整链，如 self.user_service.create_user -> user_service.create_user"""
+        parts = []
+        current = node
+        while isinstance(current, ast.Attribute):
+            parts.append(current.attr)
+            current = current.value
+        if isinstance(current, ast.Name):
+            # 跳过 self, cls, obj 等通用变量名
+            if current.id not in ['self', 'cls', 'this', 'obj']:
+                parts.append(current.id)
+        if parts:
+            parts.reverse()
+            return '.'.join(parts)
+        return node.attr
 
     def _get_return_type(self, node: ast.FunctionDef) -> str:
         """获取返回类型"""
@@ -746,44 +773,54 @@ class LayerDetector:
 
     LAYER_PATTERNS: List[LayerInfo] = [
         LayerInfo(
-            name="API Layer",
-            description="HTTP 端点、路由处理、API 控制器",
-            patterns=["routes", "controller", "handler", "endpoint", "api", "router", "route"]
+            name="frontend-ui",
+            description="前端UI组件层",
+            patterns=["component", "view", "page", "screen", "layout", "widget", "ui", "template"]
         ),
         LayerInfo(
-            name="Service Layer",
-            description="业务逻辑和应用服务",
-            patterns=["service", "usecase", "usecase", "business", "logic", "domain"]
+            name="frontend-service",
+            description="前端服务层",
+            patterns=["service", "api", "fetch", "request"]
         ),
         LayerInfo(
-            name="Data Layer",
-            description="数据模型、数据库访问、持久化",
-            patterns=["model", "entity", "schema", "database", "db", "repository", "repo", "dal", "dao"]
+            name="frontend-store",
+            description="前端状态管理层",
+            patterns=["store", "redux", "vuex", "pinia", "state"]
         ),
         LayerInfo(
-            name="UI Layer",
-            description="用户界面组件和视图",
-            patterns=["component", "view", "page", "screen", "layout", "widget", "ui", "template", "template"]
+            name="api",
+            description="API 端点层",
+            patterns=["routes", "controller", "handler", "endpoint", "router", "route"]
         ),
         LayerInfo(
-            name="Middleware Layer",
-            description="请求/响应中间件和拦截器",
+            name="service",
+            description="业务逻辑层",
+            patterns=["service", "usecase", "business", "logic"]
+        ),
+        LayerInfo(
+            name="domain",
+            description="领域模型层",
+            patterns=["model", "entity", "domain"]
+        ),
+        LayerInfo(
+            name="data",
+            description="数据访问层",
+            patterns=["repository", "repo", "dao", "dal", "mapper", "database", "db"]
+        ),
+        LayerInfo(
+            name="middleware",
+            description="中间件层",
             patterns=["middleware", "interceptor", "guard", "filter", "pipe", "wrapper"]
         ),
         LayerInfo(
-            name="Utility Layer",
-            description="共享工具、帮助库",
+            name="util",
+            description="工具层",
             patterns=["util", "helper", "lib", "common", "shared", "tool", "tools", "function"]
         ),
         LayerInfo(
-            name="Config Layer",
-            description="应用配置和环境设置",
+            name="config",
+            description="配置层",
             patterns=["config", "setting", "settings", "env", "configuration"]
-        ),
-        LayerInfo(
-            name="Test Layer",
-            description="测试文件和测试工具",
-            patterns=["test", "spec", "testing", "__test__", "__spec__", "mock"]
         ),
     ]
 
@@ -1714,7 +1751,12 @@ class CodeMapGenerator:
                                             edge_id_set.add(edge_id)
 
         # 6. 生成层级间的调用关系（基于架构模式的典型调用链）
-        layers_group = LayerDetector.group_by_layer(self.files)
+        # 按新的层级 ID 分组文件
+        layers_group: Dict[str, List[FileInfo]] = defaultdict(list)
+        for file_info in self.files:
+            layer_id, _ = self._detect_file_layer_and_side(file_info.relative_path)
+            layers_group[layer_id].append(file_info)
+
         layer_order = ["frontend-ui", "frontend-service", "frontend-store", "api", "service", "domain", "data", "middleware", "util", "config"]
 
         # 典型的跨层级调用模式
@@ -1895,15 +1937,55 @@ class CodeMapGenerator:
         return parts[0] if parts else 'root'
 
     def _is_import_match(self, import_str: str, target_file: FileInfo) -> bool:
-        """判断导入语句是否匹配目标文件"""
-        import_lower = import_str.lower().replace('.', '/')
+        """判断导入语句是否匹配目标文件
 
-        # 直接匹配文件名
-        if import_lower.endswith(os.path.basename(target_file.relative_path).lower().replace('.py', '')):
+        支持的导入格式:
+        - from module import ClassName -> 匹配 module/ClassName.py
+        - from module.submodule import ClassName -> 匹配 module/submodule/ClassName.py
+        - import module -> 匹配 module/__init__.py
+        - import module as alias -> 匹配 module/__init__.py
+        - from package.module import something -> 匹配 package/module.py
+        """
+        import_str = import_str.strip()
+        target_path = target_file.relative_path.lower().replace('\\', '/')
+        target_basename = os.path.basename(target_file.relative_path).lower().replace('.py', '')
+
+        # 提取导入的模块/类名
+        # from xxx import YYY -> YYY
+        # import xxx -> xxx
+        imported_name = import_str
+        if ' import ' in import_str:
+            # from xxx import YYY
+            imported_name = import_str.split(' import ')[-1].strip()
+        elif ' as ' in import_str:
+            # import xxx as alias
+            imported_name = import_str.split(' as ')[0].replace('import ', '').strip()
+        else:
+            imported_name = import_str.replace('import ', '').strip()
+
+        # 清理导入名（去掉 as 后的别名）
+        if ' as ' in imported_name:
+            imported_name = imported_name.split(' as ')[0].strip()
+
+        imported_name_lower = imported_name.lower().replace('.', '/')
+
+        # 1. 直接匹配文件名（不含路径）
+        if imported_name_lower == target_basename:
             return True
 
-        # 匹配模块路径
-        if import_lower in target_file.relative_path.lower().replace('\\', '/'):
+        # 2. 匹配完整路径（去掉.py后缀）
+        if imported_name_lower.endswith(target_basename):
+            return True
+
+        # 3. 匹配目标文件的目录路径
+        # 例如: import requests -> 匹配 requests/__init__.py
+        target_dir = target_path.replace(f'/{target_basename}.py', '')
+        if imported_name_lower == target_dir.replace('/', '.'):
+            return True
+
+        # 4. 检查导入是否是目标文件的上级模块
+        # 例如: from module.submodule import X -> module/submodule.py
+        if target_path.startswith(imported_name_lower.replace('.', '/')):
             return True
 
         return False

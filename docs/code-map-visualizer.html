@@ -130,14 +130,34 @@
             gap: 6px;
         }
 
+        .layer-row {
+            display: flex;
+            flex-direction: row;
+            gap: 16px;
+        }
+
+        .layer-section {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .layer-section-title {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
         .layer-item {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 11px;
+            gap: 4px;
+            font-size: 10px;
             color: var(--text-secondary);
-            padding: 4px 8px;
-            border-radius: 4px;
+            padding: 2px 4px;
+            border-radius: 3px;
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -429,36 +449,23 @@
         <div class="project-title" id="project-title">项目名称</div>
         <div class="project-meta" id="project-meta"></div>
         <div class="layer-legend" id="layer-legend">
-            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">前端层</div>
-            <div class="layer-item">
-                <div class="layer-color" style="background: var(--accent-blue);"></div>
-                <span>前端UI</span>
-            </div>
-            <div class="layer-item">
-                <div class="layer-color" style="background: var(--accent-purple);"></div>
-                <span>前端服务</span>
-            </div>
-            <div class="layer-item">
-                <div class="layer-color" style="background: var(--accent-cyan);"></div>
-                <span>前端状态</span>
-            </div>
-            <div style="font-size: 11px; color: var(--text-secondary); margin: 8px 0 6px;">后端层</div>
-            <div class="layer-item">
-                <div class="layer-color" style="background: var(--accent-red);"></div>
-                <span>API层</span>
-            </div>
-            <div class="layer-item">
-                <div class="layer-color" style="background: var(--accent-green);"></div>
-                <span>业务逻辑</span>
-            </div>
-            <div class="layer-item">
-                <div class="layer-color" style="background: var(--accent-orange);"></div>
-                <span>领域层</span>
-            </div>
-            <div style="font-size: 11px; color: var(--text-secondary); margin: 8px 0 6px;">共享层</div>
-            <div class="layer-item">
-                <div class="layer-color" style="background: var(--text-secondary);"></div>
-                <span>工具/配置</span>
+            <div class="layer-row">
+                <div class="layer-section">
+                    <div class="layer-section-title">前端</div>
+                    <div class="layer-item"><div class="layer-color" style="background: var(--accent-blue);"></div><span>UI</span></div>
+                    <div class="layer-item"><div class="layer-color" style="background: var(--accent-purple);"></div><span>服务</span></div>
+                    <div class="layer-item"><div class="layer-color" style="background: var(--accent-cyan);"></div><span>状态</span></div>
+                </div>
+                <div class="layer-section">
+                    <div class="layer-section-title">后端</div>
+                    <div class="layer-item"><div class="layer-color" style="background: var(--accent-red);"></div><span>API</span></div>
+                    <div class="layer-item"><div class="layer-color" style="background: var(--accent-green);"></div><span>业务</span></div>
+                    <div class="layer-item"><div class="layer-color" style="background: var(--accent-orange);"></div><span>领域</span></div>
+                </div>
+                <div class="layer-section">
+                    <div class="layer-section-title">共享</div>
+                    <div class="layer-item"><div class="layer-color" style="background: var(--text-secondary);"></div><span>工具</span></div>
+                </div>
             </div>
         </div>
     </div>
