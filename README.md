@@ -478,14 +478,11 @@ python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /wor
 
 # 输出：
 # - 统一代码地图：<project>-ALIGNED-CODE-MAP.md
+# - 代码走读审查报告：<project>-CODE-REVIEW-REPORT.md
 
 # 生成的内容包括：
-#   - 项目概览和统计信息
-#   - 架构分层和模块
-#   - 核心组件（类、函数）
-#   - 多角色视角
-#   - 文档对齐结果
-#   - 快速参考指南
+#   - 统一代码地图：项目概览、架构分层、代码结构、多角色视角、对齐结果
+#   - 审查报告：审查概述、架构评审、代码质量评估、风险点、改进建议
 ```
 
 ### 场景 7: 项目理解

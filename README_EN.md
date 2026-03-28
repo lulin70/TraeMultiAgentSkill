@@ -363,14 +363,11 @@ python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /wor
 
 # Output:
 # - Unified code map: <project>-ALIGNED-CODE-MAP.md
+# - Code review report: <project>-CODE-REVIEW-REPORT.md
 
 # Generated content includes:
-#   - Project overview and statistics
-#   - Architecture layers and modules
-#   - Core components (classes, functions)
-#   - Multi-role perspectives
-#   - Document alignment results
-#   - Quick reference guide
+#   - Unified code map: project overview, architecture layers, code structure, multi-role perspectives
+#   - Review report: review overview, architecture review, code quality assessment, risk points, recommendations
 ```
 
 ### Scenario 7: Project Understanding / 场景 7: 项目理解
