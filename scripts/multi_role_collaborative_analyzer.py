@@ -759,52 +759,37 @@ class MultiRoleCollaborativeAnalyzer:
 """
         if "architect" in self.role_results:
             arch = self.role_results["architect"]
-            md += f"\n**关键发现**:\n"
+            md += f"**关键发现**:\n"
             for finding in arch.key_findings[:5]:
                 md += f"- {finding}\n"
-            md += f"\n**建议**:\n"
-            for rec in arch.recommendations[:5]:
-                md += f"- {rec}\n"
 
         md += "\n### 4.2 产品经理视角\n\n"
         if "product_manager" in self.role_results:
             pm = self.role_results["product_manager"]
-            md += f"\n**关键发现**:\n"
+            md += f"**关键发现**:\n"
             for finding in pm.key_findings[:5]:
                 md += f"- {finding}\n"
-            md += f"\n**建议**:\n"
-            for rec in pm.recommendations[:5]:
-                md += f"- {rec}\n"
 
         md += "\n### 4.3 独立开发者视角\n\n"
         if "solo_coder" in self.role_results:
             coder = self.role_results["solo_coder"]
-            md += f"\n**关键发现**:\n"
+            md += f"**关键发现**:\n"
             for finding in coder.key_findings[:5]:
                 md += f"- {finding}\n"
-            md += f"\n**建议**:\n"
-            for rec in coder.recommendations[:5]:
-                md += f"- {rec}\n"
 
         md += "\n### 4.4 UI 设计师视角\n\n"
         if "ui_designer" in self.role_results:
             ui = self.role_results["ui_designer"]
-            md += f"\n**关键发现**:\n"
+            md += f"**关键发现**:\n"
             for finding in ui.key_findings[:5]:
                 md += f"- {finding}\n"
-            md += f"\n**建议**:\n"
-            for rec in ui.recommendations[:5]:
-                md += f"- {rec}\n"
 
         md += "\n### 4.5 测试专家视角\n\n"
         if "test_expert" in self.role_results:
             test = self.role_results["test_expert"]
-            md += f"\n**关键发现**:\n"
+            md += f"**关键发现**:\n"
             for finding in test.key_findings[:5]:
                 md += f"- {finding}\n"
-            md += f"\n**建议**:\n"
-            for rec in test.recommendations[:5]:
-                md += f"- {rec}\n"
 
         md += f"""
 

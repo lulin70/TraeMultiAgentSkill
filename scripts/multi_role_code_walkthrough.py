@@ -904,7 +904,6 @@ class CodeMapGenerator:
         md_content += self._generate_code_structure()
         md_content += self._generate_role_perspectives()
         md_content += self._generate_consensus_and_discrepancies()
-        md_content += self._generate_quick_reference()
         md_content += self._generate_footer()
 
         Path(output_path).write_text(md_content, encoding='utf-8')
@@ -1020,19 +1019,12 @@ class CodeMapGenerator:
             md += f"- **关注领域**: {', '.join(view['focus_areas'])}\n"
             md += f"- **识别模块数**: {view['modules_count']}\n"
             md += f"- **识别函数数**: {view['functions_count']}\n"
-            md += f"- **识别类数量**: {view['classes_count']}\n"
-
-            if view['recommendations']:
-                md += "- **建议**:\n"
-                for rec in view['recommendations']:
-                    md += f"  - {rec}\n"
-
-            md += "\n"
+            md += f"- **识别类数量**: {view['classes_count']}\n\n"
 
         return md
 
     def _generate_consensus_and_discrepancies(self) -> str:
-        """生成共识和差异"""
+        """生成共识"""
         md = "## 分析对齐结果\n\n"
 
         consensus = self.aligned.get("consensus", [])
@@ -1040,15 +1032,6 @@ class CodeMapGenerator:
             md += "### 共识点\n\n"
             for item in consensus:
                 md += f"- {item}\n"
-            md += "\n"
-
-        discrepancies = self.aligned.get("discrepancies", [])
-        if discrepancies:
-            md += "### 差异点\n\n"
-            md += "| 类型 | 描述 | 严重程度 |\n"
-            md += "|------|------|----------|\n"
-            for disc in discrepancies:
-                md += f"| {disc['type']} | {disc['description']} | {disc['severity']} |\n"
             md += "\n"
 
         return md

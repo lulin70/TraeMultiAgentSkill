@@ -349,7 +349,7 @@ python3 scripts/trae_agent_dispatch.py \
 #   8. Specification verification and quality review
 ```
 
-### Scenario 6: Code Map Generation / 场景 6: 代码地图生成
+### Scenario 6: Code Map & Code Walkthrough / 场景 6: 代码地图与代码走读
 
 ```bash
 # Generate code map (with workspace support)
@@ -358,16 +358,19 @@ python3 scripts/code_map_generator_v2.py /path/to/project --workspace /workspace
 # Output:
 # - Markdown format: <project>-CODE_MAP.md
 
-# Multi-role code walkthrough
-python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /workspace
+# True multi-role collaborative code walkthrough (using Trae Agent dispatch)
+python3 scripts/multi_role_collaborative_analyzer.py /path/to/project --workspace /workspace
 
 # Output:
 # - Unified code map: <project>-ALIGNED-CODE-MAP.md
 # - Code review report: <project>-CODE-REVIEW-REPORT.md
 
+# Simplified multi-role code walkthrough
+python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /workspace
+
 # Generated content includes:
-#   - Unified code map: project overview, architecture layers, code structure, multi-role perspectives
-#   - Review report: review overview, architecture review, code quality assessment, risk points, recommendations
+#   - Unified code map: project overview, architecture layers, multi-role analysis results
+#   - Review report: review overview, architecture review, code quality assessment
 ```
 
 ### Scenario 7: Project Understanding / 场景 7: 项目理解

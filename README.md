@@ -464,7 +464,7 @@ python3 scripts/trae_agent_dispatch.py \
 #   8. 规范验证和质量评审
 ```
 
-### 场景 6: 代码地图生成
+### 场景 6: 代码地图生成与代码走读
 
 ```bash
 # 生成代码地图（支持 workspace）
@@ -473,15 +473,18 @@ python3 scripts/code_map_generator_v2.py /path/to/project --workspace /workspace
 # 输出：
 # - Markdown 格式：<project>-CODE_MAP.md
 
-# 多角色代码走读
-python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /workspace
+# 真正的多角色协作代码走读（使用 Trae Agent 调度）
+python3 scripts/multi_role_collaborative_analyzer.py /path/to/project --workspace /workspace
 
 # 输出：
 # - 统一代码地图：<project>-ALIGNED-CODE-MAP.md
 # - 代码走读审查报告：<project>-CODE-REVIEW-REPORT.md
 
+# 简化的多角色代码走读
+python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /workspace
+
 # 生成的内容包括：
-#   - 统一代码地图：项目概览、架构分层、代码结构、多角色视角、对齐结果
+#   - 统一代码地图：项目概览、架构分层、多角色分析结果、对齐结果
 #   - 审查报告：审查概述、架构评审、代码质量评估、风险点、改进建议
 ```
 
