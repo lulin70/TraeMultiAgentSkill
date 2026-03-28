@@ -268,29 +268,27 @@ ai_integration:
 ### 代码走读与审查 (v2.3)
 
 ```bash
-# 执行多角色代码走读
-python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /workspace
+# 执行真正的多角色协作代码走读（使用 Trae Agent 调度）
+python3 scripts/multi_role_collaborative_analyzer.py /path/to/project --workspace /workspace
 
-# 输出文件:
-# - <project>-ALIGNED-CODE-MAP.md     # 统一代码地图
-# - <project>-CODE-REVIEW-REPORT.md   # 代码走读审查报告
+# 简化的多角色代码走读
+python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /workspace
 ```
 
-**多角色协作分析流程**:
+**真正的多角色协作分析流程**:
 
 1. **阶段一：项目扫描**
    - 递归扫描项目目录
-   - 识别源代码文件（.py, .java, .go, .js, .ts...）
-   - 识别配置文件（.yaml, .json, .toml...）
+   - 识别源代码文件和配置文件
    - 统计项目基本信息
    - 检测技术栈和框架
+   - 识别项目模块
 
-2. **阶段二：多角色分析**
-   - 架构师：系统架构、模块划分、技术选型、扩展性设计
-   - 产品经理：业务功能、用户流程、需求完整性、数据需求
-   - 独立开发者：代码实现、函数逻辑、接口设计、错误处理
-   - UI 设计师：界面组件、交互流程、状态管理、用户体验
-   - 测试专家：测试覆盖、边界条件、异常处理、质量风险
+2. **阶段二：调用 Trae Agent 调度**
+   - 使用 `trae_agent_dispatch_v2.py` 分发任务
+   - 每个角色使用专属 prompt 模板
+   - 角色包括：架构师、产品经理、独立开发者、UI 设计师、测试专家
+   - 各角色独立执行真实分析
 
 3. **阶段三：文档对齐**
    - 收集各角色分析结果
@@ -302,8 +300,8 @@ python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /wor
 
 | 文档 | 内容 |
 |------|------|
-| `<project>-ALIGNED-CODE-MAP.md` | 统一代码地图：项目概览、架构分层、代码结构、多角色视角、对齐结果 |
-| `<project>-CODE-REVIEW-REPORT.md` | 代码走读审查报告：架构评审、质量评估、风险点、改进建议 |
+| `<project>-ALIGNED-CODE-MAP.md` | 统一代码地图：项目概览、架构分层、多角色分析结果、对齐结果 |
+| `<project>-CODE-REVIEW-REPORT.md` | 代码走读审查报告：审查概述、架构评审、代码质量评估、改进建议 |
 
 **代码走读审查报告内容**:
 
