@@ -33,7 +33,7 @@ if [[ -d "/usr/local/bin" ]]; then
         echo "   ⚠️  符号链接已存在，正在更新..."
         sudo rm "/usr/local/bin/trae-agent"
     fi
-    if sudo ln -s "$SCRIPT_DIR/scripts/trae_agent.py" "/usr/local/bin/trae-agent" 2>/dev/null; then
+    if sudo ln -s "$SCRIPT_DIR/scripts/trae_agent_dispatch.py" "/usr/local/bin/trae-agent" 2>/dev/null; then
         echo "   ✅ 已创建符号链接：/usr/local/bin/trae-agent (需要 sudo 权限)"
     else
         echo "   ⚠️  需要 sudo 权限，跳过此方法（可以手动运行：sudo ln -s ...)"
@@ -62,14 +62,16 @@ if grep -q "alias trae=" "$SHELL_CONFIG" 2>/dev/null; then
     sed -i.bak '/alias trae=/d' "$SHELL_CONFIG"
 fi
 
-echo "alias trae='python3 \"$SCRIPT_DIR/scripts/trae_agent.py\"'" >> "$SHELL_CONFIG"
+echo "alias trae='python3 \"$SCRIPT_DIR/scripts/trae_agent_dispatch.py\"'" >> "$SHELL_CONFIG"
 echo "   ✅ 已添加到 $SHELL_CONFIG"
 echo ""
 
 # 设置执行权限
 echo "🔧 设置脚本执行权限..."
-chmod +x "$SCRIPT_DIR/scripts/trae_agent.py"
 chmod +x "$SCRIPT_DIR/scripts/trae_agent_dispatch.py"
+chmod +x "$SCRIPT_DIR/scripts/integration_script.py"
+chmod +x "$SCRIPT_DIR/scripts/knowledge_base_manager.py"
+chmod +x "$SCRIPT_DIR/scripts/user_experience_manager.py"
 echo "   ✅ 权限已设置"
 echo ""
 

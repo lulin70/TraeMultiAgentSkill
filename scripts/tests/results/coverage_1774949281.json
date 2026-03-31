@@ -1,0 +1,11 @@
+{
+  "id": "coverage_1774949281",
+  "generated_at": "2026-03-31T17:28:01.160290",
+  "overall_coverage": 85.5,
+  "module_coverage": {
+    "checkpoint_manager": 90.0,
+    "task_list_manager": 85.0,
+    "workflow_engine_v2": 80.0
+  },
+  "summary": "测试覆盖率达到预期目标（80%以上）"
+}

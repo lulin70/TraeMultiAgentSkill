@@ -40,39 +40,41 @@ This project is a fork from [https://github.com/weiransoft/TraeMultiAgentSkill/]
 - ✅ **Cross-Role Design Review** - PRD review, architecture review, UI review, test plan review, dev plan review
 - ✅ **Document-Based Task Breakdown** - All roles break down tasks based on documents, ensuring document-driven development
 
-## 🌍 Multi-Language Support / Multi-Language Support
+## 🌍 Multi-Language Support
 
-本技能支持中英文双语自动切换 / This skill supports automatic Chinese-English language switching:
+This skill supports automatic Chinese-English language switching:
 
 - **Auto-detection**: Automatically switches response language based on user language
 - **Full Coverage**: All output content supports multiple languages
 - **Smart Matching**: Code comments automatically match existing language
 - **Flexible Switching**: Supports language switching during conversation
 
-📄 Detailed documentation / 详细文档: [MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)
+📄 Detailed documentation: [MULTILINGUAL_GUIDE.md](MULTILINGUAL_GUIDE.md)
 
-## 📖 Table of Contents / 目录
+## 📖 Table of Contents
 
-- [Features / 功能特性](#-features-功能特性)
-- [Quick Start / 快速开始](#-quick-start-快速开始)
-- [Agent Roles / 角色介绍](#-agent-roles-角色介绍)
-- [Usage Methods / 使用方法](#-usage-methods-使用方法)
-- [Installation / 安装说明](#-installation-安装说明)
-- [Configuration / 配置说明](#-configuration-配置说明)
-- [Example Scenarios / 示例场景](#-example-scenarios-示例场景)
-- [Technical Architecture / 技术架构](#-technical-architecture-技术架构)
-- [Contribution Guide / 贡献指南](#-contribution-guide-贡献指南)
-- [FAQ / 常见问题](#-faq-常见问题)
-- [License / 许可证](#-license-许可证)
+- [Features](#-features-功能特性)
+- [Quick Start](#-quick-start-快速开始)
+- [Agent Roles](#-agent-roles-角色介绍)
+- [Usage Methods](#-usage-methods-使用方法)
+- [Installation](#-installation-安装说明)
+- [Configuration](#-configuration-配置说明)
+- [Example Scenarios](#-example-scenarios-示例场景)
+- [Technical Architecture](#-technical-architecture-技术架构)
+- [Contribution Guide](#-contribution-guide-贡献指南)
+- [FAQ](#-faq-常见问题)
+- [License](#-license-许可证)
 
-## ✨ Features / 功能特性
+## ✨ Features
 
-### Vibe Coding Optimization (v2.4 New) / Vibe Coding 优化 (v2.4 新增)
+### Vibe Coding Optimization (v2.4 New)
 
 1. **Planning Engine** 📋
    - Generates detailed project implementation plans
    - Supports plan saving and management
    - Task status tracking and updates
+   - **Deep Analysis Capability**: Integrates 5-Why analysis framework to identify root causes
+   - **Analysis Case Library**: Stores and indexes historical analysis results
    - Core file: `scripts/vibe_coding/planning_engine.py`
 
 2. **Prompt Evolution System** 🧠
@@ -99,7 +101,34 @@ This project is a fork from [https://github.com/weiransoft/TraeMultiAgentSkill/]
    - Processing history management
    - Core file: `scripts/vibe_coding/multimodal_processor.py`
 
-### Core Capabilities / 核心能力
+6. **Automated Verification Mechanism** 🧪
+   - Rule-based test case generator
+   - Automated test execution framework
+   - Test coverage report generation system
+   - Supports normal, boundary, and exception scenario test cases
+   - Core file: `scripts/tests/automated_test_generator.py`
+
+7. **Professional Domain Knowledge Base** 📚
+   - Lightweight knowledge management system
+   - Keyword-based knowledge search functionality
+   - Supports knowledge addition, update, and deletion
+   - Relevance ranking
+   - Core file: `scripts/knowledge_base_manager.py`
+
+8. **User Experience Optimization** 💬
+   - Improved user feedback collection mechanism
+   - Rule-based feedback analysis
+   - Feedback classification, sentiment analysis, priority calculation
+   - Interface optimization recording and management
+   - Core file: `scripts/user_experience_manager.py`
+
+9. **Integration Script** 🔗
+   - Integrates all optimization modules into TraeMultiAgentSkill
+   - Unified integration interface
+   - Supports complete task scheduling flow
+   - Core file: `scripts/integration_script.py`
+
+### Core Capabilities
 
 1. **Intelligent Role Dispatching** 🎯
    - Automatically identifies required roles based on task description
@@ -164,7 +193,7 @@ This project is a fork from [https://github.com/weiransoft/TraeMultiAgentSkill/]
    - Unified path handling and character encoding
    - Cross-platform script execution
 
-### Agent Prompt System / 角色 Prompt 系统
+### Agent Prompt System
 
 Each role is equipped with complete work rules and quality standards:
 
@@ -175,56 +204,56 @@ Each role is equipped with complete work rules and quality standards:
 - ✅ **Completeness Check** - Multi-dimensional checklists
 - ✅ **Self-Testing Rules** - 3-layer test validation
 
-## 🚀 Quick Start / 快速开始
+## 🚀 Quick Start
 
-### Prerequisites / 前置要求
+### Prerequisites
 
 - Python 3.8+
 - Trae IDE
 - Basic command line knowledge
 
-### Basic Usage / 基础使用
+### Basic Usage
 
 Use directly in Trae without additional commands:
 
 ```
 # Architecture design task
-设计系统架构：包括模块划分、技术选型、部署方案
+Design system architecture: including module division, technology selection, deployment plan
 
 # Product requirements definition
-定义产品需求：广告拦截功能，需要明确的验收标准
+Define product requirements: ad blocking functionality, clear acceptance criteria required
 
 # Test strategy formulation
-制定测试策略：覆盖正常、异常、边界、性能场景
+Develop test strategy: covering normal, exceptional, boundary, and performance scenarios
 
 # Feature development
-实现广告拦截功能：完整代码，包含单元测试
+Implement ad blocking functionality: complete code with unit tests
 ```
 
 The agent will automatically identify the task type and dispatch the corresponding role!
 
-### Advanced Usage / 高级使用
+### Advanced Usage
 
 Use the dispatch script for more fine-grained control:
 
 ```bash
 # Auto-identify role
 python3 scripts/trae_agent_dispatch.py \
-    --task "设计系统架构"
+    --task "Design system architecture"
 
 # Specify role
 python3 scripts/trae_agent_dispatch.py \
-    --task "实现功能" \
+    --task "Implement functionality" \
     --agent solo_coder
 
 # Multi-agent consensus
 python3 scripts/trae_agent_dispatch.py \
-    --task "启动新项目：安全浏览器广告拦截功能" \
+    --task "Start new project: secure browser ad blocking functionality" \
     --consensus true
 
 # Complete project lifecycle
 python3 scripts/trae_agent_dispatch.py \
-    --task "安全浏览器广告拦截功能" \
+    --task "Secure browser ad blocking functionality" \
     --project-full-lifecycle
 
 # Specification-driven development
@@ -242,9 +271,9 @@ python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /wor
 python3 scripts/project_understanding.py /path/to/project
 ```
 
-## 🎭 Agent Roles / 角色介绍
+## 🎭 Agent Roles
 
-### 1. Architect / 架构师
+### 1. Architect
 
 **Responsibilities**: Design systematic, forward-looking, implementable, and verifiable architecture
 
@@ -261,9 +290,9 @@ python3 scripts/project_understanding.py /path/to/project
 - Data model design
 - Deployment architecture description
 
-**Trigger Keywords**: 架构、设计、选型、审查、性能、瓶颈、模块、接口、部署
+**Trigger Keywords**: architecture, design, selection, review, performance, bottleneck, module, interface, deployment
 
-### 2. Product Manager / 产品经理
+### 2. Product Manager
 
 **Responsibilities**: Define products with clear user value, explicit requirements, implementable and verifiable
 
@@ -278,9 +307,9 @@ python3 scripts/project_understanding.py /path/to/project
 - Acceptance criteria (SMART)
 - Competitive analysis report
 
-**Trigger Keywords**: 需求、PRD、用户故事、竞品、市场、调研、验收、UAT、体验
+**Trigger Keywords**: requirements, PRD, user story, competition, market, research, acceptance, UAT, experience
 
-### 3. Test Expert / 测试专家
+### 3. Test Expert
 
 **Responsibilities**: Ensure comprehensive, in-depth, automated, and quantifiable quality assurance
 
@@ -295,9 +324,9 @@ python3 scripts/project_understanding.py /path/to/project
 - Automated test scripts
 - Quality assessment report
 
-**Trigger Keywords**: 测试、质量、验收、自动化、性能测试、缺陷、评审、门禁
+**Trigger Keywords**: test, quality, acceptance, automation, performance test, defect, review, gate
 
-### 4. UI Designer / UI 设计师
+### 4. UI Designer
 
 **Responsibilities**: Create unique, production-grade UI interfaces with high design quality, avoiding generic AI "slop" aesthetics
 
@@ -314,9 +343,9 @@ python3 scripts/project_understanding.py /path/to/project
 - High-fidelity prototypes
 - UI design document
 
-**Trigger Keywords**: UI设计、界面设计、前端设计、视觉设计、UI/UX、UI原型、界面美化、UI优化、UI重构
+**Trigger Keywords**: UI design, interface design, frontend design, visual design, UI/UX, UI prototype, interface beautification, UI optimization, UI refactoring
 
-### 5. Solo Coder / 独立开发者
+### 5. Solo Coder
 
 **Responsibilities**: Write complete, high-quality, maintainable, and testable code
 
@@ -331,16 +360,16 @@ python3 scripts/project_understanding.py /path/to/project
 - Integration tests
 - Technical documentation
 
-**Trigger Keywords**: 实现、开发、代码、修复、优化、重构、单元测试、文档
+**Trigger Keywords**: implementation, development, code, fix, optimization, refactoring, unit test, documentation
 
-## 💡 Usage Methods / 使用方法
+## 💡 Usage Methods
 
-### Scenario 1: Project Startup / 场景 1: 项目启动
+### Scenario 1: Project Startup
 
 ```bash
 # Complete project startup (multi-agent consensus)
 python3 scripts/trae_agent_dispatch.py \
-    --task "启动新项目：安全浏览器广告拦截功能" \
+    --task "Start new project: secure browser ad blocking functionality" \
     --consensus true \
     --priority high
 
@@ -351,14 +380,14 @@ python3 scripts/trae_agent_dispatch.py \
 #   4. Solo Coder - Development plan
 ```
 
-### Scenario 2: Feature Development / 场景 2: 功能开发
+### Scenario 2: Feature Development
 
 ```bash
 # Single role dispatch (fast development)
 python3 scripts/trae_agent_dispatch.py \
-    --task "实现广告拦截核心模块" \
+    --task "Implement ad blocking core module" \
     --agent solo_coder \
-    --context "基于架构设计文档 v2.0"
+    --context "Based on architecture design document v2.0"
 
 # Automatic includes:
 #   - Architecture design document as context
@@ -366,12 +395,12 @@ python3 scripts/trae_agent_dispatch.py \
 #   - Self-testing requirements
 ```
 
-### Scenario 3: Code Review / 场景 3: 代码审查
+### Scenario 3: Code Review
 
 ```bash
 # Multi-agent code review
 python3 scripts/trae_agent_dispatch.py \
-    --task "审查广告拦截核心模块" \
+    --task "Review ad blocking core module" \
     --code-review \
     --files src/adblock/ tests/
 
@@ -381,12 +410,12 @@ python3 scripts/trae_agent_dispatch.py \
 #   - Solo Coder (code quality)
 ```
 
-### Scenario 4: Emergency Bug Fix / 场景 4: 紧急 Bug 修复
+### Scenario 4: Emergency Bug Fix
 
 ```bash
 # Emergency fix (fast track)
 python3 scripts/trae_agent_dispatch.py \
-    --task "紧急修复：生产环境崩溃" \
+    --task "Emergency fix: production environment crash" \
     --priority critical \
     --fast-track
 
@@ -396,7 +425,7 @@ python3 scripts/trae_agent_dispatch.py \
 #   - Real-time progress synchronization
 ```
 
-### Scenario 5: Specification-Driven Development / 场景 5: 规范驱动开发
+### Scenario 5: Specification-Driven Development
 
 ```bash
 # Initialize specification environment
@@ -410,7 +439,7 @@ python3 scripts/spec_tools.py update --spec-file SPEC.md
 
 # Specification-driven project startup
 python3 scripts/trae_agent_dispatch.py \
-    --task "启动规范驱动项目：电商系统" \
+    --task "Start specification-driven project: e-commerce system" \
     --spec-driven
 
 # Automatic execution:
@@ -424,7 +453,7 @@ python3 scripts/trae_agent_dispatch.py \
 #   8. Specification verification and quality review
 ```
 
-### Scenario 6: Code Map & Code Walkthrough / 场景 6: 代码地图与代码走读
+### Scenario 6: Code Map & Code Walkthrough
 
 ```bash
 # Generate code map (with workspace support)
@@ -448,7 +477,7 @@ python3 scripts/multi_role_code_walkthrough.py /path/to/project --workspace /wor
 #   - Review report: review overview, architecture review, code quality assessment
 ```
 
-### Scenario 7: Project Understanding / 场景 7: 项目理解
+### Scenario 7: Project Understanding
 
 ```bash
 # Generate project understanding documents
@@ -468,9 +497,9 @@ python3 scripts/project_understanding.py /path/to/project
 #   - Role-specific insights and recommendations
 ```
 
-## 📦 Installation / 安装说明
+## 📦 Installation
 
-### Method 1: Global Installation (Recommended) / 方式一：全局安装（推荐）
+### Method 1: Global Installation (Recommended)
 
 ```bash
 # Run installation script
@@ -483,15 +512,15 @@ ls -lh ~/.trae/skills/trae-multi-agent/
 # Restart Trae application
 ```
 
-### Method 2: Project-Level Installation / 方式二：项目级安装
+### Method 2: Project-Level Installation
 
 Skill is included in project directory, Trae will automatically load:
 
 ```
-项目目录/.trae/skills/trae-multi-agent/
+project-directory/.trae/skills/trae-multi-agent/
 ```
 
-### Method 3: Manual Installation / 方式三：手动安装
+### Method 3: Manual Installation
 
 ```bash
 # 1. Create skill directory
@@ -507,7 +536,7 @@ ls -lh ~/.trae/skills/trae-multi-agent/SKILL.md
 # 4. Restart Trae
 ```
 
-### Verify Installation / 验证安装
+### Verify Installation
 
 ```bash
 # Check skill files
@@ -515,11 +544,11 @@ ls -lh ~/.trae/skills/trae-multi-agent/SKILL.md
 # Should display: 34K SKILL.md
 
 # Test dispatch script
-python3 scripts/trae_agent_dispatch.py --task "设计系统架构"
-# Should display: 🎯 自动识别为：架构师
+python3 scripts/trae_agent_dispatch.py --task "Design system architecture"
+# Should display: 🎯 Identified as: Architect
 ```
 
-## ⚙️ Configuration / 配置说明
+## ⚙️ Configuration
 
 ### Skill Configuration (skills-index.json)
 
@@ -539,30 +568,30 @@ python3 scripts/trae_agent_dispatch.py --task "设计系统架构"
 }
 ```
 
-### Role Recognition Algorithm / 角色识别算法
+### Role Recognition Algorithm
 
 ```python
 def analyze_task(task: str):
     """
-    分析任务，识别需要的角色
+    Analyze task and identify required roles
     
     Args:
-        task: 任务描述
+        task: Task description
         
     Returns:
-        (最佳角色，置信度，所有匹配的角色列表)
+        (Best role, confidence, list of all matched roles)
     """
     scores = {}
     matched_roles = []
     
-    # 关键词匹配 + 位置权重
+    # Keyword matching + position weight
     for role, config in ROLES.items():
         score = 0.0
         for keyword in config["keywords"]:
             if keyword in task:
                 score += 1.0
         
-        # 位置权重：越靠前权重越高
+        # Position weight: higher weight for earlier positions
         words = task.split()
         for i, word in enumerate(words):
             for keyword in config["keywords"]:
@@ -571,41 +600,41 @@ def analyze_task(task: str):
         
         scores[role] = score
     
-    # 选择最佳角色
+    # Select best role
     best_role = max(scores, key=scores.get)
     confidence = min(scores[best_role] / len(keywords), 1.0)
     
     return best_role, confidence, matched_roles
 ```
 
-### Consensus Trigger Conditions / 共识触发条件
+### Consensus Trigger Conditions
 
 ```python
 def _needs_consensus(task, confidence, matched_roles):
-    """判断是否需要多角色共识"""
+    """Determine if multi-agent consensus is needed"""
     
-    # 1. 置信度低于阈值
+    # 1. Confidence below threshold
     if confidence < 0.6:
         return True
     
-    # 2. 涉及多个专业领域
+    # 2. Involves multiple professional domains
     if len(matched_roles) >= 2:
         return True
     
-    # 3. 任务描述很长
+    # 3. Task description is very long
     if len(task) > 200:
         return True
     
-    # 4. 包含明确的共识请求
-    if any(kw in task for kw in ["共识", "评审", "讨论"]):
+    # 4. Contains explicit consensus request
+    if any(kw in task for kw in ["consensus", "review", "discussion"]):
         return True
     
     return False
 ```
 
-## 📋 New Feature / Feature Change Standard Workflow / 新功能/功能变更标准工作流程
+## 📋 New Feature / Feature Change Standard Workflow
 
-### Core Principle: Design First, Document First, Then Develop / 核心原则：先设计、先写文档、再开发
+### Core Principle: Design First, Document First, Then Develop
 
 **Must Follow Workflow**:
 
@@ -647,16 +676,16 @@ Release Decision (Multi-Agent)
 
 Detailed process description: [SKILL.md](SKILL.md) - New Feature / Feature Change Standard Workflow
 
-## 📚 Example Scenarios / 示例场景
+## 📚 Example Scenarios
 
-### Example 1: Complete Project Startup / 示例 1: 完整项目启动
+### Example 1: Complete Project Startup
 
 **Input**:
 ```
-启动新项目：安全浏览器广告拦截功能
-- 支持拦截恶意广告和钓鱼网站
-- 性能要求：页面加载延迟<100ms
-- 需要完整的测试覆盖
+Start new project: secure browser ad blocking functionality
+- Support blocking malicious ads and phishing websites
+- Performance requirement: page load delay < 100ms
+- Complete test coverage required
 ```
 
 **Automatic Process**:
@@ -684,14 +713,14 @@ Detailed process description: [SKILL.md](SKILL.md) - New Feature / Feature Chang
    - Risk assessment
 ```
 
-### Example 2: Feature Development / 示例 2: 功能开发
+### Example 2: Feature Development
 
 **Input**:
 ```
-实现广告拦截核心模块
-- 基于架构设计文档 v2.0
-- 使用 SQLite 存储规则
-- 需要完整单元测试
+Implement ad blocking core module
+- Based on architecture design document v2.0
+- Use SQLite for rule storage
+- Complete unit tests required
 ```
 
 **Automatic Processing**:
@@ -715,14 +744,14 @@ Detailed process description: [SKILL.md](SKILL.md) - New Feature / Feature Chang
    5. Self-testing verification
 ```
 
-### Example 3: Architecture Review / 示例 3: 架构审查
+### Example 3: Architecture Review
 
 **Input**:
 ```
-审查当前系统架构
-- 评估性能瓶颈
-- 识别技术债务
-- 提出优化建议
+Review current system architecture
+- Evaluate performance bottlenecks
+- Identify technical debt
+- Propose optimization suggestions
 ```
 
 **Automatic Processing**:
@@ -747,15 +776,15 @@ Detailed process description: [SKILL.md](SKILL.md) - New Feature / Feature Chang
    - Priority sorting
 ```
 
-### Example 4: Vibe Coding Optimization Process / 示例 4: Vibe Coding 优化流程
+### Example 4: Vibe Coding Optimization Process
 
 **Input**:
 ```
-使用 Vibe Coding 优化项目开发流程
-- 生成详细的项目计划
-- 优化提示词以提高 AI 输出质量
-- 管理项目上下文和模块结构
-- 处理多模态输入
+Optimize project development process using Vibe Coding
+- Generate detailed project plan
+- Optimize prompts to improve AI output quality
+- Manage project context and module structure
+- Process multimodal inputs
 ```
 
 **Automatic Process**:
@@ -797,9 +826,9 @@ python3 scripts/vibe_coding/integration_test.py
 python3 scripts/vibe_coding/test_vibe_coding.py
 ```
 
-## 🏗️ Technical Architecture / 技术架构
+## 🏗️ Technical Architecture
 
-### System Architecture / 系统架构
+### System Architecture
 
 ```
 ┌─────────────────────────────────────────┐
@@ -834,7 +863,7 @@ python3 scripts/vibe_coding/test_vibe_coding.py
 └─────────────────────────────────────────┘
 ```
 
-### Data Flow / 数据流
+### Data Flow
 
 ```
 User Input
@@ -853,14 +882,14 @@ Result Verification (Checklist)
 Output Response
 ```
 
-### Core Algorithms / 核心算法
+### Core Algorithms
 
-#### 1. Role Recognition Algorithm / 角色识别算法
+#### 1. Role Recognition Algorithm
 
 ```python
 def analyze_task(task: str) -> Tuple[str, float, List[str]]:
     """
-    分析任务，识别需要的角色
+    Analyze task and identify required roles
     
     Algorithm:
     1. Keyword matching
@@ -875,13 +904,13 @@ def analyze_task(task: str) -> Tuple[str, float, List[str]]:
         score = 0.0
         matched_keywords = []
         
-        # 关键词匹配
+        # Keyword matching
         for keyword in config["keywords"]:
             if keyword in task:
                 score += 1.0
                 matched_keywords.append(keyword)
         
-        # 位置权重
+        # Position weight
         words = task.split()
         for i, word in enumerate(words):
             for keyword in config["keywords"]:
@@ -893,23 +922,23 @@ def analyze_task(task: str) -> Tuple[str, float, List[str]]:
         
         scores[role] = score
     
-    # 选择最佳角色
+    # Select best role
     best_role = max(scores, key=scores.get)
     max_score = scores[best_role]
     
-    # 计算置信度
+    # Calculate confidence
     confidence = min(max_score / len(ROLES[best_role]["keywords"]), 1.0) \
                  if max_score > 0 else 0.0
     
     return best_role, confidence, matched_roles
 ```
 
-#### 2. Consensus Decision Algorithm / 共识决策算法
+#### 2. Consensus Decision Algorithm
 
 ```python
 def organize_consensus(task: str, agents: List[str]) -> Dict:
     """
-    组织多角色共识
+    Organize multi-agent consensus
     
     Process:
     1. Determine lead role
@@ -918,31 +947,31 @@ def organize_consensus(task: str, agents: List[str]) -> Dict:
     4. Reach consensus
     5. Generate resolution
     """
-    # 确定主导角色
+    # Determine lead role
     lead_role = determine_lead_role(task)
     
-    # 收集意见
+    # Collect opinions
     opinions = {}
     for agent in agents:
         opinion = agent.analyze(task)
         opinions[agent.role] = opinion
     
-    # 冲突检测
+    # Conflict detection
     conflicts = detect_conflicts(opinions)
     
-    # 解决冲突
+    # Resolve conflicts
     if conflicts:
         resolved = resolve_conflicts(conflicts, opinions)
     
-    # 生成决议
+    # Generate consensus
     consensus = generate_consensus(opinions)
     
     return consensus
 ```
 
-## 🤝 Contribution Guide / 贡献指南
+## 🤝 Contribution Guide
 
-### Development Environment Setup / 开发环境设置
+### Development Environment Setup
 
 ```bash
 # 1. Clone project
@@ -960,7 +989,7 @@ pip install -r requirements.txt
 pytest tests/
 ```
 
-### Submission Process / 提交流程
+### Submission Process
 
 1. **Fork project**
 2. **Create feature branch** (`git checkout -b feature/AmazingFeature`)
@@ -968,14 +997,14 @@ pytest tests/
 4. **Push to branch** (`git push origin feature/AmazingFeature`)
 5. **Open Pull Request**
 
-### Code Standards / 代码规范
+### Code Standards
 
 - Follow PEP 8 standard
 - Use type annotations
 - Write unit tests
-- Add Chinese comments
+- Add comments in English
 
-### Test Requirements / 测试要求
+### Test Requirements
 
 ```bash
 # Run all tests
@@ -989,7 +1018,7 @@ pytest tests/ --cov=src --cov-report=html
 # - Branch coverage > 70%
 ```
 
-## ❓ FAQ / 常见问题
+## ❓ FAQ
 
 ### Q1: Skill not working?
 
@@ -1024,7 +1053,7 @@ brew install python@3.11
 
 **A**: Edit role Prompt section in `SKILL.md` file, then restart Trae.
 
-## 📄 License / 许可证
+## 📄 License
 
 MIT License
 
@@ -1048,13 +1077,13 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## 📞 Contact / 联系方式
+## 📞 Contact
 
 - **Project Homepage**: https://github.com/lulin70/TraeMultiAgentSkill
 - **Issue Feedback**: https://github.com/lulin70/TraeMultiAgentSkill/issues
 - **Original Project**: https://github.com/weiransoft/TraeMultiAgentSkill
 - **Vibe Coding Concept**: https://github.com/2025Emma/vibe-coding-cn
 
-## 🙏 Acknowledgments / 致谢
+## 🙏 Acknowledgments
 
-感谢所有贡献者和用户的支持！
+Thank you to all contributors and users for your support!

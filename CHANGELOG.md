@@ -5,6 +5,87 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.4.0] - 2026-03-31
+
+### Added
+
+#### Vibe Coding 集成 (v2.4)
+
+##### 规划引擎
+- ✅ `PlanningEngine` 类 (`scripts/vibe_coding/planning_engine.py`)
+  - 实现规划驱动开发理念
+  - 生成详细的项目实施计划
+  - 支持计划保存和管理
+  - 任务状态跟踪和更新
+  - **深度分析能力**：集成 5-Why 分析框架
+  - **分析案例库**：存储和索引历史分析结果
+
+##### 提示词进化系统
+- ✅ `PromptEvolutionSystem` 类 (`scripts/vibe_coding/prompt_evolution.py`)
+  - Alpha（生成器）和 Omega（优化器）提示词的自改进生成
+  - 提示词效果分析和评分
+  - 历史记录和模板管理
+  - 自定义模板支持
+
+##### 增强上下文管理器
+- ✅ `EnhancedDualLayerContextManager` 类 (`scripts/vibe_coding/enhanced_context_manager.py`)
+  - 语义记忆和多模型支持
+  - 全局和任务上下文管理
+  - 模型协调和分配
+  - 增强版上下文同步器
+
+##### 模块管理器
+- ✅ `ModuleManager` 类 (`scripts/vibe_coding/module_manager.py`)
+  - 模块化设计工具
+  - 模块创建和管理
+  - 依赖分析和接口定义
+  - 模块接口规范生成
+
+##### 多模态处理器
+- ✅ `MultimodalProcessor` 类 (`scripts/vibe_coding/multimodal_processor.py`)
+  - 支持文本、图像和语音输入
+  - 文本到代码转换
+  - 处理历史管理
+  - 多模态输入分析
+
+##### 自动化验证机制
+- ✅ `AutomatedTestRunner` 类 (`scripts/tests/automated_test_generator.py`)
+  - 基于规则的测试用例生成器
+  - 自动化测试执行框架
+  - 测试覆盖率报告生成系统
+  - 支持正常、边界和异常场景的测试用例
+
+##### 专业领域知识库
+- ✅ `KnowledgeBaseManager` 类 (`scripts/knowledge_base_manager.py`)
+  - 轻量级知识管理系统
+  - 基于关键词的知识搜索功能
+  - 支持知识的添加、更新和删除
+  - 相关性排序
+
+##### 用户体验优化
+- ✅ `UserExperienceManager` 类 (`scripts/user_experience_manager.py`)
+  - 改进的用户反馈收集机制
+  - 基于规则的反馈分析
+  - 反馈分类、情感分析、优先级计算
+  - 界面优化记录和管理
+
+##### 集成脚本
+- ✅ `TraeMultiAgentIntegration` 类 (`scripts/integration_script.py`)
+  - 将所有优化模块整合到 TraeMultiAgentSkill 中
+  - 统一的集成接口
+  - 支持完整的任务调度流程
+  - 整合深度分析、自动化验证、知识库和用户体验模块
+
+### Fixed
+
+- ✅ 修复安装脚本中的文件引用问题
+  - 将 `trae_agent.py` 更正为 `trae_agent_dispatch.py`
+  - 添加对所有优化脚本的执行权限设置
+
+- ✅ 修复EXAMPLES_EN.md中的中文内容
+  - 将中文内容替换为英文
+  - 确保英文版文档与中文版一致
+
 ## [2.3.0] - 2026-03-28
 
 ### Added

@@ -18,6 +18,7 @@ sys.path.insert(0, str(script_dir))
 from test_checkpoint_manager import TestCheckpointManager, TestHandoffDocument
 from test_task_list_manager import TestTaskListManager
 from test_workflow_engine_v2 import TestWorkflowEngineV2, TestCheckpointAndHandoffIntegration
+from automated_test_generator import AutomatedTestRunner
 
 
 def run_all_tests():
@@ -31,32 +32,35 @@ def run_all_tests():
     print()
     print("=" * 70)
     
-    # 创建测试套件
-    loader = unittest.TestLoader()
-    suite = unittest.TestSuite()
+    # 使用自动化测试运行器
+    runner = AutomatedTestRunner()
     
-    # 添加测试
-    suite.addTests(loader.loadTestsFromTestCase(TestCheckpointManager))
-    suite.addTests(loader.loadTestsFromTestCase(TestHandoffDocument))
-    suite.addTests(loader.loadTestsFromTestCase(TestTaskListManager))
-    suite.addTests(loader.loadTestsFromTestCase(TestWorkflowEngineV2))
-    suite.addTests(loader.loadTestsFromTestCase(TestCheckpointAndHandoffIntegration))
-    
-    # 运行测试
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
+    # 运行所有测试
+    test_report = runner.run_all_tests()
     
     # 打印总结
     print()
     print("=" * 70)
     print("📊 测试结果总结")
     print("=" * 70)
-    print(f"总测试数: {result.testsRun}")
-    print(f"成功: {result.testsRun - len(result.failures) - len(result.errors)}")
-    print(f"失败: {len(result.failures)}")
-    print(f"错误: {len(result.errors)}")
+    print(f"总测试数: {test_report['total_tests']}")
+    print(f"成功: {test_report['passed_tests']}")
+    print(f"失败: {test_report['failed_tests']}")
+    print(f"错误: {test_report['error_tests']}")
     
-    if result.wasSuccessful():
+    # 生成测试覆盖率报告
+    print()
+    print("=" * 70)
+    print("📈 测试覆盖率报告")
+    print("=" * 70)
+    coverage_report = runner.generate_test_coverage_report()
+    print(f"整体覆盖率: {coverage_report['overall_coverage']:.1f}%")
+    print("模块覆盖率:")
+    for module, coverage in coverage_report['module_coverage'].items():
+        print(f"- {module}: {coverage:.1f}%")
+    print(f"总结: {coverage_report['summary']}")
+    
+    if test_report['success']:
         print()
         print("🎉 所有测试通过！")
         print()
@@ -69,18 +73,18 @@ def run_all_tests():
     else:
         print()
         print("❌ 部分测试失败，请检查上述错误信息")
-        if result.failures:
+        if test_report['failures']:
             print()
             print("失败详情:")
-            for test, traceback in result.failures:
+            for test in test_report['failures']:
                 print(f"  - {test}")
-        if result.errors:
+        if test_report['errors']:
             print()
             print("错误详情:")
-            for test, traceback in result.errors:
+            for test in test_report['errors']:
                 print(f"  - {test}")
     
-    return result.wasSuccessful()
+    return test_report['success']
 
 
 if __name__ == '__main__':

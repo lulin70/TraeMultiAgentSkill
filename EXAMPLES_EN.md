@@ -315,7 +315,7 @@ Core Features:
 
 Acceptance Criteria:
   - Ad blocking rate > 99%
-  - Page load speed提升 30%
+  - Page load speed increased by 30%
   - Zero privacy data leakage
 
 ---
@@ -394,14 +394,14 @@ Key Decisions:
 
 Risk Assessment:
   ⚠️ Rust development talent scarcity → Recruit in advance
-  ⚠️ Rule library maintenance cost high → Community共建
+  ⚠️ Rule library maintenance cost high → Community collaboration
   ⚠️ Browser compatibility issues → Thorough testing
 
 Next Actions:
-  1. Product Manager完善 PRD (2 days)
-  2. Architect输出 detailed design (3 days)
-  3. Solo Coder搭建 environment (2 days)
-  4. Test Expert准备 test cases (3 days)
+  1. Product Manager completes PRD (2 days)
+  2. Architect outputs detailed design (3 days)
+  3. Solo Coder sets up environment (2 days)
+  4. Test Expert prepares test cases (3 days)
 ```
 
 ---
@@ -413,7 +413,7 @@ Next Actions:
 **Input**:
 ```bash
 python3 scripts/trae_agent_dispatch.py \
-    --task "Emergency fix: Ad blocking失效, user complaints surged" \
+    --task "Emergency fix: Ad blocking not working, user complaints surged" \
     --priority critical \
     --fast-track
 ```

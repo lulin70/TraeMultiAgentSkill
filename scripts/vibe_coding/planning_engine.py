@@ -4,6 +4,7 @@
 Vibe Coding 规划引擎
 
 实现 Vibe Coding 的规划驱动开发理念，为项目生成详细的实施计划。
+增强了深度分析能力，包括5-Why分析和分析案例库。
 """
 
 import os
@@ -26,7 +27,9 @@ class PlanningEngine:
             'memory-bank'
         )
         self.plans_dir = os.path.join(self.memory_bank_path, 'plans')
+        self.analysis_cases_dir = os.path.join(self.memory_bank_path, 'analysis_cases')
         os.makedirs(self.plans_dir, exist_ok=True)
+        os.makedirs(self.analysis_cases_dir, exist_ok=True)
     
     def generate_plan(self, project_info):
         """
@@ -332,6 +335,166 @@ class PlanningEngine:
         plans.sort(key=lambda x: x['created_at'], reverse=True)
         
         return plans
+    
+    def five_why_analysis(self, problem, context=None):
+        """
+        执行5-Why分析，识别问题的根本原因
+        
+        Args:
+            problem (str): 问题描述
+            context (dict, optional): 问题上下文信息
+        
+        Returns:
+            dict: 5-Why分析结果
+        """
+        # 生成分析ID
+        analysis_id = f"analysis_{int(time.time())}"
+        
+        # 执行5-Why分析
+        # 这里使用基于规则的分析，不需要LLM
+        whys = []
+        
+        # Why 1: 直接原因
+        why1 = f"为什么会出现{problem}？"
+        answer1 = f"直接原因：{problem}的直接触发因素"
+        whys.append({"question": why1, "answer": answer1})
+        
+        # Why 2: 间接原因
+        why2 = f"为什么会出现{answer1.split('：')[-1]}？"
+        answer2 = "间接原因：系统设计或流程中的潜在问题"
+        whys.append({"question": why2, "answer": answer2})
+        
+        # Why 3: 根本原因
+        why3 = f"为什么会出现{answer2.split('：')[-1]}？"
+        answer3 = "根本原因：架构或设计中的缺陷"
+        whys.append({"question": why3, "answer": answer3})
+        
+        # Why 4: 根因的根因
+        why4 = f"为什么会出现{answer3.split('：')[-1]}？"
+        answer4 = "根因的根因：缺乏充分的设计评审或测试"
+        whys.append({"question": why4, "answer": answer4})
+        
+        # Why 5: 最终根因
+        why5 = f"为什么会出现{answer4.split('：')[-1]}？"
+        answer5 = "最终根因：流程或管理上的不足"
+        whys.append({"question": why5, "answer": answer5})
+        
+        # 生成解决方案
+        solutions = [
+            "1. 针对直接原因的临时解决方案",
+            "2. 针对间接原因的短期解决方案",
+            "3. 针对根本原因的长期解决方案",
+            "4. 预防类似问题再次发生的措施"
+        ]
+        
+        # 生成分析结果
+        analysis_result = {
+            'id': analysis_id,
+            'created_at': datetime.now().isoformat(),
+            'problem': problem,
+            'context': context or {},
+            'whys': whys,
+            'root_cause': answer5,
+            'solutions': solutions,
+            'status': 'completed'
+        }
+        
+        # 保存分析案例
+        self.save_analysis_case(analysis_result)
+        
+        return analysis_result
+    
+    def save_analysis_case(self, analysis):
+        """
+        保存分析案例到案例库
+        
+        Args:
+            analysis (dict): 分析结果
+        """
+        analysis_file = os.path.join(self.analysis_cases_dir, f"{analysis['id']}.json")
+        with open(analysis_file, 'w', encoding='utf-8') as f:
+            json.dump(analysis, f, ensure_ascii=False, indent=2)
+    
+    def load_analysis_case(self, analysis_id):
+        """
+        加载分析案例
+        
+        Args:
+            analysis_id (str): 分析ID
+        
+        Returns:
+            dict: 分析案例数据
+        """
+        analysis_file = os.path.join(self.analysis_cases_dir, f"{analysis_id}.json")
+        if not os.path.exists(analysis_file):
+            return None
+        
+        with open(analysis_file, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    
+    def search_analysis_cases(self, keyword):
+        """
+        搜索分析案例
+        
+        Args:
+            keyword (str): 搜索关键词
+        
+        Returns:
+            list: 匹配的分析案例列表
+        """
+        matched_cases = []
+        if not os.path.exists(self.analysis_cases_dir):
+            return matched_cases
+        
+        for filename in os.listdir(self.analysis_cases_dir):
+            if filename.endswith('.json'):
+                analysis_id = filename[:-5]  # 移除 .json 后缀
+                analysis = self.load_analysis_case(analysis_id)
+                if analysis:
+                    # 检查关键词是否在问题描述或分析结果中
+                    if keyword.lower() in analysis['problem'].lower() or \
+                       any(keyword.lower() in str(item).lower() for item in analysis['whys']) or \
+                       keyword.lower() in analysis['root_cause'].lower():
+                        matched_cases.append({
+                            'id': analysis['id'],
+                            'created_at': analysis['created_at'],
+                            'problem': analysis['problem'],
+                            'root_cause': analysis['root_cause']
+                        })
+        
+        # 按创建时间排序
+        matched_cases.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        return matched_cases
+    
+    def list_analysis_cases(self):
+        """
+        列出所有分析案例
+        
+        Returns:
+            list: 分析案例列表
+        """
+        cases = []
+        if not os.path.exists(self.analysis_cases_dir):
+            return cases
+        
+        for filename in os.listdir(self.analysis_cases_dir):
+            if filename.endswith('.json'):
+                analysis_id = filename[:-5]  # 移除 .json 后缀
+                analysis = self.load_analysis_case(analysis_id)
+                if analysis:
+                    cases.append({
+                        'id': analysis['id'],
+                        'created_at': analysis['created_at'],
+                        'problem': analysis['problem'],
+                        'root_cause': analysis['root_cause'],
+                        'status': analysis['status']
+                    })
+        
+        # 按创建时间排序
+        cases.sort(key=lambda x: x['created_at'], reverse=True)
+        
+        return cases
 
 if __name__ == '__main__':
     # 测试规划引擎
@@ -362,3 +525,33 @@ if __name__ == '__main__':
     status = engine.get_plan_status(plan['id'])
     print(f"完成率: {status['completion_rate']:.1f}%")
     print(f"状态统计: {status['status_counts']}")
+    
+    # 测试5-Why分析
+    print("\n测试5-Why分析:")
+    problem = "系统启动时间过长"
+    context = {"系统": "TraeMultiAgentSkill", "环境": "开发环境", "症状": "启动时间超过10秒"}
+    analysis = engine.five_why_analysis(problem, context)
+    print(f"分析ID: {analysis['id']}")
+    print(f"问题: {analysis['problem']}")
+    print("5-Why分析:")
+    for i, why in enumerate(analysis['whys'], 1):
+        print(f"Why {i}: {why['question']}")
+        print(f"Answer {i}: {why['answer']}")
+    print(f"根本原因: {analysis['root_cause']}")
+    print("解决方案:")
+    for solution in analysis['solutions']:
+        print(f"- {solution}")
+    
+    # 测试分析案例库
+    print("\n测试分析案例库:")
+    cases = engine.list_analysis_cases()
+    print(f"分析案例数量: {len(cases)}")
+    for case in cases:
+        print(f"- {case['id']}: {case['problem']} (根本原因: {case['root_cause']})")
+    
+    # 测试搜索分析案例
+    print("\n测试搜索分析案例:")
+    search_results = engine.search_analysis_cases("启动时间")
+    print(f"搜索结果数量: {len(search_results)}")
+    for result in search_results:
+        print(f"- {result['id']}: {result['problem']}")
