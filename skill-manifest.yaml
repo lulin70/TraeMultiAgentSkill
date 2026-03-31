@@ -391,7 +391,6 @@ capabilities:
         context_info:
           type: object
           description: 上下文信息
-
 dependencies: []
 
 ai_integration:
@@ -491,7 +490,6 @@ workflows:
         name: 智能代码生成
         role: vibe-coding
         action: process_multimodal
-
 context_management:
   type: dual-layer
   
@@ -560,8 +558,8 @@ metadata:
     - context-management
   
   license: MIT
-  repository: https://github.com/weiransoft/zeroclaw
-  documentation: https://github.com/weiransoft/zeroclaw/tree/main/.trae/skills/trae-multi-agent
+  repository: https://github.com/lulin70/TraeMultiAgentSkill
+  documentation: https://github.com/lulin70/TraeMultiAgentSkill
   
   version_history:
     - version: 2.4.0
@@ -606,4 +604,4 @@ metadata:
         - 简单的上下文管理
 
 created_at: "2026-03-16T00:00:00"
-updated_at: "2026-03-17T00:00:00"
+updated_at: "2026-03-31T00:00:00"

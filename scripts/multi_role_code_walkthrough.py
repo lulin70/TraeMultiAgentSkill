@@ -920,7 +920,10 @@ class CodeMapGenerator:
         md_content += self._generate_project_overview()
         md_content += self._generate_architecture_view()
         md_content += self._generate_code_structure()
+<<<<<<< HEAD
         md_content += self._generate_role_perspectives()
+=======
+>>>>>>> upstream/main
         md_content += self._generate_consensus_and_discrepancies()
         md_content += self._generate_footer()
 

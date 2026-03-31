@@ -1080,7 +1080,6 @@ python3 scripts/vibe_coding/integration_test.py
 # 测试 Vibe Coding 功能
 python3 scripts/vibe_coding/test_vibe_coding.py
 ```
-
 ## 🏗️ 技术架构
 
 ### 系统架构
