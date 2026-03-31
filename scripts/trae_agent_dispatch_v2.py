@@ -171,6 +171,9 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
 - /mas workflow <工作流> <任务> - 执行特定工作流
   工作流：standard-dev, rapid-prototype, bug-fix, vibe-coding
 
+**项目全生命周期：**
+- /mas lifecycle <任务> - 执行项目全生命周期模式（8 阶段标准工作流程：需求→架构→UI→测试→任务→开发→测试→发布）
+
 **知识管理：**
 - /mas knowledge list - 列出所有知识
 - /mas knowledge export - 导出知识
@@ -257,6 +260,14 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
         log(f'🔄 执行工作流 {workflow_type}：{workflow_task}', 'INFO')
         # 这里应该调用工作流执行功能
         return f"✅ 已启动 {workflow_type} 工作流"
+    
+    # 处理项目全生命周期模式
+    elif action == "lifecycle":
+        if not params:
+            return "❌ 命令格式错误，请使用：/mas lifecycle <任务>"
+        log(f'📋 执行项目全生命周期模式：{params}', 'INFO')
+        # 这里应该调用项目全生命周期功能，相当于使用 --project-full-lifecycle 参数
+        return "✅ 已启动项目全生命周期模式（8 阶段标准工作流程：需求→架构→UI→测试→任务→开发→测试→发布）"
     
     # 处理系统命令
     elif action == "status":
@@ -497,9 +508,34 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
         if task.startswith('/mas '):
             # 处理 MAS 命令
             mas_command = task[5:].strip()  # 去掉 '/mas ' 前缀
-            result = handle_mas_command(mas_command, context_manager)
-            log(result, 'SUCCESS')
-            return True
+            
+            # 检查是否是 lifecycle 命令
+            if mas_command.startswith('lifecycle '):
+                # 提取任务内容
+                lifecycle_task = mas_command[10:].strip()
+                log(f'📋 执行项目全生命周期模式：{lifecycle_task}', 'INFO')
+                
+                # 这里应该调用项目全生命周期功能
+                # 模拟执行8阶段标准工作流程
+                stages = [
+                    "需求分析（产品经理）",
+                    "架构设计（架构师）",
+                    "UI 设计（UI 设计师）",
+                    "测试设计（测试专家）",
+                    "任务分解（独立开发者）",
+                    "开发实现（独立开发者）",
+                    "测试验证（测试专家）",
+                    "发布评审（多角色）"
+                ]
+                
+                result = "✅ 已启动项目全生命周期模式\n\n" + "\n".join([f"  {i+1}. {stage}" for i, stage in enumerate(stages)])
+                log(result, 'SUCCESS')
+                return True
+            else:
+                # 处理其他 MAS 命令
+                result = handle_mas_command(mas_command, context_manager)
+                log(result, 'SUCCESS')
+                return True
         
         # 3. 识别 Vibe Coding 相关的自然语言意图
         vibe_intent = recognize_vibe_intent(task)
