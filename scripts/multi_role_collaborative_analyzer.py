@@ -214,15 +214,38 @@ class RolePromptLoader:
 
     @classmethod
     def get_task_template(cls, role: str, project_path: str, workspace: str) -> str:
-        """获取角色的任务模板"""
+        """获取角色的任务模板
+
+        模板中的 {{ 和 }} 表示 JSON 对象，{...} 表示省略号，都需要特殊处理：
+        1. 先将 {{ 和 }} 转换为占位符，避免 format() 误解析
+        2. 将 {...} 转换为占位符，避免 format() 误解析
+        3. 执行字符串替换变量
+        4. 恢复 JSON 格式的双大括号和省略号
+        """
         template = cls.PROMPT_TEMPLATES.get(role, {})
         task_template = template.get("task_template", "")
-        task_template = task_template.replace("{{", "[[DOUBLE_BRACE_OPEN]]")
-        task_template = task_template.replace("}}", "[[DOUBLE_BRACE_CLOSE]]")
-        task_template = task_template.format(project_path=project_path, workspace=workspace)
-        task_template = task_template.replace('\"', '"')
-        task_template = task_template.replace("[[DOUBLE_BRACE_OPEN]]", "{")
-        task_template = task_template.replace("[[DOUBLE_BRACE_CLOSE]]", "}")
+
+        # 第一步：将 {{ 和 }} 转换为占位符（避免 format() 误解析）
+        task_template = task_template.replace("{{", "__DOUBLE_BRACE_OPEN__")
+        task_template = task_template.replace("}}", "__DOUBLE_BRACE_CLOSE__")
+
+        # 第二步：将 {...} 转换为占位符（避免 format() 误解析省略号）
+        task_template = task_template.replace("{...}", "__ELLIPSIS__")
+
+        # 第三步：执行字符串替换变量（使用 replace 而不是 format 避免位置参数问题）
+        task_template = task_template.replace("{project_path}", project_path)
+        task_template = task_template.replace("{workspace}", workspace)
+
+        # 第四步：恢复被误转义的引号
+        task_template = task_template.replace('\\"', '"')
+
+        # 第五步：恢复双大括号（用于 JSON 格式）
+        task_template = task_template.replace("__DOUBLE_BRACE_OPEN__", "{{")
+        task_template = task_template.replace("__DOUBLE_BRACE_CLOSE__", "}}")
+
+        # 第六步：恢复省略号
+        task_template = task_template.replace("__ELLIPSIS__", "...")
+
         return task_template
 
 
