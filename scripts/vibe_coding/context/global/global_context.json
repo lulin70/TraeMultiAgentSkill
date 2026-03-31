@@ -1,0 +1,308 @@
+{
+  "version": 19,
+  "user_profile": null,
+  "knowledge_base": {
+    "vibe_coding": {
+      "id": "vibe_coding",
+      "category": "programming",
+      "title": "Vibe Coding",
+      "content": {
+        "description": "一种基于规划驱动的编程范式，结合AI辅助和结构化流程"
+      },
+      "tags": [
+        "AI",
+        "programming",
+        "planning"
+      ],
+      "source": "",
+      "confidence": 1.0,
+      "usage_count": 0,
+      "created_at": "2026-03-31T11:50:28.787265",
+      "updated_at": "2026-03-31T11:50:28.787267"
+    },
+    "trae_multi_agent": {
+      "id": "trae_multi_agent",
+      "category": "skill",
+      "title": "TraeMultiAgentSkill",
+      "content": {
+        "description": "多智能体协作技能，支持项目生命周期管理"
+      },
+      "tags": [
+        "AI",
+        "multi-agent",
+        "project management"
+      ],
+      "source": "",
+      "confidence": 1.0,
+      "usage_count": 0,
+      "created_at": "2026-03-31T11:50:28.787269",
+      "updated_at": "2026-03-31T11:50:28.787270"
+    }
+  },
+  "experience_db": {
+    "exp-TEST-TASK-001": {
+      "id": "exp-TEST-TASK-001",
+      "task_id": "TEST-TASK-001",
+      "task_type": "general",
+      "success": true,
+      "description": "任务：测试任务",
+      "lessons_learned": [],
+      "best_practices": [],
+      "patterns": [],
+      "created_at": "2026-03-31T11:42:55.233904"
+    },
+    "exp-INTEGRATION-TASK-001": {
+      "id": "exp-INTEGRATION-TASK-001",
+      "task_id": "INTEGRATION-TASK-001",
+      "task_type": "general",
+      "success": true,
+      "description": "任务：开发 Vibe Coding 与 TraeMultiAgentSkill 的集成接口",
+      "lessons_learned": [],
+      "best_practices": [],
+      "patterns": [],
+      "created_at": "2026-03-31T11:50:28.787575"
+    }
+  },
+  "collaboration_net": {},
+  "capability_models": {},
+  "semantic_memory": {},
+  "models": {
+    "gpt-4": {
+      "model_type": "general",
+      "name": "GPT-4",
+      "capabilities": [
+        "natural_language",
+        "planning",
+        "problem_solving"
+      ],
+      "parameters": {},
+      "performance": {},
+      "usage_count": 1
+    },
+    "claude-3": {
+      "model_type": "general",
+      "name": "Claude 3",
+      "capabilities": [
+        "natural_language",
+        "problem_solving"
+      ],
+      "parameters": {},
+      "performance": {},
+      "usage_count": 0
+    },
+    "gemini": {
+      "model_type": "vision",
+      "name": "Gemini",
+      "capabilities": [
+        "natural_language",
+        "vision_processing"
+      ],
+      "parameters": {},
+      "performance": {},
+      "usage_count": 0
+    }
+  },
+  "model_assignments": {
+    "assignment_1774929028": {
+      "task_id": "INTEGRATION-TASK-001",
+      "model_id": "gpt-4",
+      "capability": "planning",
+      "confidence": 0.7,
+      "created_at": "2026-03-31T11:50:28.786787",
+      "completed_at": null,
+      "success": null
+    }
+  },
+  "version_history": [
+    {
+      "version": 1,
+      "timestamp": "2026-03-31T11:36:40.175715",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 0,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 2,
+      "timestamp": "2026-03-31T11:36:40.176230",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 0,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 3,
+      "timestamp": "2026-03-31T11:36:40.176679",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 4,
+      "timestamp": "2026-03-31T11:42:55.231822",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 5,
+      "timestamp": "2026-03-31T11:42:55.233288",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 6,
+      "timestamp": "2026-03-31T11:42:55.233910",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 7,
+      "timestamp": "2026-03-31T11:49:23.713701",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 8,
+      "timestamp": "2026-03-31T11:49:23.714294",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 2
+      }
+    },
+    {
+      "version": 9,
+      "timestamp": "2026-03-31T11:49:23.714499",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 3
+      }
+    },
+    {
+      "version": 10,
+      "timestamp": "2026-03-31T11:49:23.715205",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 3
+      }
+    },
+    {
+      "version": 11,
+      "timestamp": "2026-03-31T11:49:48.700503",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 12,
+      "timestamp": "2026-03-31T11:49:48.700782",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 2
+      }
+    },
+    {
+      "version": 13,
+      "timestamp": "2026-03-31T11:49:48.701024",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 3
+      }
+    },
+    {
+      "version": 14,
+      "timestamp": "2026-03-31T11:49:48.701882",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 3
+      }
+    },
+    {
+      "version": 15,
+      "timestamp": "2026-03-31T11:50:28.785034",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 1
+      }
+    },
+    {
+      "version": 16,
+      "timestamp": "2026-03-31T11:50:28.785546",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 2
+      }
+    },
+    {
+      "version": 17,
+      "timestamp": "2026-03-31T11:50:28.785823",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 3
+      }
+    },
+    {
+      "version": 18,
+      "timestamp": "2026-03-31T11:50:28.786793",
+      "stats": {
+        "knowledge_count": 0,
+        "experience_count": 1,
+        "collaboration_count": 0,
+        "model_count": 3
+      }
+    },
+    {
+      "version": 19,
+      "timestamp": "2026-03-31T11:50:28.787585",
+      "stats": {
+        "knowledge_count": 2,
+        "experience_count": 2,
+        "collaboration_count": 0,
+        "model_count": 3
+      }
+    }
+  ]
+}

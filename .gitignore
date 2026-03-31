@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+build/
+dist/
+*.egg-info/
+
+# Testing
+.coverage
+.pytest_cache/
+test_results/
+
+# Logs
+logs/
+*.log
+
+# Temporary
+*.tmp
+*.temp
+
+# Memory Bank
+memory-bank/
+
+# Plans
+plans/
+
+# Progress
+progress/
+
+# Prompt Evolution
+prompt_evolution/
+
+# Prompts
+prompts/
+
+# Registry
+registry/
+
+# Workflows
+workflows/
+
+# Source
+src/
+
+# Docs
+/docs/
