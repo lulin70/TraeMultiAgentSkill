@@ -82,6 +82,38 @@
 
 ## ✨ 功能特性
 
+### Vibe Coding 优化 (v2.4 新增)
+
+1. **规划引擎** 📋
+   - 为任务生成详细的实施计划
+   - 支持计划保存和管理
+   - 任务状态跟踪和更新
+   - 核心文件：`scripts/vibe_coding/planning_engine.py`
+
+2. **提示词进化系统** 🧠
+   - Alpha（生成器）和 Omega（优化器）提示词的自改进生成
+   - 提示词效果分析和评分
+   - 历史记录和模板管理
+   - 核心文件：`scripts/vibe_coding/prompt_evolution.py`
+
+3. **增强上下文管理器** 🔄
+   - 语义记忆和多模型支持
+   - 全局和任务上下文管理
+   - 模型协调和分配
+   - 核心文件：`scripts/vibe_coding/enhanced_context_manager.py`
+
+4. **模块管理器** 📦
+   - 模块化设计工具
+   - 模块创建和管理
+   - 依赖分析和接口定义
+   - 核心文件：`scripts/vibe_coding/module_manager.py`
+
+5. **多模态处理器** 🎭
+   - 支持文本、图像和语音输入
+   - 文本到代码转换
+   - 处理历史管理
+   - 核心文件：`scripts/vibe_coding/multimodal_processor.py`
+
 ### AI 增强能力 (v2.1 新增)
 
 1. **AI 语义理解驱动的角色匹配** 🧠
@@ -935,6 +967,56 @@ PRD 文档（产品经理）
    - 风险评估
 ```
 
+### 示例 4: Vibe Coding 优化流程
+
+**输入**:
+```
+使用 Vibe Coding 优化项目开发流程
+- 生成详细的项目计划
+- 优化提示词以提高 AI 输出质量
+- 管理项目上下文和模块结构
+- 处理多模态输入
+```
+
+**自动流程**:
+```
+🎯 识别为：Vibe Coding 优化任务
+
+📋 阶段 1: 规划生成 (规划引擎)
+   - 生成详细的项目实施计划
+   - 任务分解和优先级排序
+   - 进度跟踪设置
+
+📋 阶段 2: 提示词优化 (提示词进化系统)
+   - Alpha 生成器创建初始提示词
+   - Omega 优化器改进提示词质量
+   - 效果分析和评分
+
+📋 阶段 3: 上下文管理 (增强上下文管理器)
+   - 初始化全局上下文
+   - 为任务分配合适的模型
+   - 注入相关知识和经验
+
+📋 阶段 4: 模块设计 (模块管理器)
+   - 创建项目模块结构
+   - 定义模块依赖关系
+   - 生成模块接口规范
+
+📋 阶段 5: 多模态处理 (多模态处理器)
+   - 处理文本输入转换为代码
+   - 分析处理历史和结果
+   - 生成最终代码和文档
+```
+
+**使用命令**:
+```bash
+# 运行 Vibe Coding 集成测试
+python3 scripts/vibe_coding/integration_test.py
+
+# 测试 Vibe Coding 功能
+python3 scripts/vibe_coding/test_vibe_coding.py
+```
+
 ### 示例 2: 功能开发
 
 **输入**:
@@ -1020,6 +1102,13 @@ PRD 文档（产品经理）
 │  - 产品经理 (Product Manager)            │
 │  - 测试专家 (Test Expert)                │
 │  - 独立开发者 (Solo Coder)               │
+├─────────────────────────────────────────┤
+│  Vibe Coding 优化层                      │
+│  - 规划引擎 (Planning Engine)            │
+│  - 提示词进化系统 (Prompt Evolution)     │
+│  - 增强上下文管理器 (Enhanced Context)   │
+│  - 模块管理器 (Module Manager)           │
+│  - 多模态处理器 (Multimodal Processor)   │
 ├─────────────────────────────────────────┤
 │  执行层 (Executor)                       │
 │  - 任务执行                              │
@@ -1244,9 +1333,10 @@ SOFTWARE.
 
 ## 📞 联系方式
 
-- **项目主页**: https://github.com/weiransoft/TraeMultiAgentSkill.git
-- **问题反馈**: https://github.com/weiransoft/TraeMultiAgentSkill.git/issues
-- **文档**: https://weiransoft.github.io/TraeMultiAgentSkill/
+- **项目主页**: https://github.com/lulin70/TraeMultiAgentSkill
+- **问题反馈**: https://github.com/lulin70/TraeMultiAgentSkill/issues
+- **原项目**: https://github.com/weiransoft/TraeMultiAgentSkill
+- **Vibe Coding 理念**: https://github.com/2025Emma/vibe-coding-cn
 
 ## 🙏 致谢
 
