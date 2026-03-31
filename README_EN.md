@@ -1,9 +1,27 @@
 # Trae Multi-Agent Skill
 
-🎭 Dynamically dispatches to appropriate agent roles (Architect, Product Manager, Test Expert, Solo Coder) based on task type. Supports multi-agent collaboration, consensus mechanism, complete project lifecycle management, specification-driven development, code map generation, and project understanding. Supports Chinese-English bilingual.
+🎭 Dynamically dispatches to appropriate agent roles (Architect, Product Manager, Test Expert, Solo Coder, UI Designer) based on task type. Supports multi-agent collaboration, consensus mechanism, complete project lifecycle management, specification-driven development, code map generation, project understanding, and UI design capabilities. Supports Chinese-English bilingual.
+
+## Project Source
+
+This project is a fork from [https://github.com/weiransoft/TraeMultiAgentSkill/](https://github.com/weiransoft/TraeMultiAgentSkill/) and optimized using the concepts from [https://github.com/2025Emma/vibe-coding-cn](https://github.com/2025Emma/vibe-coding-cn).
+
+### Vibe Coding Optimization Concepts
+
+- **Planning-Driven Development**: Emphasizes planning before execution
+- **Context Fixation**: Ensures context consistency during development
+- **AI Pair Programming**: Leverages AI capabilities to enhance development efficiency
+- **Prompt Evolution System**: Self-improving generation of Alpha (generator) and Omega (optimizer) prompts
+- **Memory Bank**: Centralized knowledge storage for project context management
+- **Multi-Model Collaboration**: Uses multiple AI models to handle different tasks
+- **Modular Design**: Breaks down projects into manageable modules with clear interfaces
+- **Multimodal Support**: Integrates text, image, and voice inputs
+- **Context Management**: Maintains consistent project context across interactions
+- **Planning Engine**: Generates detailed implementation plans for tasks
 
 ## 🎉 March 2026 Latest Updates
 
+- ✅ **Vibe Coding Integration (v2.4)** - Integration of planning engine, prompt evolution system, enhanced context manager, module manager, multimodal processor
 - ✅ **Multi-Role Code Walkthrough (v2.3)** - Architect, PM, Solo Coder, UI Designer, Test Expert analyze code from multiple perspectives, generate aligned unified code map
 - ✅ **Code Map Workspace Support (v2.3)** - Supports single workspace with multiple projects, clear project identification
 - ✅ **3D Code Map Visualization (v2.3)** - Three.js interactive visualization with flowing animations and theme switching
@@ -48,6 +66,38 @@
 - [License / 许可证](#-license-许可证)
 
 ## ✨ Features / 功能特性
+
+### Vibe Coding Optimization (v2.4 New) / Vibe Coding 优化 (v2.4 新增)
+
+1. **Planning Engine** 📋
+   - Generates detailed project implementation plans
+   - Supports plan saving and management
+   - Task status tracking and updates
+   - Core file: `scripts/vibe_coding/planning_engine.py`
+
+2. **Prompt Evolution System** 🧠
+   - Self-improving generation of Alpha (generator) and Omega (optimizer) prompts
+   - Prompt effectiveness analysis and scoring
+   - History and template management
+   - Core file: `scripts/vibe_coding/prompt_evolution.py`
+
+3. **Enhanced Context Manager** 🔄
+   - Semantic memory and multi-model support
+   - Global and task context management
+   - Model coordination and allocation
+   - Core file: `scripts/vibe_coding/enhanced_context_manager.py`
+
+4. **Module Manager** 📦
+   - Modular design tools
+   - Module creation and management
+   - Dependency analysis and interface definition
+   - Core file: `scripts/vibe_coding/module_manager.py`
+
+5. **Multimodal Processor** 🎭
+   - Supports text, image, and voice inputs
+   - Text-to-code conversion
+   - Processing history management
+   - Core file: `scripts/vibe_coding/multimodal_processor.py`
 
 ### Core Capabilities / 核心能力
 
@@ -99,14 +149,15 @@
    - Serves as work initialization context
    - Role-specific insights and recommendations
 
-8. **7-Stage Standard Workflow** 📊
+8. **8-Stage Standard Workflow** 📊
    - Stage 1: Requirements Analysis (Product Manager)
    - Stage 2: Architecture Design (Architect)
-   - Stage 3: Test Design (Test Expert)
-   - Stage 4: Task Breakdown (Solo Coder)
-   - Stage 5: Development Implementation (Solo Coder)
-   - Stage 6: Test Verification (Test Expert)
-   - Stage 7: Release Review (Multi-Agent)
+   - Stage 3: UI Design (UI Designer)
+   - Stage 4: Test Design (Test Expert)
+   - Stage 5: Task Breakdown (Solo Coder)
+   - Stage 6: Development Implementation (Solo Coder)
+   - Stage 7: Test Verification (Test Expert)
+   - Stage 8: Release Review (Multi-Agent)
 
 9. **Cross-Platform Compatibility** 🌍
    - Supports Windows, Mac, and Linux
@@ -246,7 +297,26 @@ python3 scripts/project_understanding.py /path/to/project
 
 **Trigger Keywords**: 测试、质量、验收、自动化、性能测试、缺陷、评审、门禁
 
-### 4. Solo Coder / 独立开发者
+### 4. UI Designer / UI 设计师
+
+**Responsibilities**: Create unique, production-grade UI interfaces with high design quality, avoiding generic AI "slop" aesthetics
+
+**Core Principles**:
+- ✅ Design Thinking Rules - Answer 4 key questions before designing
+- ✅ UI Design Aesthetics Guide - Fonts, colors, animations, layout
+- ✅ Zero Tolerance Checklist - Prohibits generic fonts, outdated colors, AI slop
+- ✅ Verification-Driven Design - Complete acceptance criteria
+- ✅ Completeness Check - Multi-dimensional checklists
+
+**Typical Outputs**:
+- Design philosophy document
+- Style guide
+- High-fidelity prototypes
+- UI design document
+
+**Trigger Keywords**: UI设计、界面设计、前端设计、视觉设计、UI/UX、UI原型、界面美化、UI优化、UI重构
+
+### 5. Solo Coder / 独立开发者
 
 **Responsibilities**: Write complete, high-quality, maintainable, and testable code
 
@@ -677,6 +747,56 @@ Detailed process description: [SKILL.md](SKILL.md) - New Feature / Feature Chang
    - Priority sorting
 ```
 
+### Example 4: Vibe Coding Optimization Process / 示例 4: Vibe Coding 优化流程
+
+**Input**:
+```
+使用 Vibe Coding 优化项目开发流程
+- 生成详细的项目计划
+- 优化提示词以提高 AI 输出质量
+- 管理项目上下文和模块结构
+- 处理多模态输入
+```
+
+**Automatic Process**:
+```
+🎯 Identified as: Vibe Coding optimization task
+
+📋 Stage 1: Planning Generation (Planning Engine)
+   - Generate detailed project implementation plan
+   - Task breakdown and priority sorting
+   - Progress tracking setup
+
+📋 Stage 2: Prompt Optimization (Prompt Evolution System)
+   - Alpha generator creates initial prompts
+   - Omega optimizer improves prompt quality
+   - Effectiveness analysis and scoring
+
+📋 Stage 3: Context Management (Enhanced Context Manager)
+   - Initialize global context
+   - Assign appropriate models for tasks
+   - Inject relevant knowledge and experience
+
+📋 Stage 4: Module Design (Module Manager)
+   - Create project module structure
+   - Define module dependencies
+   - Generate module interface specifications
+
+📋 Stage 5: Multimodal Processing (Multimodal Processor)
+   - Process text input conversion to code
+   - Analyze processing history and results
+   - Generate final code and documentation
+```
+
+**Usage Commands**:
+```bash
+# Run Vibe Coding integration test
+python3 scripts/vibe_coding/integration_test.py
+
+# Test Vibe Coding functionality
+python3 scripts/vibe_coding/test_vibe_coding.py
+```
+
 ## 🏗️ Technical Architecture / 技术架构
 
 ### System Architecture / 系统架构
@@ -699,6 +819,13 @@ Detailed process description: [SKILL.md](SKILL.md) - New Feature / Feature Chang
 │  - Product Manager                       │
 │  - Test Expert                           │
 │  - Solo Coder                            │
+├─────────────────────────────────────────┤
+│  Vibe Coding Optimization Layer          │
+│  - Planning Engine                       │
+│  - Prompt Evolution System               │
+│  - Enhanced Context Manager              │
+│  - Module Manager                        │
+│  - Multimodal Processor                  │
 ├─────────────────────────────────────────┤
 │  Execution Layer (Executor)              │
 │  - Task execution                        │
@@ -923,14 +1050,11 @@ SOFTWARE.
 
 ## 📞 Contact / 联系方式
 
-- **Project Homepage**: https://github.com/weiransoft/TraeMultiAgentSkill.git
-- **Issue Feedback**: https://github.com/weiransoft/TraeMultiAgentSkill.git/issues
-- **Documentation**: https://weiransoft.github.io/TraeMultiAgentSkill/
+- **Project Homepage**: https://github.com/lulin70/TraeMultiAgentSkill
+- **Issue Feedback**: https://github.com/lulin70/TraeMultiAgentSkill/issues
+- **Original Project**: https://github.com/weiransoft/TraeMultiAgentSkill
+- **Vibe Coding Concept**: https://github.com/2025Emma/vibe-coding-cn
 
 ## 🙏 Acknowledgments / 致谢
 
 感谢所有贡献者和用户的支持！
-
----
-
-**Made with ❤️ by Weiransoft**
