@@ -95,3 +95,15 @@ src/
 # 本地运行时生成的上下文目录
 context/
 .trae/
+
+# 测试结果
+scripts/tests/results/
+scripts/vibe_coding/test_results/
+
+# 运行时模块和多模态数据
+scripts/vibe_coding/modules/
+scripts/vibe_coding/multimodal/
+
+# 备份文件
+*.bkp
+.*.bkp
