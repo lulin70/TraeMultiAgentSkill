@@ -30,8 +30,105 @@ class PromptEvolutionSystem:
         os.makedirs(self.prompts_dir, exist_ok=True)
         os.makedirs(self.evolution_dir, exist_ok=True)
         
+        # 初始化核心规则
+        self.core_rules = self._load_core_rules()
+        
         # 初始化默认提示词模板
         self._initialize_default_templates()
+    
+    def _load_core_rules(self):
+        """
+        加载核心规则
+        
+        Returns:
+            list: 核心规则列表
+        """
+        return [
+            {
+                "id": "rule_1",
+                "name": "用禁令代替指令",
+                "description": "多用\"绝不\"\"不准\"设定边界，明确禁止的行为",
+                "examples": ["绝不使用占位符代码", "不准简化需求", "禁止硬编码敏感信息"]
+            },
+            {
+                "id": "rule_2",
+                "name": "设置唱反调角色",
+                "description": "专找问题而非确认可行，在多角色协作中添加批判性审查",
+                "examples": ["作为批判性审查者，找出方案中的问题", "检查设计中的潜在风险", "识别实现中的缺陷"]
+            },
+            {
+                "id": "rule_3",
+                "name": "建立反驳话术库",
+                "description": "应对\"看起来没问题\"等借口，提供标准化的反驳话术",
+                "examples": ["这个方案在边界情况下可能会失败", "我们需要考虑性能影响", "安全性方面还有改进空间"]
+            },
+            {
+                "id": "rule_4",
+                "name": "避免画蛇添足",
+                "description": "不添加未要求内容，接受适度重复",
+                "examples": ["只实现要求的功能", "不添加额外的特性", "保持代码简洁"]
+            },
+            {
+                "id": "rule_5",
+                "name": "如实汇报原则",
+                "description": "不润色也不过度谦虚，客观汇报进度和问题",
+                "examples": ["任务已完成80%，遇到了X问题", "这个功能实现存在性能瓶颈", "需要额外的时间来完成测试"]
+            },
+            {
+                "id": "rule_6",
+                "name": "保留核心思考",
+                "description": "活可分出去，但理解不能外包，确保对任务的核心理解",
+                "examples": ["先理解需求再执行", "保留对核心问题的分析", "确保理解任务的本质"]
+            },
+            {
+                "id": "rule_7",
+                "name": "诚实面对未知",
+                "description": "不知道就说不知道，不猜测或编造信息",
+                "examples": ["关于这个问题，我需要更多信息", "我无法确定，需要进一步研究", "这个领域超出了我的知识范围"]
+            },
+            {
+                "id": "rule_8",
+                "name": "先看再改",
+                "description": "编辑前必须确认内容，理解现有代码或文档",
+                "examples": ["先阅读完整的代码再修改", "理解现有架构后再设计", "分析现有文档后再更新"]
+            },
+            {
+                "id": "rule_9",
+                "name": "授权有时效",
+                "description": "一次授权≠永久许可，明确决策权限范围和时效",
+                "examples": ["在X范围内可以自主决策", "超过预算需要重新审批", "技术选型需要架构师确认"]
+            },
+            {
+                "id": "rule_10",
+                "name": "解释规则原因",
+                "description": "让AI理解\"为什么\"，增强规则的执行效果",
+                "examples": ["这样做是为了提高代码可维护性", "这个规则有助于保证系统安全", "遵循这个规范可以提升用户体验"]
+            },
+            {
+                "id": "rule_11",
+                "name": "按需提供信息",
+                "description": "用到再给，避免过载，采用渐进式信息提供",
+                "examples": ["先提供核心需求，细节稍后补充", "根据进展逐步提供更多信息", "只提供与当前任务相关的信息"]
+            },
+            {
+                "id": "rule_12",
+                "name": "沟通规范到标点",
+                "description": "禁用表情，语言精炼，统一沟通风格和格式",
+                "examples": ["使用简洁专业的语言", "避免使用表情符号", "保持格式一致"]
+            },
+            {
+                "id": "rule_13",
+                "name": "优化表达顺序",
+                "description": "先铺垫后要求，调整Prompt结构",
+                "examples": ["先介绍背景，再提出要求", "先说明目标，再描述步骤", "先提供上下文，再给出具体任务"]
+            },
+            {
+                "id": "rule_14",
+                "name": "模块化设计",
+                "description": "按场景组合独立功能模块，提高可维护性",
+                "examples": ["将Prompt按功能模块组织", "使用模块化的代码结构", "按场景组合独立功能"]
+            }
+        ]
     
     def _initialize_default_templates(self):
         """
@@ -78,15 +175,21 @@ class PromptEvolutionSystem:
         with open(template_file, 'r', encoding='utf-8') as f:
             template_data = json.load(f)
         
+        # 构建核心规则指导
+        core_rules_guidance = self._build_core_rules_guidance()
+        
         # 生成提示词
         prompt = template_data['template'].format(
             task_description=task_description
         )
         
-        # 保存生成的提示词
-        self._save_generated_prompt(task_description, prompt, 'generated')
+        # 添加核心规则指导
+        prompt_with_rules = prompt + "\n\n" + core_rules_guidance
         
-        return prompt
+        # 保存生成的提示词
+        self._save_generated_prompt(task_description, prompt_with_rules, 'generated')
+        
+        return prompt_with_rules
     
     def optimize_prompt(self, original_prompt, template_name='omega_optimizer'):
         """
@@ -107,15 +210,39 @@ class PromptEvolutionSystem:
         with open(template_file, 'r', encoding='utf-8') as f:
             template_data = json.load(f)
         
+        # 构建核心规则指导
+        core_rules_guidance = self._build_core_rules_guidance()
+        
         # 生成优化提示词
         optimization_prompt = template_data['template'].format(
             original_prompt=original_prompt
         )
         
-        # 保存优化过程
-        self._save_generated_prompt(original_prompt, optimization_prompt, 'optimized')
+        # 添加核心规则指导
+        optimization_prompt_with_rules = optimization_prompt + "\n\n" + core_rules_guidance
         
-        return optimization_prompt
+        # 保存优化过程
+        self._save_generated_prompt(original_prompt, optimization_prompt_with_rules, 'optimized')
+        
+        return optimization_prompt_with_rules
+    
+    def _build_core_rules_guidance(self):
+        """
+        构建核心规则指导
+        
+        Returns:
+            str: 核心规则指导文本
+        """
+        guidance = "## 核心规则指导\n\n"
+        guidance += "在生成和优化提示词时，请严格遵循以下核心规则：\n\n"
+        
+        for rule in self.core_rules:
+            guidance += f"**{rule['name']}**: {rule['description']}\n"
+            if rule['examples']:
+                guidance += "  示例：" + ", ".join(rule['examples']) + "\n"
+            guidance += "\n"
+        
+        return guidance
     
     def _save_generated_prompt(self, input_text, output_prompt, prompt_type):
         """
