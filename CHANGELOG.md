@@ -5,6 +5,64 @@
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [2.5.0] - 2026-04-06
+
+### Added
+
+#### Memory Classification Engine 集成
+
+##### 记忆适配器模块
+- ✅ 新增 `scripts/memory_adapter.py` 模块
+- ✅ 实现 7 种记忆类型分类：用户偏好、纠正信号、事实声明、决策记录、关系信息、任务模式、情感标记
+- ✅ 实现 4 层存储架构：工作记忆、程序性记忆、情节记忆、语义记忆
+- ✅ 实现 `MemoryTypeMapper` 分类器
+- ✅ 实现 `MemoryAdapter` 核心适配器
+
+##### 双层上下文管理器增强
+- ✅ 新增 `process_message_with_memory()` 方法
+- ✅ 新增 `retrieve_memories_by_type()` 方法
+- ✅ 新增 `apply_forgetting()` 方法
+- ✅ 新增 `get_memory_statistics()` 方法
+
+##### 遗忘机制
+- ✅ 基于加权衰减的智能遗忘
+- ✅ 自动清理低价值记忆
+- ✅ 支持自定义衰减因子和最小权重阈值
+
+##### 文档更新
+- ✅ 新增 `docs/architecture/memory_integration_architecture.md` 架构文档
+- ✅ 新增 `docs/testing/memory_integration_test.md` 测试报告
+- ✅ 更新 `README.md` 添加 v2.5.0 功能说明
+
+##### 测试
+- ✅ 新增 `scripts/test_memory_adapter.py` 测试脚本
+- ✅ 记忆类型分类准确率 92.9%
+- ✅ 层级映射准确率 100%
+- ✅ 集成测试全部通过
+
+## [2.4.2] - 2026-04-03
+
+### Added
+
+#### 智能生命周期识别
+
+- ✅ 自动检测需要完整项目流程的任务
+- ✅ 新增 `IntentType.PROJECT_LIFECYCLE` 意图类型
+- ✅ 扩展触发关键词：项目生命周期、全生命周期、完整流程、启动项目、新项目等
+- ✅ SKILL.md 新增自动触发规则说明
+
+## [2.4.1] - 2026-04-01
+
+### Added
+
+#### 核心规则集成
+
+- ✅ 集成 Claude Code 的 14 条提示词核心规则到 Vibe Coding 提示词优化系统
+- ✅ 新增 `/mas lifecycle` 命令，一键启动完整项目生命周期
+- ✅ 新增 `/mas rules` 命令，查看系统集成的核心规则库
+- ✅ 完成多角色批判性审核报告 (`docs/critical_review.md`)
+- ✅ 仓库结构优化，清理不必要的文件
+
 ## [2.3.0] - 2026-03-28
 
 ### Added

@@ -23,6 +23,13 @@ from enum import Enum
 import copy
 import re
 
+try:
+    from memory_adapter import MemoryAdapter, MemoryType, MemoryTier, memory_adapter
+    MEMORY_ADAPTER_AVAILABLE = True
+except ImportError:
+    MEMORY_ADAPTER_AVAILABLE = False
+    print("⚠️  Memory Adapter 不可用，使用内置记忆管理")
+
 
 class ContextLevel(Enum):
     """上下文层级"""
@@ -1404,34 +1411,31 @@ class DualLayerContextManager:
     双层上下文管理器
     
     统一管理全局上下文层和任务上下文层
+    集成 Memory Classification Engine 的记忆分类能力
     """
     
     def __init__(self, project_root: str = ".", skill_root: str = "."):
-        """
-        初始化双层上下文管理器
-        
-        Args:
-            project_root: 项目根目录
-            skill_root: 技能根目录
-        """
         self.project_root = Path(project_root)
         self.skill_root = Path(skill_root)
         
-        # 双层上下文
         self.global_context = GlobalContext(str(self.skill_root))
         self.task_contexts: Dict[str, TaskContext] = {}
         
-        # 同步器
         self.synchronizer = ContextSynchronizer()
         
-        # 知识管理器
         self.knowledge_manager = KnowledgeManager(self.global_context)
         
-        # 当前任务
         self.current_task_id: Optional[str] = None
         
-        # 初始化项目结构（如果不存在）
         self._ensure_project_structure()
+        
+        if MEMORY_ADAPTER_AVAILABLE:
+            self.memory_adapter = memory_adapter
+            self._use_memory_adapter = True
+            print("✅ Memory Classification Engine 已集成")
+        else:
+            self.memory_adapter = None
+            self._use_memory_adapter = False
     
     def _ensure_project_structure(self):
         """确保项目目录结构存在"""
@@ -1621,8 +1625,124 @@ class DualLayerContextManager:
             'total_knowledge': len(knowledge_base),
             'category_stats': category_stats,
             'total_usage': total_usage,
-            'average_usage': total_usage / len(knowledge_base) if knowledge_base else 0
+            'average_usage': total_usage / len(knowledge_base) if knowledge_base else 0,
+            'memory_adapter_enabled': self._use_memory_adapter
         }
+    
+    def process_message_with_memory(self, message: str, context: Dict[str, Any] = None) -> Optional[Any]:
+        """
+        使用记忆适配器处理消息
+        
+        Args:
+            message: 用户消息
+            context: 上下文信息
+            
+        Returns:
+            Optional[Any]: 记忆项（如果值得记忆）
+        """
+        if self._use_memory_adapter and self.memory_adapter:
+            memory_item = self.memory_adapter.process_message(message, context)
+            if memory_item:
+                knowledge = KnowledgeItem(
+                    id=memory_item.memory_id,
+                    category=memory_item.memory_type.value,
+                    title=memory_item.content[:50],
+                    content={'text': memory_item.content, 'metadata': memory_item.metadata},
+                    tags=memory_item.tags,
+                    source=memory_item.source,
+                    confidence=memory_item.confidence
+                )
+                self.global_context.add_knowledge(knowledge)
+                return memory_item
+        return None
+    
+    def retrieve_memories_by_type(self, memory_type: str, query: str = "", limit: int = 10) -> List[KnowledgeItem]:
+        """
+        按记忆类型检索
+        
+        Args:
+            memory_type: 记忆类型
+            query: 查询字符串
+            limit: 限制数量
+            
+        Returns:
+            List[KnowledgeItem]: 知识项列表
+        """
+        if self._use_memory_adapter and self.memory_adapter:
+            try:
+                mem_type = MemoryType(memory_type)
+                memories = self.memory_adapter.retrieve_memories(
+                    query, memory_type=mem_type, limit=limit
+                )
+                return [
+                    KnowledgeItem(
+                        id=m.memory_id,
+                        category=m.memory_type.value,
+                        title=m.content[:50],
+                        content={'text': m.content},
+                        tags=m.tags,
+                        confidence=m.confidence
+                    ) for m in memories
+                ]
+            except ValueError:
+                pass
+        
+        return self.search_knowledge(query or memory_type, limit)
+    
+    def apply_forgetting(self, decay_factor: float = 0.9, min_weight: float = 0.1) -> Dict[str, Any]:
+        """
+        应用遗忘机制
+        
+        Args:
+            decay_factor: 衰减因子
+            min_weight: 最小权重阈值
+            
+        Returns:
+            Dict[str, Any]: 遗忘统计
+        """
+        result = {
+            'forgotten_count': 0,
+            'remaining_count': 0,
+            'memory_adapter_used': False
+        }
+        
+        if self._use_memory_adapter and self.memory_adapter:
+            forgotten = self.memory_adapter.apply_forgetting(decay_factor, min_weight)
+            result['forgotten_count'] = forgotten
+            result['memory_adapter_used'] = True
+            stats = self.memory_adapter.get_statistics()
+            result['remaining_count'] = stats['total_memories']
+        else:
+            for knowledge_id, knowledge in list(self.global_context.knowledge_base.items()):
+                knowledge.confidence *= decay_factor
+                if knowledge.confidence < min_weight:
+                    del self.global_context.knowledge_base[knowledge_id]
+                    result['forgotten_count'] += 1
+                else:
+                    result['remaining_count'] += 1
+        
+        return result
+    
+    def get_memory_statistics(self) -> Dict[str, Any]:
+        """
+        获取记忆统计信息
+        
+        Returns:
+            Dict[str, Any]: 记忆统计
+        """
+        stats = self.get_knowledge_statistics()
+        
+        if self._use_memory_adapter and self.memory_adapter:
+            mce_stats = self.memory_adapter.get_statistics()
+            stats['mce_integration'] = {
+                'enabled': True,
+                'by_tier': mce_stats['by_tier'],
+                'by_type': mce_stats['by_type']
+            }
+        else:
+            stats['mce_integration'] = {'enabled': False}
+        
+        return stats
 
 
 def main():
