@@ -54,6 +54,15 @@ from .worker import Worker, WorkerFactory
 from .consensus import ConsensusEngine
 from .coordinator import Coordinator
 from .batch_scheduler import BatchScheduler
+from .context_compressor import (
+    ContextCompressor,
+    Message,
+    MemoryEntry,
+    CompressedContext,
+    CompressionLevel,
+    MessageType,
+    MemoryCategory,
+)
 
 __all__ = [
     "Scratchpad",
@@ -62,6 +71,13 @@ __all__ = [
     "ConsensusEngine",
     "Coordinator",
     "BatchScheduler",
+    "ContextCompressor",
+    "Message",
+    "MemoryEntry",
+    "CompressedContext",
+    "CompressionLevel",
+    "MessageType",
+    "MemoryCategory",
     "EntryType",
     "EntryStatus",
     "ReferenceType",
@@ -78,4 +94,6 @@ __all__ = [
     "BatchMode",
     "TaskBatch",
     "ScheduleResult",
+    "ROLE_WEIGHTS",
+    "CONSENSUS_THRESHOLDS",
 ]

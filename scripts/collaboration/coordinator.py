@@ -29,16 +29,22 @@ from .models import (
 from .scratchpad import Scratchpad
 from .worker import Worker, WorkerFactory
 from .consensus import ConsensusEngine
+from .context_compressor import ContextCompressor, Message, MessageType, CompressionLevel, CompressedContext
 
 
 class Coordinator:
     def __init__(self, scratchpad: Optional[Scratchpad] = None,
-                 persist_dir: Optional[str] = None):
+                 persist_dir: Optional[str] = None,
+                 enable_compression: bool = True,
+                 compression_threshold: int = 100000):
         self.scratchpad = scratchpad or Scratchpad(persist_dir=persist_dir)
         self.consensus = ConsensusEngine()
         self.workers: Dict[str, Worker] = {}
         self._execution_history: List[Dict[str, Any]] = []
         self.coordinator_id = f"coord-{uuid.uuid4().hex[:8]}"
+        self.enable_compression = enable_compression
+        self.compressor = ContextCompressor(token_threshold=compression_threshold) if enable_compression else None
+        self._message_buffer: List[Message] = []
 
     def plan_task(self, task_description: str,
                   available_roles: List[Dict[str, str]],
@@ -97,10 +103,25 @@ class Coordinator:
         results = []
         errors = []
 
-        for batch in plan.batches:
+        for batch_idx, batch in enumerate(plan.batches):
             batch_results, batch_errors = self._execute_batch(batch)
             results.extend(batch_results)
             errors.extend(batch_errors)
+
+            if self.compressor and batch_idx < len(plan.batches) - 1:
+                self._buffer_worker_messages(batch_results)
+                compressed = self.compressor.check_and_compress(self._message_buffer)
+                if compressed.compression_level != CompressionLevel.NONE:
+                    self._execution_history.append({
+                        "timestamp": time.time(),
+                        "compression": {
+                            "level": compressed.compression_level.value,
+                            "original_tokens": compressed.original_token_count,
+                            "compressed_tokens": compressed.compressed_token_count,
+                            "reduction_pct": round(compressed.reduction_percent, 1),
+                            "summary": compressed.summary[:200],
+                        },
+                    })
 
         duration = time.time() - start_time
         success_count = sum(1 for r in results if r.success)
@@ -117,6 +138,31 @@ class Coordinator:
 
         self._record_execution(result)
         return result
+
+    def _buffer_worker_messages(self, batch_results: List[WorkerResult]):
+        for r in batch_results:
+            if r.output:
+                self._message_buffer.append(Message(
+                    role=r.worker_id,
+                    content=str(r.output)[:2000],
+                    msg_type=MessageType.ASSISTANT,
+                    metadata={"task_id": r.task_id, "success": r.success},
+                ))
+
+    def compress_context(self, force_level=None) -> Optional[CompressedContext]:
+        if not self.compressor:
+            return None
+        return self.compressor.check_and_compress(self._message_buffer, force_level=force_level)
+
+    def get_compression_stats(self) -> Optional[Dict[str, Any]]:
+        if not self.compressor:
+            return None
+        return self.compressor.get_compression_stats()
+
+    def get_session_memory(self, category=None, limit=50):
+        if not self.compressor:
+            return []
+        return self.compressor.get_session_memory(category=category, limit=limit)
 
     def _execute_batch(self, batch: TaskBatch) -> Tuple[List[WorkerResult], List[str]]:
         results = []
