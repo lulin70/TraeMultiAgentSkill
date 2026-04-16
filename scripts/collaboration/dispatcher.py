@@ -54,11 +54,13 @@ from .permission_guard import (
     PermissionGuard, PermissionLevel, ActionType,
     ProposedAction, PermissionRule,
 )
-from .skillifier import Skillifier, ExecutionRecord, ExecutionStep
+from .skillifier import Skillifier, ExecutionRecord, ExecutionStep, PGActionType
 from .warmup_manager import WarmupManager, WarmupConfig, WarmupLayer
 from .memory_bridge import (
     MemoryBridge, MemoryConfig as MBConfig,
     MemoryType, MemoryItem, MemoryQuery,
+    KnowledgeItem, UserFeedback, EpisodicMemory,
+    PersistedPattern, AnalysisCase, ErrorContext,
 )
 
 
@@ -523,10 +525,7 @@ class MultiAgentDispatcher:
                     ep = EpisodicMemory(
                         id=f"epi-{uuid.uuid4().hex[:8]}",
                         task_description=task_description,
-                        roles_participated=role_ids,
-                        outcome="success" if exec_result.success else "failed",
-                        key_findings=scratchpad_summary[:500],
-                        lessons_learned="",
+                        finding=scratchpad_summary[:500],
                     )
                     self.memory_bridge.capture_execution(
                         execution_record={"task": task_description, "roles": role_ids},
@@ -540,26 +539,15 @@ class MultiAgentDispatcher:
             skill_proposals = []
             if self.enable_skillify and self.skillifier and exec_result.success:
                 try:
-                    exec_record = ExecutionRecord(
-                        id=f"exec-{uuid.uuid4().hex[:8]}",
-                        task_description=task_description,
-                        steps=[ExecutionStep(
-                            action="collaborate",
-                            input_data=task_description,
-                            output_data=scratchpad_summary[:300],
-                            duration_seconds=exec_result.duration_seconds,
-                        )],
-                        overall_success=exec_result.success,
-                        roles_used=role_ids,
-                    )
-                    proposal = self.skillifier.analyze_success_pattern([exec_record])
-                    if proposal and proposal.confidence > 0.3:
-                        skill_proposals.append({
-                            "title": proposal.title or "新协作模式",
-                            "confidence": proposal.confidence,
-                            "category": proposal.category.value if proposal.category else "general",
-                            "steps_count": len(proposal.steps) if proposal.steps else 0,
-                        })
+                    patterns = self.skillifier.analyze_history()
+                    if patterns:
+                        for pattern in patterns:
+                            if pattern.confidence > 0.3:
+                                skill_proposals.append({
+                                    "title": pattern.title or "新协作模式",
+                                    "confidence": pattern.confidence,
+                                    "category": pattern.category.value if hasattr(pattern, 'category') and pattern.category else "general",
+                                })
                 except Exception as skill_err:
                     errors.append(f"Skillifier error: {skill_err}")
 
