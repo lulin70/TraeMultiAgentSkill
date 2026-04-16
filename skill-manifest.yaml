@@ -1,27 +1,21 @@
 name: trae-multi-agent
-version: 2.5.0
+version: 3.0.0
 description: |
-  Trae 多智能体协作技能（AI 增强版 + Vibe Coding 集成 + 长程 Agent 支持 + 核心规则系统 + 智能生命周期识别 + Memory Classification Engine 集成）
-  
-  基于双层动态上下文管理架构和大模型 AI 助手能力，实现智能体之间的高效协作。
-  支持产品、架构、开发、测试等多种角色的智能调度和工作流编排。
-  集成 Vibe Coding 规划驱动开发理念，提供更智能的开发体验。
-  集成 Claude Code 的 14 条核心规则，提升提示词质量和执行效果。
-  新增智能生命周期识别，自动检测需要完整项目流程的任务。
-  深度集成 Memory Classification Engine，实现 7 种记忆类型分类和 4 层存储架构。
-  
-  核心特性：
-  - 双层动态上下文管理（长期记忆 + 工作记忆）
-  - AI 语义理解驱动的智能角色匹配
-  - 灵活的工作流编排引擎
-  - 完整的技能注册和发现机制
-  - 经验沉淀和知识积累
-  - 大模型 AI 助手深度集成
-  - 长程 Agent 支持（Checkpoint + Handoff + TaskList）
-  - Vibe Coding 规划驱动开发（规划引擎 + 提示词进化 + 多模型协作）
-  - 核心规则系统（Claude Code 14 条核心规则集成）
-  - 智能生命周期识别（自动检测并启动项目全生命周期模式）
-  - Memory Classification Engine 集成（7 种记忆类型 + 4 层存储 + 遗忘机制）
+  V3.0 多智能体协作平台 — 基于 Coordinator/Worker/Scratchpad 模式的完整多Agent协作系统。
+
+  核心架构：用户任务 → MultiAgentDispatcher → Coordinator编排 → 多Worker并行执行 → Scratchpad共享 → Consensus决策 → 结果返回
+
+  10大核心模块（668测试全通过）：
+  1. Coordinator 协调器 - 全局任务编排与Worker管理
+  2. Scratchpad 共享黑板 - Worker间实时信息交换
+  3. Worker 执行者 - 角色实例化与任务执行
+  4. ConsensusEngine 共识引擎 - 权重投票+否决权+升级人工
+  5. BatchScheduler 并行调度 - 自动并发安全性判断
+  6. ContextCompressor 上下文压缩 - 3级压缩防溢出(SNIP/SessionMemory/FullCompact)
+  7. PermissionGuard 权限守卫 - 4级安全分级(PLAN/DEFAULT/AUTO/BYPASS)
+  8. Skillifier 技能学习 - 从成功操作自动生成新Skill
+  9. WarmupManager 启动预热 - 3层预加载(EAGER/ASYNC/LAZY) + 进程级缓存
+  10. MemoryBridge 记忆桥接 - 7类型记忆 + 倒排索引 + TF-IDF + 遗忘曲线
 
 author: Trae Team
 status: active
@@ -32,371 +26,104 @@ ai_capabilities:
   context_understanding: true
   natural_language_interface: true
   long_running_agent: true
+  multi_agent_collaboration: true
+  memory_persistence: true
+  auto_skill_generation: true
 
 capabilities:
-  - name: product-manager
+  - name: multi-agent-dispatcher
     description: |
-      产品经理角色，负责需求分析和 PRD 编写
-      
-      核心能力：
-      - 需求挖掘和分析
-      - PRD 文档编写
-      - 用户研究
-      - 竞品分析
-      - 产品规划
-    input_schema:
-      type: object
-      properties:
-        requirements:
-          type: string
-          description: 需求描述
-        detail_level:
-          type: string
-          enum: [low, medium, high]
-          description: 详细程度
-        user_personas:
-          type: array
-          items:
-            type: string
-          description: 用户画像列表
-    output_schema:
-      type: object
-      properties:
-        prd:
-          type: object
-          description: PRD 文档
-        user_stories:
-          type: array
-          items:
-            type: string
-          description: 用户故事列表
-        acceptance_criteria:
-          type: array
-          items:
-            type: string
-          description: 验收标准
-
-  - name: architect
-    description: |
-      架构师角色，负责系统架构设计和技术选型
-      
-      核心能力：
-      - 系统架构设计
-      - 技术选型和评估
-      - 架构评审
-      - 性能优化设计
-      - 安全架构设计
-    input_schema:
-      type: object
-      properties:
-        requirements:
-          type: object
-          description: 需求文档（PRD）
-        constraints:
-          type: array
-          items:
-            type: string
-          description: 技术约束
-        scalability_requirements:
-          type: string
-          description: 可扩展性要求
-    output_schema:
-      type: object
-      properties:
-        architecture:
-          type: object
-          description: 架构设计文档
-        technology_stack:
-          type: array
-          items:
-            type: string
-          description: 技术栈选择
-        component_design:
-          type: object
-          description: 组件设计
-
-  - name: developer
-    description: |
-      开发工程师角色，负责代码实现和功能开发
-      
-      核心能力：
-      - 代码实现
-      - 功能开发
-      - 代码优化
-      - Bug 修复
-      - 单元测试编写
-    input_schema:
-      type: object
-      properties:
-        design:
-          type: object
-          description: 设计文档
-        requirements:
-          type: object
-          description: 需求文档
-        coding_standards:
-          type: object
-          description: 编码规范
-    output_schema:
-      type: object
-      properties:
-        code:
-          type: string
-          description: 源代码
-        unit_tests:
-          type: array
-          items:
-            type: string
-          description: 单元测试代码
-        documentation:
-          type: string
-          description: 代码文档
-
-  - name: tester
-    description: |
-      测试工程师角色，负责测试用例设计和执行
-      
-      核心能力：
-      - 测试用例设计
-      - 测试执行
-      - Bug 跟踪和分析
-      - 质量保障
-      - 自动化测试
-    input_schema:
-      type: object
-      properties:
-        requirements:
-          type: object
-          description: 需求文档
-        code:
-          type: string
-          description: 待测试代码
-        test_strategy:
-          type: string
-          description: 测试策略
-    output_schema:
-      type: object
-      properties:
-        test_cases:
-          type: array
-          items:
-            type: object
-          description: 测试用例
-        test_results:
-          type: array
-          items:
-            type: object
-          description: 测试结果
-        bug_reports:
-          type: array
-          items:
-            type: object
-          description: Bug 报告
-
-  - name: solo-coder
-    description: |
-      独立开发者角色，负责代码实现和功能开发
+      V3.0 统一调度入口 - 一键完成多Agent协作
 
       核心能力：
-      - 代码实现
-      - 功能开发
-      - 代码优化
-      - Bug 修复
-      - 单元测试编写
-    input_schema:
-      type: object
-      properties:
-        design:
-          type: object
-          description: 设计文档
-        requirements:
-          type: object
-          description: 需求文档
-        coding_standards:
-          type: object
-          description: 编码规范
-    output_schema:
-      type: object
-      properties:
-        code:
-          type: string
-          description: 源代码
-        unit_tests:
-          type: array
-          items:
-            type: string
-          description: 单元测试代码
-        documentation:
-          type: string
-          description: 代码文档
-
-  - name: ui-designer
-    description: |
-      UI 设计师角色，负责用户界面设计
-      
-      核心能力：
-      - 界面设计
-      - 交互设计
-      - 视觉设计
-      - 原型设计
-      - 设计系统建设
-    input_schema:
-      type: object
-      properties:
-        requirements:
-          type: object
-          description: 需求文档
-        brand_guidelines:
-          type: object
-          description: 品牌规范
-        user_flows:
-          type: array
-          items:
-            type: string
-          description: 用户流程
-    output_schema:
-      type: object
-      properties:
-        designs:
-          type: array
-          items:
-            type: object
-          description: 设计稿
-        prototypes:
-          type: array
-          items:
-            type: string
-          description: 原型
-        design_system:
-          type: object
-          description: 设计系统组件
-
-  - name: devops
-    description: |
-      DevOps 工程师角色，负责部署和运维
-      
-      核心能力：
-      - 持续集成/持续部署（CI/CD）
-      - 监控告警
-      - 性能调优
-      - 安全管理
-      - 容器化部署
-    input_schema:
-      type: object
-      properties:
-        code:
-          type: string
-          description: 源代码
-        environment:
-          type: string
-          description: 部署环境
-        monitoring_requirements:
-          type: object
-          description: 监控需求
-    output_schema:
-      type: object
-      properties:
-        deployment:
-          type: object
-          description: 部署配置
-        ci_cd_pipeline:
-          type: object
-          description: CI/CD 流水线
-        monitoring_config:
-          type: object
-          description: 监控配置
-
-  - name: ai-assistant
-    description: |
-      AI 助手角色，提供大模型语义理解和智能推理能力
-      
-      核心能力：
-      - 语义理解和匹配
-      - 智能推理和决策
-      - 上下文感知
-      - 自然语言交互
-      - 知识问答
-      - 代码审查和建议
+      - 任务意图分析与角色自动匹配
+      - Coordinator全局编排多Worker并行执行
+      - Scratchpad实时共享发现/决策/冲突
+      - Consensus共识决策解决分歧
+      - 完整结果报告(Markdown格式)
     input_schema:
       type: object
       properties:
         task:
           type: string
           description: 任务描述
-        context:
-          type: object
-          description: 上下文信息
-        mode:
-          type: string
-          enum: [matching, reasoning, reviewing, assisting]
-          description: AI 工作模式
-    output_schema:
-      type: object
-      properties:
-        response:
-          type: string
-          description: AI 响应
-        confidence:
-          type: number
-          description: 置信度
-        reasoning:
-          type: string
-          description: 推理过程
-        suggestions:
+        roles:
           type: array
           items:
             type: string
-          description: 建议列表
-
-  - name: vibe-coding
-    description: |
-      Vibe Coding 规划驱动开发助手
-      
-      核心能力：
-      - 规划引擎：生成详细的项目计划和任务分解
-      - 提示词进化：自动生成和优化提示词
-      - 上下文管理：语义记忆和多模型协作
-      - 模块化设计：项目模块化分解和依赖分析
-      - 多模态处理：支持文本、图像、语音输入
-      - 智能代码生成：基于自然语言描述生成代码
-    input_schema:
-      type: object
-      properties:
-        action:
+          description: 指定参与角色(可选，默认自动匹配)
+        mode:
           type: string
-          enum: [plan, optimize_prompt, manage_context, design_module, process_multimodal]
-          description: Vibe Coding 功能类型
-        project_info:
-          type: object
-          description: 项目信息（用于规划）
-        task_description:
-          type: string
-          description: 任务描述（用于提示词生成）
-        text_input:
-          type: string
-          description: 文本输入（用于代码生成）
-        language:
-          type: string
-          enum: [python, javascript, typescript, java, go, rust]
-          description: 目标编程语言
+          enum: [auto, parallel, sequential, consensus]
+          description: 调度模式
+        dry_run:
+          type: boolean
+          description: 仅模拟不执行
     output_schema:
       type: object
       properties:
-        plan:
-          type: object
-          description: 生成的项目计划
-        prompt:
+        success:
+          type: boolean
+        matched_roles:
+          type: array
+          items:
+            type: string
+        summary:
           type: string
-          description: 优化后的提示词
-        code:
+        report:
           type: string
-          description: 生成的代码
-        module_structure:
+          description: Markdown格式完整报告
+        timing:
           type: object
-          description: 模块结构
-        context_info:
-          type: object
-          description: 上下文信息
+        worker_results:
+          type: array
+
+  - name: coordinator-collaboration
+    description: |
+      Coordinator + Worker + Scratchpad 协作核心
+
+      使用场景：
+      - 需要多个角色同时分析同一问题
+      - 复杂任务需要分工协作
+      - 需要实时共享中间发现和决策
+
+  - name: context-compression
+    description: |
+      3级上下文压缩策略
+
+      Level 1 SNIP: 精细剪裁旧对话
+      Level 2 SessionMemory: 提取记忆后清空
+      Level 3 FullCompact: LLM生成摘要
+
+  - name: permission-guard
+    description: |
+      4级权限安全守卫
+
+      PLAN: 只读模式
+      DEFAULT: 写操作需确认
+      AUTO: AI分类器自动判断
+      BYPASS: 完全跳过(最高信任)
+
+  - name: skill-learning
+    description: |
+      Skillifier - 从成功操作序列中自动生成可复用Skill
+
+  - name: warmup-optimizer
+    description: |
+      WarmupManager - 3层启动预热优化冷启动延迟
+
+      EAGER: 同步预加载(~15ms)
+      ASYNC: 异步后台预热(~300ms)
+      LAZY: 按需加载
+
+  - name: memory-bridge
+    description: |
+      MemoryBridge - 跨会话记忆桥接系统
+
+      7种记忆类型: knowledge/episodic/semantic/feedback/pattern/analysis/correction
+      倒排索引 + TF-IDF检索 + 中文分词
+      遗忘曲线: 7d=1.0 → 90d≈0.3
+      自动压缩(60d+) + 过期清理(90d+)
 
 dependencies: []
 
@@ -409,234 +136,106 @@ ai_integration:
     - context_understanding
     - natural_language_processing
     - code_analysis
+    - multi_agent_orchestration
   config:
-    max_tokens: 4096
+    max_tokens: 8192
     temperature: 0.7
     top_p: 0.9
     use_cache: true
     fallback_to_keyword: true
 
 workflows:
-  - workflow_id: standard-dev-workflow
-    name: 标准开发工作流
-    description: 产品 → 架构 → 开发 → 测试的完整流程
+  - workflow_id: v3-multi-agent-collaboration
+    name: V3 多Agent协作工作流
+    description: 基于Coordinator/Worker/Scratchpad的并行协作流程
     steps:
-      - step_id: prd
-        name: 需求分析
-        role: product-manager
-        action: analyze_requirements
-
-      - step_id: architecture
-        name: 架构设计
-        role: architect
-        action: design_architecture
-
-      - step_id: development
-        name: 代码开发
-        role: solo-coder
-        action: implement_code
-
-      - step_id: testing
-        name: 测试验证
-        role: tester
-        action: execute_tests
-
-  - workflow_id: rapid-prototype-workflow
-    name: 快速原型工作流
-    description: 快速验证想法的简化流程
-    steps:
-      - step_id: quick-design
-        name: 快速设计
-        role: solo-coder
-        action: rapid_implementation
-
-  - workflow_id: bug-fix-workflow
-    name: Bug 修复工作流
-    description: Bug 分析和修复流程
-    steps:
-      - step_id: analysis
-        name: Bug 分析
-        role: tester
-        action: analyze_bug
-
-      - step_id: fix
-        name: Bug 修复
-        role: solo-coder
-        action: fix_bug
-
-      - step_id: verification
-        name: 验证
-        role: tester
-        action: verify_fix
-
-  - workflow_id: vibe-coding-workflow
-    name: Vibe Coding 规划驱动工作流
-    description: 基于 Vibe Coding 理念的规划驱动开发流程
-    steps:
-      - step_id: planning
-        name: 项目规划
-        role: vibe-coding
-        action: plan
-
-      - step_id: prompt_optimization
-        name: 提示词优化
-        role: vibe-coding
-        action: optimize_prompt
-
-      - step_id: context_management
-        name: 上下文管理
-        role: vibe-coding
-        action: manage_context
-
-      - step_id: module_design
-        name: 模块化设计
-        role: vibe-coding
-        action: design_module
-
-      - step_id: code_generation
-        name: 智能代码生成
-        role: vibe-coding
-        action: process_multimodal
-
-context_management:
-  type: dual-layer
-  
-  global_context:
-    description: 全局上下文层（长期记忆）
-    components:
-      - user_profile: 用户画像
-      - knowledge_base: 领域知识库
-      - experience_db: 历史经验库
-      - collaboration_net: 协作网络
-      - capability_models: 能力模型
-    
-    persistence: true
-    version_control: true
-  
-  task_context:
-    description: 任务上下文层（工作记忆）
-    components:
-      - task_definition: 任务定义
-      - task_status: 任务状态
-      - working_memory: 工作记忆
-      - artifacts: 中间结果
-      - thought_history: 思考历史
-    
-    persistence: true
-    cleanup_on_complete: false
-  
-  synchronization:
-    task_to_global:
-      - experience_extraction: 提取经验教训
-      - knowledge_extraction: 提取新知识
-      - preference_update: 更新用户偏好
-      - collaboration_record: 记录协作效果
-    
-    global_to_task:
-      - knowledge_injection: 注入相关知识
-      - experience_injection: 注入历史经验
-      - preference_application: 应用用户偏好
-      - capability_reference: 参考能力模型
-
-role_scheduling:
-  strategy: intelligent-matching
-  
-  matcher:
-    type: hybrid
-    components:
-      - keyword_matching: 关键词匹配（权重 0.7）
-      - semantic_matching: 语义匹配（权重 0.3）
-    
-    scoring:
-      capability_match: 0.5
-      skill_match: 0.3
-      keyword_overlap: 0.2
-    
-    learning:
-      enabled: true
-      feedback_loop: true
+      - step_id: analyze
+        name: 任务分析
+        action: dispatcher.analyze_task()
+      - step_id: plan
+        name: 编排计划
+        action: coordinator.plan_task()
+      - step_id: spawn
+        name: 创建Worker
+        action: coordinator.spawn_workers()
+      - step_id: execute
+        name: 并行执行
+        action: coordinator.execute_plan()
+      - step_id: collect
+        name: 收集结果
+        action: coordinator.collect_results()
+      - step_id: consensus
+        name: 共识决策(如有冲突)
+        action: coordinator.resolve_conflicts()
+      - step_id: report
+        name: 生成报告
+        action: result.to_markdown()
 
 metadata:
   category: productivity
   tags:
     - ai
-    - agent
+    - multi-agent
     - collaboration
+    - coordinator
+    - scratchpad
     - workflow
     - context-management
-  
+    - memory
+    - v3
+
   license: MIT
-  repository: https://github.com/weiransoft/zeroclaw
-  documentation: https://github.com/weiransoft/zeroclaw/tree/main/.trae/skills/trae-multi-agent
-  
+  repository: https://github.com/lulin70/TraeMultiAgentSkill
+
   version_history:
+    - version: 3.0.0
+      date: "2026-04-16"
+      changes:
+        - V3.0 完整重构: Coordinator/Worker/Scratchpad协作架构
+        - 新增 MultiAgentDispatcher 统一调度入口 (54测试)
+        - 新增 ContextCompressor 3级压缩 (72测试)
+        - 新增 PermissionGuard 4级权限 (105测试)
+        - 新增 Skillifier 技能学习 (96测试)
+        - 新增 WarmupManager 启动预热 (103测试)
+        - 新增 MemoryBridge 记忆桥接 (96测试)
+        - 新增 SKILL.md v3 操作手册
+        - 总计668个测试全部通过
+        - 支持本地Trae无缝使用，预留OpenClaw/Claude Code集成接口
+
     - version: 2.5.0
       date: "2026-04-06"
       changes:
-        - 深度集成 Memory Classification Engine：7 种记忆类型分类
-        - 实现 4 层存储架构：工作记忆、程序性记忆、情节记忆、语义记忆
-        - 新增记忆适配器模块：memory_adapter.py
-        - 新增遗忘机制：基于加权衰减的智能遗忘
-        - 新增记忆类型检索：按类型过滤和检索记忆
-        - 更新 dual_layer_context_manager.py：集成记忆适配器
+        - 深度集成 Memory Classification Engine
 
     - version: 2.4.2
       date: "2026-04-03"
       changes:
-        - 智能生命周期识别：自动检测需要完整项目流程的任务，无需手动指定 --project-full-lifecycle
-        - 新增 IntentType.PROJECT_LIFECYCLE 意图类型
-        - 扩展触发关键词：项目生命周期、全生命周期、完整流程、启动项目、新项目等
-        - SKILL.md 新增自动触发规则说明
-
-    - version: 2.4.1
-      date: "2026-04-01"
-      changes:
-        - 核心规则集成：集成 Claude Code 的 14 条提示词核心规则到 Vibe Coding 提示词优化系统
-        - 项目全生命周期命令：新增 /mas lifecycle 命令，一键启动完整项目生命周期
-        - 核心规则查询：新增 /mas rules 命令，查看系统集成的核心规则库
-        - 批判性审核报告：完成多角色批判性审核，识别改进方向
-        - 仓库结构优化：清理不必要的文件，优化目录结构
+        - 智能生命周期识别
 
     - version: 2.4.0
       date: "2026-03-31"
       changes:
-        - Vibe Coding 集成：规划引擎、提示词进化系统、增强上下文管理器
-        - 模块化设计工具：项目模块化分解、依赖分析、接口管理
-        - 多模态处理器：支持文本、图像、语音输入的智能处理
-        - 多模型协作系统：智能模型分配和任务调度
-        - Vibe Coding 工作流：规划驱动开发流程
+        - Vibe Coding 集成
 
     - version: 2.3.0
       date: "2026-03-28"
       changes:
-        - 多角色代码走读：架构师、产品经理、独立开发者、UI 设计师、测试专家多视角分析
-        - 代码地图 Workspace 支持：支持一个 workspace 包含多个项目
-        - 文档对齐机制：多角色分析结果对齐，生成统一代码地图
-        - 代码走读审查报告：审查概述、架构评审、代码质量评估、风险点、改进建议
-        - 代码地图生成器 v2.1：多语言分析、架构分层检测、调用关系追踪
-        - 真正的多角色协作分析器：集成 Trae Agent 调度系统，各角色独立真实分析
+        - 多角色代码走读
 
     - version: 2.2.0
       date: "2026-03-21"
       changes:
-        - 长程 Agent 支持（Checkpoint + Handoff + TaskList）
-        - 基于 Anthropic《Effective Harnesses for Long-Running Agents》
+        - 长程 Agent 支持
 
     - version: 2.0.0
       date: "2026-03-17"
       changes:
-        - 实现双层动态上下文管理
-        - 新增技能注册中心
-        - 新增智能角色匹配器
-        - 新增工作流编排引擎
-        - 完整的经验沉淀机制
+        - 双层动态上下文管理
 
     - version: 1.0.0
       date: "2026-03-16"
       changes:
         - 初始版本
-        - 基础的多角色协作
-        - 简单的上下文管理
 
 created_at: "2026-03-16T00:00:00"
-updated_at: "2026-04-01T00:00:00"
+updated_at: "2026-04-16T00:00:00"

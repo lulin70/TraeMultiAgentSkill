@@ -1,0 +1,714 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+V3 Multi-Agent 协作调度器 (Dispatcher)
+
+这是 v3.0 的统一入口，将所有协作组件串联为一条可用的流水线：
+
+    用户任务 → [意图识别] → [角色分配] → [Coordinator编排]
+           → [Worker并行执行] → [Scratchpad共享] → [共识决策]
+           → [上下文压缩] → [权限检查] → [记忆沉淀] → [结果返回]
+
+集成组件：
+- WarmupManager: 启动预热，减少冷启动延迟
+- Coordinator + Worker + Scratchpad: 多Agent协作核心
+- BatchScheduler: 并行/串行混合调度
+- ConsensusEngine: 共识决策机制
+- ContextCompressor: 上下文压缩，防止溢出
+- PermissionGuard: 权限守卫，安全操作检查
+- Skillifier: 从成功模式中学习，生成新Skill
+- MemoryBridge: 跨会话记忆桥接
+
+使用示例:
+    from scripts.collaboration.dispatcher import MultiAgentDispatcher
+
+    disp = MultiAgentDispatcher()
+    result = disp.dispatch("设计一个用户认证系统")
+    print(result.summary)
+"""
+
+import os
+import sys
+import time
+import uuid
+import json
+import tempfile
+import threading
+from pathlib import Path
+from datetime import datetime
+from typing import Dict, List, Optional, Any, Tuple
+from dataclasses import dataclass, field
+
+from .models import (
+    EntryType, EntryStatus, TaskDefinition, ExecutionPlan,
+    TaskBatch, BatchMode, ScheduleResult, WorkerResult,
+    ConsensusRecord, DecisionOutcome, ROLE_WEIGHTS,
+)
+from .scratchpad import Scratchpad
+from .worker import Worker, WorkerFactory
+from .consensus import ConsensusEngine
+from .coordinator import Coordinator
+from .batch_scheduler import BatchScheduler
+from .context_compressor import ContextCompressor, Message, MessageType, CompressionLevel
+from .permission_guard import (
+    PermissionGuard, PermissionLevel, ActionType,
+    ProposedAction, PermissionRule,
+)
+from .skillifier import Skillifier, ExecutionRecord, ExecutionStep
+from .warmup_manager import WarmupManager, WarmupConfig, WarmupLayer
+from .memory_bridge import (
+    MemoryBridge, MemoryConfig as MBConfig,
+    MemoryType, MemoryItem, MemoryQuery,
+)
+
+
+ROLE_TEMPLATES = {
+    "architect": {
+        "name": "架构师",
+        "prompt": """你是系统架构师。负责：
+1. 系统架构设计（分层、模块化、接口定义）
+2. 技术选型和评估
+3. 性能、安全、可扩展性设计
+4. 输出：架构文档、技术方案、模块设计""",
+        "keywords": ["架构", "设计", "选型", "性能", "模块", "接口", "部署", "微服务"],
+    },
+    "product-manager": {
+        "name": "产品经理",
+        "prompt": """你是产品经理。负责：
+1. 需求分析和PRD编写
+2. 用户故事和验收标准
+3. 竞品分析
+4. 输出：需求文档、用户故事、功能规格""",
+        "keywords": ["需求", "PRD", "用户故事", "竞品", "验收", "体验", "功能"],
+    },
+    "tester": {
+        "name": "测试专家",
+        "prompt": """你是测试专家。负责：
+1. 测试策略和用例设计
+2. 自动化测试方案
+3. 质量评估和缺陷追踪
+4. 输出：测试计划、测试用例、质量报告""",
+        "keywords": ["测试", "质量", "验收", "自动化", "性能测试", "缺陷", "门禁"],
+    },
+    "solo-coder": {
+        "name": "独立开发者",
+        "prompt": """你是全栈开发者。负责：
+1. 功能实现和代码编写
+2. 单元测试和文档
+3. 代码重构和优化
+4. Bug修复
+5. 输出：源代码、测试、技术文档""",
+        "keywords": ["实现", "开发", "代码", "修复", "优化", "重构", "单元测试"],
+    },
+    "ui-designer": {
+        "name": "UI设计师",
+        "prompt": """你是UI/UX设计师。负责：
+1. 界面设计和交互原型
+2. 设计系统和组件规范
+3. 视觉稿和设计交付
+4. 输出：设计稿、原型、设计规范""",
+        "keywords": ["UI", "界面", "前端", "视觉", "交互", "原型", "设计"],
+    },
+}
+
+
+@dataclass
+class DispatchResult:
+    """调度结果"""
+    success: bool
+    task_description: str
+    matched_roles: List[str] = field(default_factory=list)
+    summary: str = ""
+    details: Dict[str, Any] = field(default_factory=dict)
+    scratchpad_summary: str = ""
+    consensus_records: List[Dict[str, Any]] = field(default_factory=list)
+    compression_info: Optional[Dict[str, Any]] = None
+    memory_stats: Optional[Dict[str, Any]] = None
+    permission_checks: List[Dict[str, Any]] = field(default_factory=list)
+    skill_proposals: List[Dict[str, Any]] = field(default_factory=list)
+    duration_seconds: float = 0.0
+    worker_results: List[Dict[str, Any]] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "success": self.success,
+            "task_description": self.task_description,
+            "matched_roles": self.matched_roles,
+            "summary": self.summary,
+            "details": self.details,
+            "scratchpad_summary": self.scratchpad_summary,
+            "consensus_records": self.consensus_records,
+            "compression_info": self.compression_info,
+            "memory_stats": self.memory_stats,
+            "permission_checks": self.permission_checks,
+            "skill_proposals": self.skill_proposals,
+            "duration_seconds": round(self.duration_seconds, 2),
+            "worker_results": self.worker_results,
+            "errors": self.errors,
+        }
+
+    def to_markdown(self) -> str:
+        lines = [
+            f"# 🤖 Multi-Agent 协作结果",
+            "",
+            f"**任务**: {self.task_description}",
+            f"**状态**: {'✅ 成功' if self.success else '❌ 失败'}",
+            f"**耗时**: {self.duration_seconds:.2f}s",
+            f"**参与角色**: {', '.join(self.matched_roles)}",
+            "",
+            "## 📋 执行摘要",
+            self.summary or "(无摘要)",
+        ]
+        if self.worker_results:
+            lines.append("")
+            lines.append("## 👥 各角色产出")
+            for wr in self.worker_results:
+                role_name = wr.get('role', 'unknown')
+                status_icon = '✅' if wr.get('success') else '❌'
+                output_preview = (wr.get('output', '') or '')[:300]
+                lines.append(f"- [{status_icon}] **{role_name}**: {output_preview}")
+        if self.scratchpad_summary:
+            lines.extend(["", "## 📝 Scratchpad 共享区", self.scratchpad_summary])
+        if self.consensus_records:
+            lines.append("")
+            lines.append("## 🗳️ 共识决策")
+            for cr in self.consensus_records:
+                icon = '✅' if cr.get('outcome') == 'APPROVED' else '⚠️'
+                lines.append(f"- [{icon}] {cr.get('topic', '')}: {cr.get('outcome', '')}")
+        if self.compression_info:
+            ci = self.compression_info
+            lines.extend([
+                "",
+                "## 📦 上下文压缩",
+                f"- 级别: {ci.get('level', 'N/A')}",
+                f"- 原始: {ci.get('original_tokens', 0)} tokens",
+                f"- 压缩后: {ci.get('compressed_tokens', 0)} tokens",
+                f"- 节省: {ci.get('reduction_pct', 0)}%",
+            ])
+        if self.memory_stats:
+            ms = self.memory_stats
+            lines.extend([
+                "",
+                "## 🧠 记忆系统",
+                f"- 总记忆数: {ms.get('total_memories', 0)}",
+                f"- 知识条目: {ms.get('knowledge_count', 0)}",
+                f"- 情节记录: {ms.get('episodic_count', 0)}",
+            ])
+        if self.permission_checks:
+            lines.append("")
+            lines.append("## 🔒 权限检查")
+            for pc in self.permission_checks:
+                icon = '✅' if pc.get('allowed') else '🚫'
+                lines.append(f"- [{icon}] {pc.get('action', '')}: {pc.get('decision', '')}")
+        if self.skill_proposals:
+            lines.append("")
+            lines.append("## ⚡ Skill 学习")
+            for sp in self.skill_proposals:
+                lines.append(f"- 📌 {sp.get('title', '新Skill')}: {sp.get('confidence', 0):.0%}")
+        if self.errors:
+            lines.extend(["", "## ⚠️ 错误信息"])
+            for e in self.errors:
+                lines.append(f"- {e}")
+        return "\n".join(lines)
+
+
+class MultiAgentDispatcher:
+    """
+    V3 统一调度器
+
+    将所有 v3 组件整合为一个易用的高层 API。
+    支持单次调用完成完整的多 Agent 协作流程。
+    """
+
+    def __init__(self,
+                 persist_dir: Optional[str] = None,
+                 enable_warmup: bool = True,
+                 enable_compression: bool = True,
+                 enable_permission: bool = True,
+                 enable_memory: bool = True,
+                 enable_skillify: bool = True,
+                 compression_threshold: int = 100000,
+                 memory_dir: Optional[str] = None,
+                 permission_level: PermissionLevel = PermissionLevel.DEFAULT):
+        """
+        Args:
+            persist_dir: Scratchpad 持久化目录
+            enable_warmup: 是否启用启动预热
+            enable_compression: 是否启用上下文压缩
+            enable_permission: 是否启用权限检查
+            enable_memory: 是否启用记忆桥接
+            enable_skillify: 是否启用Skill学习
+            compression_threshold: 压缩触发阈值(token数)
+            memory_dir: 记忆存储目录
+            permission_level: 默认权限级别
+        """
+        self.persist_dir = persist_dir or tempfile.mkdtemp(prefix="mas_v3_")
+        self.memory_dir = memory_dir or os.path.join(self.persist_dir, "memory")
+        self.enable_warmup = enable_warmup
+        self.enable_compression = enable_compression
+        self.enable_permission = enable_permission
+        self.enable_memory = enable_memory
+        self.enable_skillify = enable_skillify
+        self.compression_threshold = compression_threshold
+        self.permission_level = permission_level
+
+        os.makedirs(self.persist_dir, exist_ok=True)
+        os.makedirs(self.memory_dir, exist_ok=True)
+
+        self._init_components()
+
+    def _init_components(self):
+        """初始化所有v3组件"""
+        self.scratchpad = Scratchpad(persist_dir=self.persist_dir)
+
+        self.coordinator = Coordinator(
+            scratchpad=self.scratchpad,
+            persist_dir=self.persist_dir,
+            enable_compression=self.enable_compression,
+            compression_threshold=self.compression_threshold,
+        )
+
+        self.batch_scheduler = BatchScheduler()
+
+        self.consensus_engine = ConsensusEngine()
+
+        if self.enable_compression:
+            self.compressor = ContextCompressor(
+                token_threshold=self.compression_threshold
+            )
+        else:
+            self.compressor = None
+
+        if self.enable_permission:
+            self.permission_guard = PermissionGuard(
+                current_level=self.permission_level,
+            )
+        else:
+            self.permission_guard = None
+
+        if self.enable_warmup:
+            warmup_cfg = WarmupConfig(
+            cache_enabled=True,
+            cache_max_size=50,
+            cache_ttl_seconds=3600,
+            metrics_enabled=True,
+        )
+            self.warmup_manager = WarmupManager(config=warmup_cfg)
+            try:
+                self.warmup_manager.warmup()
+            except Exception:
+                pass
+        else:
+            self.warmup_manager = None
+
+        if self.enable_memory:
+            self.memory_bridge = MemoryBridge(base_dir=self.memory_dir)
+        else:
+            self.memory_bridge = None
+
+        if self.enable_skillify:
+            self.skillifier = Skillifier()
+        else:
+            self.skillifier = None
+
+        self._dispatch_history: List[DispatchResult] = []
+
+    def analyze_task(self, task_description: str) -> List[Dict[str, str]]:
+        """
+        分析任务，匹配合适的角色
+
+        Args:
+            task_description: 任务描述
+
+        Returns:
+            匹配到的角色列表 [{"role_id": "...", "name": "...", "reason": "..."}]
+        """
+        task_lower = task_description.lower()
+        matched = []
+
+        for role_id, role_info in ROLE_TEMPLATES.items():
+            score = 0
+            matched_keywords = []
+            for kw in role_info["keywords"]:
+                if kw in task_lower:
+                    score += 1
+                    matched_keywords.append(kw)
+
+            if score > 0:
+                confidence = min(score / len(role_info["keywords"]), 1.0)
+                matched.append({
+                    "role_id": role_id,
+                    "name": role_info["name"],
+                    "confidence": confidence,
+                    "matched_keywords": matched_keywords,
+                    "reason": f"匹配关键词: {', '.join(matched_keywords)}",
+                })
+
+        matched.sort(key=lambda x: x["confidence"], reverse=True)
+
+        if not matched:
+            matched.append({
+                "role_id": "solo-coder",
+                "name": "独立开发者",
+                "confidence": 0.5,
+                "matched_keywords": [],
+                "reason": "默认角色：无明确关键词匹配",
+            })
+
+        return matched
+
+    def dispatch(self,
+                  task_description: str,
+                  roles: Optional[List[str]] = None,
+                  mode: str = "auto",
+                  dry_run: bool = False) -> DispatchResult:
+        """
+        核心调度方法 - 一键完成多Agent协作
+
+        Args:
+            task_description: 任务描述
+            roles: 指定角色列表（如 ["architect", "tester"]），None则自动匹配
+            mode: 执行模式 ("auto"/"parallel"/"sequential"/"consensus")
+            dry_run: 仅模拟执行，不实际运行Worker
+
+        Returns:
+            DispatchResult: 完整的调度结果
+        """
+        start_time = time.time()
+        errors = []
+
+        try:
+            step1_time = time.time()
+
+            matched_roles = self.analyze_task(task_description)
+
+            if roles:
+                role_ids_set = set(roles)
+                matched_roles = [r for r in matched_roles if r["role_id"] in role_ids_set]
+                for rid in roles:
+                    if not any(r["role_id"] == rid for r in matched_roles):
+                        template = ROLE_TEMPLATES.get(rid, {"name": rid, "prompt": ""})
+                        matched_roles.append({
+                            "role_id": rid,
+                            "name": template.get("name", rid),
+                            "confidence": 1.0,
+                            "matched_keywords": [],
+                            "reason": "用户指定",
+                        })
+
+            role_ids = [r["role_id"] for r in matched_roles]
+
+            if dry_run:
+                return DispatchResult(
+                    success=True,
+                    task_description=task_description,
+                    matched_roles=role_ids,
+                    summary=f"[DRY RUN] 将调度角色: {', '.join(role_ids)}",
+                    duration_seconds=time.time() - start_time,
+                )
+
+            step2_time = time.time()
+
+            if self.warmup_manager:
+                for rid in role_ids:
+                    cache_key = f"role-prompt-{rid}"
+                    if not self.warmup_manager.is_ready(cache_key):
+                        template = ROLE_TEMPLATES.get(rid, {})
+                        self.warmup_manager.set_cache(
+                            cache_key, template.get("prompt", ""),
+                            ttl=1800,
+                        )
+
+            step3_time = time.time()
+
+            available_roles = []
+            for r in matched_roles:
+                template = ROLE_TEMPLATES.get(r["role_id"], {})
+                available_roles.append({
+                    "role_id": r["role_id"],
+                    "role_prompt": template.get("prompt", ""),
+                    "confidence": r.get("confidence", 0.5),
+                })
+
+            plan = self.coordinator.plan_task(
+                task_description=task_description,
+                available_roles=available_roles,
+            )
+
+            step4_time = time.time()
+
+            workers = self.coordinator.spawn_workers(plan)
+
+            step5_time = time.time()
+
+            exec_result = self.coordinator.execute_plan(plan)
+
+            step6_time = time.time()
+
+            worker_results = []
+            for r in exec_result.results:
+                worker_results.append({
+                    "worker_id": r.worker_id,
+                    "role": r.worker_id.split("-")[0] if "-" in r.worker_id else r.worker_id,
+                    "task_id": r.task_id,
+                    "success": r.success,
+                    "output": str(r.output)[:500] if r.output else None,
+                    "error": r.error,
+                })
+
+            if exec_result.errors:
+                errors.extend(exec_result.errors)
+
+            step7_time = time.time()
+
+            collection = self.coordinator.collect_results()
+            scratchpad_summary = collection.get("scratchpad", "")
+
+            step8_time = time.time()
+
+            consensus_records = []
+            conflicts_count = collection.get("conflicts_count", 0)
+            if conflicts_count > 0 or mode == "consensus":
+                resolutions = self.coordinator.resolve_conflicts()
+                for rec in resolutions:
+                    consensus_records.append({
+                        "topic": rec.topic,
+                        "outcome": rec.outcome.value,
+                        "final_decision": rec.final_decision,
+                        "votes_for": rec.votes_for,
+                        "votes_against": rec.votes_against,
+                        "votes_abstain": rec.votes_abstain,
+                    })
+
+            step9_time = time.time()
+
+            compression_info = None
+            if self.enable_compression and self.compressor:
+                stats = self.coordinator.get_compression_stats()
+                if stats:
+                    compression_info = stats
+
+            step10_time = time.time()
+
+            permission_checks = []
+            if self.enable_permission and self.permission_guard:
+                test_actions = [
+                    ProposedAction(action_type=ActionType.FILE_CREATE,
+                                   target="/tmp/test_output.md",
+                                   description="生成输出文件"),
+                ]
+                for action in test_actions:
+                    decision = self.permission_guard.check(action)
+                    permission_checks.append({
+                        "action": f"{action.action_type.value}:{action.target}",
+                        "allowed": decision.outcome.value == "ALLOWED",
+                        "decision": decision.outcome.value,
+                        "reason": decision.reason or "",
+                    })
+
+            step11_time = time.time()
+
+            memory_stats = None
+            if self.enable_memory and self.memory_bridge:
+                try:
+                    stats = self.memory_bridge.get_statistics()
+                    memory_stats = {
+                        "total_memories": stats.total_memories,
+                        "by_type_counts": stats.by_type_counts,
+                        "index_built": stats.index_built,
+                        "total_captures": stats.total_captures,
+                    }
+
+                    ep = EpisodicMemory(
+                        id=f"epi-{uuid.uuid4().hex[:8]}",
+                        task_description=task_description,
+                        roles_participated=role_ids,
+                        outcome="success" if exec_result.success else "failed",
+                        key_findings=scratchpad_summary[:500],
+                        lessons_learned="",
+                    )
+                    self.memory_bridge.capture_execution(
+                        execution_record={"task": task_description, "roles": role_ids},
+                        scratchpad_entries=[],
+                    )
+                except Exception as mem_err:
+                    errors.append(f"MemoryBridge error: {mem_err}")
+
+            step12_time = time.time()
+
+            skill_proposals = []
+            if self.enable_skillify and self.skillifier and exec_result.success:
+                try:
+                    exec_record = ExecutionRecord(
+                        id=f"exec-{uuid.uuid4().hex[:8]}",
+                        task_description=task_description,
+                        steps=[ExecutionStep(
+                            action="collaborate",
+                            input_data=task_description,
+                            output_data=scratchpad_summary[:300],
+                            duration_seconds=exec_result.duration_seconds,
+                        )],
+                        overall_success=exec_result.success,
+                        roles_used=role_ids,
+                    )
+                    proposal = self.skillifier.analyze_success_pattern([exec_record])
+                    if proposal and proposal.confidence > 0.3:
+                        skill_proposals.append({
+                            "title": proposal.title or "新协作模式",
+                            "confidence": proposal.confidence,
+                            "category": proposal.category.value if proposal.category else "general",
+                            "steps_count": len(proposal.steps) if proposal.steps else 0,
+                        })
+                except Exception as skill_err:
+                    errors.append(f"Skillifier error: {skill_err}")
+
+            total_duration = time.time() - start_time
+
+            report = self.coordinator.generate_report()
+
+            result = DispatchResult(
+                success=exec_result.success and len(errors) == 0,
+                task_description=task_description,
+                matched_roles=role_ids,
+                summary=self._build_summary(task_description, role_ids, exec_result, scratchpad_summary),
+                details={
+                    "plan_total_tasks": plan.total_tasks,
+                    "completed_tasks": exec_result.completed_tasks,
+                    "failed_tasks": exec_result.failed_tasks,
+                    "report": report,
+                    "timing": {
+                        "analyze": round(step2_time - step1_time, 3),
+                        "warmup": round(step3_time - step2_time, 3),
+                        "plan": round(step4_time - step3_time, 3),
+                        "spawn": round(step5_time - step4_time, 3),
+                        "execute": round(step6_time - step5_time, 3),
+                        "collect": round(step7_time - step6_time, 3),
+                        "consensus": round(step8_time - step7_time, 3),
+                        "compress": round(step9_time - step8_time, 3),
+                        "permission": round(step10_time - step9_time, 3),
+                        "memory": round(step11_time - step10_time, 3),
+                        "skillify": round(step12_time - step11_time, 3),
+                    },
+                },
+                scratchpad_summary=scratchpad_summary,
+                consensus_records=consensus_records,
+                compression_info=compression_info,
+                memory_stats=memory_stats,
+                permission_checks=permission_checks,
+                skill_proposals=skill_proposals,
+                duration_seconds=total_duration,
+                worker_results=worker_results,
+                errors=errors,
+            )
+
+            self._dispatch_history.append(result)
+            return result
+
+        except Exception as e:
+            return DispatchResult(
+                success=False,
+                task_description=task_description,
+                matched_roles=[],
+                summary=f"调度异常: {e}",
+                errors=[str(e)],
+                duration_seconds=time.time() - start_time,
+            )
+
+    def _build_summary(self, task: str, roles: List[str],
+                       exec_result: ScheduleResult, sp_summary: str) -> str:
+        """构建执行摘要"""
+        role_names = [ROLE_TEMPLATES.get(r, {}).get("name", r) for r in roles]
+        parts = [
+            f"任务「{task[:80]}」已完成多Agent协作。",
+            f"参与角色: {', '.join(role_names)} ({len(roles)}个)",
+        ]
+        if exec_result.results:
+            done = sum(1 for r in exec_result.results if r.success)
+            parts.append(f"执行结果: {done}/{len(exec_result.results)} 个Worker成功")
+        if exec_result.duration_seconds:
+            parts.append(f"协作耗时: {exec_result.duration_seconds:.2f}s")
+        if sp_summary:
+            parts.append(f"Scratchpad关键发现: {sp_summary[:200]}")
+        return "\n".join(parts)
+
+    def quick_dispatch(self, task: str) -> str:
+        """快速调度 - 返回 Markdown 格式报告"""
+        result = self.dispatch(task)
+        return result.to_markdown()
+
+    def get_status(self) -> Dict[str, Any]:
+        """获取系统状态"""
+        status = {
+            "version": "3.0",
+            "persist_dir": self.persist_dir,
+            "components": {
+                "coordinator": self.coordinator is not None,
+                "scratchpad": self.scratchpad is not None,
+                "batch_scheduler": self.batch_scheduler is not None,
+                "consensus": self.consensus_engine is not None,
+                "compressor": self.compressor is not None,
+                "permission_guard": self.permission_guard is not None,
+                "warmup_manager": self.warmup_manager is not None,
+                "memory_bridge": self.memory_bridge is not None,
+                "skillifier": self.skillifier is not None,
+            },
+            "dispatch_count": len(self._dispatch_history),
+            "scratchpad_stats": self.scratchpad.get_stats() if self.scratchpad else {},
+        }
+
+        if self.warmup_manager:
+            try:
+                metrics = self.warmup_manager.get_metrics()
+                status["warmup_metrics"] = {
+                    "cache_size": metrics.cache_size,
+                    "hit_rate": round(metrics.cache_hit_rate, 3) if metrics.cache_hit_rate else 0,
+                    "tasks_completed": metrics.tasks_completed,
+                    "eager_duration_ms": round(metrics.eager_duration_ms, 2),
+                }
+            except Exception:
+                status["warmup_metrics"] = None
+
+        if self.memory_bridge:
+            try:
+                mem_stats = self.memory_bridge.get_statistics()
+                status["memory_stats"] = {
+                    "total_memories": mem_stats.total_memories,
+                    "by_type_counts": mem_stats.by_type_counts,
+                    "index_built": mem_stats.index_built,
+                }
+            except Exception:
+                status["memory_stats"] = None
+
+        return status
+
+    def get_history(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """获取调度历史"""
+        return [r.to_dict() for r in self._dispatch_history[-limit:]]
+
+    def shutdown(self):
+        """优雅关闭所有组件"""
+        if self.warmup_manager:
+            try:
+                self.warmup_manager.shutdown()
+            except Exception:
+                pass
+
+        if self.memory_bridge:
+            try:
+                self.memory_bridge.cleanup_expired_memories()
+            except Exception:
+                pass
+
+
+def create_dispatcher(**kwargs) -> MultiAgentDispatcher:
+    """工厂函数 - 创建并初始化调度器实例"""
+    return MultiAgentDispatcher(**kwargs)
+
+
+def quick_collaborate(task: str, **kwargs) -> DispatchResult:
+    """便捷函数 - 单次调用完成协作"""
+    disp = create_dispatcher(**kwargs)
+    result = disp.dispatch(task)
+    disp.shutdown()
+    return result

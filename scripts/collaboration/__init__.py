@@ -115,6 +115,13 @@ from .memory_bridge import (
     AnalysisCase,
     ErrorContext,
 )
+from .dispatcher import (
+    MultiAgentDispatcher,
+    DispatchResult,
+    create_dispatcher,
+    quick_collaborate,
+    ROLE_TEMPLATES,
+)
 
 __all__ = [
     "Scratchpad",
@@ -192,4 +199,9 @@ __all__ = [
     "ScheduleResult",
     "ROLE_WEIGHTS",
     "CONSENSUS_THRESHOLDS",
+    "MultiAgentDispatcher",
+    "DispatchResult",
+    "create_dispatcher",
+    "quick_collaborate",
+    "ROLE_TEMPLATES",
 ]
