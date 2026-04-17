@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-MultiAgentSkill CLI Entry Point — Cross-platform interface for ClaudeCode, OpenClaw, and any AI coding assistant.
+DevSquad CLI Entry Point — Cross-platform interface for ClaudeCode, OpenClaw, and any AI coding assistant.
 
 Usage:
     python -m scripts.cli --task "design user auth system" --roles architect coder tester
@@ -83,7 +83,7 @@ def cmd_status(args):
     try:
         stats = disp.get_statistics() if hasattr(disp, 'get_statistics') else {}
         status = {
-            "name": "MultiAgentSkill",
+            "name": "DevSquad",
             "version": "3.3.0",
             "status": "ready",
             "available_roles": ROLES,
@@ -120,7 +120,7 @@ def cmd_roles(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="MultiAgentSkill V3.3 — Multi-Agent Collaboration Platform CLI",
+        description="DevSquad V3.3 — Multi-Agent Software Development Team CLI",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

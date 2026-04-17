@@ -3,7 +3,7 @@
 """
 Vibe Coding 模块
 
-集成 Vibe Coding 核心理念和功能到 MultiAgentSkill
+集成 Vibe Coding 核心理念和功能到 DevSquad
 """
 
 from .planning_engine import PlanningEngine

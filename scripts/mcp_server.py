@@ -1,5 +1,5 @@
 """
-MultiAgentSkill MCP (Model Context Protocol) Server — For OpenClaw / Claude Code Tool Integration.
+DevSquad MCP (Model Context Protocol) Server — For OpenClaw / Claude Code Tool Integration.
 
 This server exposes MultiAgentDispatcher capabilities as MCP tools, enabling
 any MCP-compatible AI agent (OpenClaw, Claude Code, Cursor, etc.) to invoke
@@ -28,7 +28,7 @@ from typing import Any, Dict, List, Optional
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
-logger = logging.getLogger("MultiAgentSkill-MCP")
+logger = logging.getLogger("DevSquad-MCP")
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -41,8 +41,8 @@ from scripts.collaboration.dispatcher import MultiAgentDispatcher
 from scripts.collaboration.permission_guard import PermissionLevel
 
 
-class MultiAgentSkillMCPServer:
-    """MCP Server wrapper for MultiAgentSkill."""
+class DevSquadMCPServer:
+    """MCP Server wrapper for DevSquad."""
 
     def __init__(self):
         self._dispatcher: Optional[MultiAgentDispatcher] = None
@@ -65,8 +65,8 @@ def create_mcp_server() -> "FastMCP":
     if not MCP_AVAILABLE:
         raise ImportError("MCP SDK not installed. Run: pip install mcp")
 
-    mcp = FastMCP("MultiAgentSkill")
-    server = MultiAgentSkillMCPServer()
+    mcp = FastMCP("DevSquad")
+    server = DevSquadMCPServer()
 
     @mcp.tool()
     def multiagent_dispatch(
@@ -185,7 +185,7 @@ def create_mcp_server() -> "FastMCP":
         try:
             stats = disp.get_statistics() if hasattr(disp, 'get_statistics') else {}
             return json.dumps({
-                "name": "MultiAgentSkill",
+                "name": "DevSquad",
                 "version": "3.3.0",
                 "status": "ready",
                 "modules": 16,
@@ -202,7 +202,7 @@ def create_mcp_server() -> "FastMCP":
                 },
             }, ensure_ascii=False, indent=2)
         except Exception as e:
-            return json.dumps({"name": "MultiAgentSkill", "version": "3.3.0", "status": "ready", "error": str(e)})
+            return json.dumps({"name": "DevSquad", "version": "3.3.0", "status": "ready", "error": str(e)})
 
     @mcp.tool()
     def multiagent_analyze(task: str) -> str:
@@ -231,7 +231,7 @@ def create_mcp_server() -> "FastMCP":
     @mcp.tool()
     def multiagent_shutdown() -> str:
         """
-        Shutdown the MultiAgentSkill dispatcher and free resources.
+        Shutdown the DevSquad dispatcher and free resources.
         Call this when done to clean up memory and connections.
         """
         server.shutdown()
@@ -244,7 +244,7 @@ def main():
     """Start the MCP server."""
     import argparse
 
-    parser = argparse.ArgumentParser(description="MultiAgentSkill MCP Server")
+    parser = argparse.ArgumentParser(description="DevSquad MCP Server")
     parser.add_argument("--port", "-p", type=int, default=None, help="SSE transport port (default: stdio)")
     parser.add_argument("--host", default="127.0.0.1", help="SSE host (default: 127.0.0.1)")
     args = parser.parse_args()

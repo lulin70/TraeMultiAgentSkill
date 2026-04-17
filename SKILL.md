@@ -1,17 +1,14 @@
 ---
-name: multi-agent-team-v3
-slug: multi-agent-team-v3
+name: devsquad
+slug: devsquad
 description: |
-  V3.3 Multi-Agent Collaboration Platform — Complete multi-agent collaboration system
+  V3.3 DevSquad — Multi-Agent Software Development Team.
+  Transforms a single AI assistant into a specialized dev squad (architect/pm/coder/tester/...)
   based on Coordinator/Worker/Scratchpad pattern.
-  16 core modules: Coordinator + Scratchpad + Worker + ConsensusEngine +
-  BatchScheduler + ContextCompressor + PermissionGuard +
-  Skillifier + WarmupManager + MemoryBridge (MCE+Claw) +
-  PromptAssembler + PromptVariantGenerator + MCEAdapter + WorkBuddyClawSource.
-  ~828 tests, all passing. Supports EN/CN/JP trilingual.
+  16 core modules, ~828 tests, all passing. Cross-platform (Trae/ClaudeCode/OpenClaw).
 ---
 
-# Multi-Agent Team V3.3 — Multi-Agent Collaboration Platform
+# DevSquad V3.3 — Multi-Agent Software Development Team
 
 ## Core Positioning
 

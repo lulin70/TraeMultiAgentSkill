@@ -1,15 +1,16 @@
 ---
-name: multi-agent-team
+name: devsquad
 description: |
-  Multi-Agent Collaboration Platform — Transform single AI into a multi-AI team.
+  DevSquad — Multi-Agent Software Development Team.
+  Transforms single AI into a specialized dev squad (architect/pm/coder/tester/...).
   Use this when: user needs multi-role analysis, code review, architecture design,
-  complex task decomposition, or parallel expert collaboration.
+  complex task decomposition, or parallel expert collaboration for software development.
 
   Triggers: "design", "implement", "analyze", "review", "collaborate", "multi-role",
-  "team", "architect", "test", "optimize" in task descriptions.
+  "team", "architect", "test", "optimize", "develop", "code" in task descriptions.
 metadata:
   version: 3.3.0
-  author: MultiAgentSkill Team
+  author: DevSquad Team
 ---
 
 # Multi-Agent Team Skill
@@ -29,7 +30,7 @@ Activate this skill when the user request involves:
 
 ```python
 import sys
-sys.path.insert(0, '/path/to/MultiAgentSkill')
+sys.path.insert(0, '/path/to/DevSquad')
 from scripts.collaboration.dispatcher import MultiAgentDispatcher
 
 disp = MultiAgentDispatcher()
@@ -41,7 +42,7 @@ disp.shutdown()
 ### Option B: CLI Interface
 
 ```bash
-cd /path/to/MultiAgentSkill
+cd /path/to/DevSquad
 python3 scripts/demo/e2e_full_demo.py --task "your task" --roles architect pm coder tester
 ```
 

@@ -1,4 +1,4 @@
-# Trae Multi-Agent Skill
+# DevSquad — Multi-Agent Software Development Team
 
 🎭 **V3.3** — Multi-agent collaboration platform with 16 core modules, ~828 tests, 100% pass rate.
 Dynamically dispatches to appropriate agent roles (Architect, Product Manager, Test Expert, UI Designer, Coder) based on task type.
@@ -1074,9 +1074,9 @@ SOFTWARE.
 
 ## 📞 Contact / 联系方式
 
-- **Project Homepage**: https://github.com/weiransoft/MultiAgentSkill.git
-- **Issue Feedback**: https://github.com/weiransoft/MultiAgentSkill.git/issues
-- **Documentation**: https://weiransoft.github.io/MultiAgentSkill/
+- **Project Homepage**: https://github.com/weiransoft/DevSquad.git
+- **Issue Feedback**: https://github.com/weiransoft/DevSquad.git/issues
+- **Documentation**: https://weiransoft.github.io/DevSquad/
 
 ## 🙏 Acknowledgments / 致谢
 
@@ -1084,4 +1084,4 @@ Thank you to all contributors and users for your support!
 
 ---
 
-Based on [https://github.com/weiransoft/MultiAgentSkill/](https://github.com/weiransoft/MultiAgentSkill/) with optimizations inspired by [https://github.com/2025Emma/vibe-coding-cn](https://github.com/2025Emma/vibe-coding-cn)
+Based on [https://github.com/weiransoft/DevSquad/](https://github.com/weiransoft/DevSquad/) with optimizations inspired by [https://github.com/2025Emma/vibe-coding-cn](https://github.com/2025Emma/vibe-coding-cn)

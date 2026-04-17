@@ -208,7 +208,7 @@ python3 clawskills/trae/scripts/trae_skill_entry.py \
 
 ## 🔗 GitHub 仓库
 
-https://github.com/weiransoft/MultiAgentSkill
+https://github.com/weiransoft/DevSquad
 
 ## 📈 版本演进
 

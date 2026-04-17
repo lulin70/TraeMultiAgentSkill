@@ -1,4 +1,4 @@
-name: trae-multi-agent
+name: devsquad
 version: 3.0.0
 description: |
   V3.0 多智能体协作平台 — 基于 Coordinator/Worker/Scratchpad 模式的完整多Agent协作系统。
@@ -185,7 +185,7 @@ metadata:
     - v3
 
   license: MIT
-  repository: https://github.com/lulin70/MultiAgentSkill
+  repository: https://github.com/lulin70/DevSquad
 
   version_history:
     - version: 3.0.0

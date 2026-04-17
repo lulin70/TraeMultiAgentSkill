@@ -340,9 +340,9 @@ if __name__ == '__main__':
     # 生成测试计划
     project_info = {
         'name': 'Vibe Coding 集成测试',
-        'description': '测试 Vibe Coding 集成到 MultiAgentSkill',
+        'description': '测试 Vibe Coding 集成到 DevSquad',
         'goals': ['集成 Vibe Coding 概念', '实现核心功能', '测试系统性能'],
-        'scope': 'MultiAgentSkill 增强'
+        'scope': 'DevSquad 增强'
     }
     
     plan = engine.generate_plan(project_info)

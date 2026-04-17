@@ -1,12 +1,13 @@
-# MultiAgentSkill — Project Instructions for AI Coding Assistants
+# DevSquad — Project Instructions for AI Coding Assistants
 
 ## Project Overview
 
-MultiAgentSkill is a **V3.3 Multi-Agent Collaboration Platform** that transforms a single AI assistant into a multi-AI team. It implements the Coordinator/Worker/Scratchpad pattern for parallel agent collaboration.
+**DevSquad** is a **V3.3 Multi-Agent Software Development Team** platform. It transforms a single AI assistant into a specialized development squad with 10 roles (architect/pm/coder/tester/ui/devops/security/data/reviewer/optimizer). Based on the Coordinator/Worker/Scratchpad pattern for parallel agent collaboration.
 
 **16 Core Modules**: Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor (4-level), PermissionGuard (4-level), Skillifier, WarmupManager (3-layer), MemoryBridge (MCE+Claw), TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource.
 
 **Test Coverage**: ~828 tests, all passing.
+**Cross-Platform**: Trae IDE / ClaudeCode / OpenClaw / Any MCP-compatible client.
 
 ## Architecture
 
@@ -46,7 +47,7 @@ result = disp.quick_dispatch(task, include_action_items=True)   # auto-generate 
 ## Directory Structure
 
 ```
-MultiAgentSkill/
+DevSquad/
 ├── scripts/
 │   ├── collaboration/          # ★ Core V3 modules (16 files)
 │   │   ├── dispatcher.py       # MultiAgentDispatcher — unified entry point
@@ -100,12 +101,12 @@ MultiAgentSkill/
 |-----------|------|--------|
 | MCE (Memory Classification Engine) | Local pip package | v0.4.0 integrated |
 | WorkBuddy Claw | `/Users/lin/WorkBuddy/Claw` | Read-only bridge |
-| GitHub Remote | `github.com/lulin70/TraeMultiAgentSkill` | Active |
+| GitHub Remote | `github.com/lulin70/TraeDevSquad` | Active |
 
 ## Running Tests
 
 ```bash
-cd /path/to/MultiAgentSkill
+cd /path/to/DevSquad
 python3 -m pytest scripts/collaboration/mce_adapter_test.py \
   scripts/collaboration/dispatcher_ux_test.py \
   scripts/collaboration/claw_integration_test.py \
