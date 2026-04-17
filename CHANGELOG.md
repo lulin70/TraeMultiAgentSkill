@@ -212,8 +212,8 @@ Based on Coordinator/Worker/Scratchpad collaboration pattern:
 #### 核心规则集成
 
 - ✅ 集成 Claude Code 的 14 条提示词核心规则到 Vibe Coding 提示词优化系统
-- ✅ 新增 `/mas lifecycle` 命令，一键启动完整项目生命周期
-- ✅ 新增 `/mas rules` 命令，查看系统集成的核心规则库
+- ✅ 新增 `/dss lifecycle` 命令，一键启动完整项目生命周期
+- ✅ 新增 `/dss rules` 命令，查看系统集成的核心规则库
 - ✅ 完成多角色批判性审核报告 (`docs/critical_review.md`)
 - ✅ 仓库结构优化，清理不必要的文件
 

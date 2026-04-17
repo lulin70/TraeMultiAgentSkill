@@ -7,7 +7,7 @@
 将以下行添加到你的 shell 配置文件（`~/.zshrc` 或 `~/.bashrc`）:
 
 ```bash
-export TRAE_MULTI_AGENT_SKILL_PATH="$HOME/claw/.trae/skills/trae-multi-agent"
+export DSS_SKILL_PATH="$HOME/claw/.trae/skills/devsquad"
 ```
 
 然后重新加载配置：
@@ -20,10 +20,10 @@ source ~/.zshrc
 
 ```bash
 # 创建全局可执行的符号链接
-ln -s /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/trae_agent.py /usr/local/bin/trae-agent
+ln -s /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent.py /usr/local/bin/trae-agent
 
 # 或者使用 brew link 方式（如果有 brew）
-brew link --force trae-multi-agent
+brew link --force devsquad
 ```
 
 ### 方法 3：使用包装脚本
@@ -31,7 +31,7 @@ brew link --force trae-multi-agent
 在任何项目中，直接使用包装脚本的绝对路径：
 
 ```bash
-python3 /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/trae_agent.py \
+python3 /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent.py \
   --task "你的任务描述" \
   --agent architect
 ```
@@ -90,16 +90,16 @@ trae-agent --task "测试" --agent architect --dry-run
 
 ### 找不到 skill
 
-如果提示 "找不到 trae-multi-agent skill"，请检查：
+如果提示 "找不到 devsquad skill"，请检查：
 
 1. 环境变量是否正确设置：
    ```bash
-   echo $TRAE_MULTI_AGENT_SKILL_PATH
+   echo $DSS_SKILL_PATH
    ```
 
 2. skill 路径是否存在：
    ```bash
-   ls -la $TRAE_MULTI_AGENT_SKILL_PATH
+   ls -la $DSS_SKILL_PATH
    ```
 
 3. 重新加载 shell 配置：
@@ -112,9 +112,9 @@ trae-agent --task "测试" --agent architect --dry-run
 如果遇到权限错误，确保脚本有执行权限：
 
 ```bash
-chmod +x /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/trae_agent.py
-chmod +x /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/trae_agent_dispatch.py
-chmod +x /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/trae_agent_dispatch_v2.py
+chmod +x /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent.py
+chmod +x /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent_dispatch.py
+chmod +x /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent_dispatch_v2.py
 ```
 
 ## 长程 Agent 功能 (v2.2)
@@ -142,7 +142,7 @@ chmod +x /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/trae_agent_di
 
 ```bash
 # 运行长程 Agent 功能测试
-cd /Users/wangwei/claw/.trae/skills/trae-multi-agent
+cd /Users/wangwei/claw/.trae/skills/devsquad
 python3 scripts/tests/run_tests.py
 ```
 
@@ -155,5 +155,5 @@ python3 scripts/tests/run_tests.py
 rm /usr/local/bin/trae-agent
 
 # 删除环境变量（从 ~/.zshrc 或 ~/.bashrc 中移除）
-unset TRAE_MULTI_AGENT_SKILL_PATH
+unset DSS_SKILL_PATH
 ```

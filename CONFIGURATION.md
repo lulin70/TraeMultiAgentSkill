@@ -17,7 +17,7 @@ can't open file '/Users/xxx/your-project/scripts/trae_agent_dispatch.py': [Errno
 1. **复制包装脚本到你的项目**
 
    ```bash
-   cp ~/.trae/skills/trae-multi-agent/scripts/trae_agent_dispatch_wrapper.sh /your/project/path/
+   cp ~/DevSquad/scripts/trae_agent_dispatch_wrapper.sh /your/project/path/
    ```
 
 2. **编辑包装脚本**
@@ -45,7 +45,7 @@ can't open file '/Users/xxx/your-project/scripts/trae_agent_dispatch.py': [Errno
 直接调用 skill 脚本：
 
 ```bash
-python3 ~/.trae/skills/trae-multi-agent/scripts/trae_agent_dispatch.py \
+python3 ~/DevSquad/scripts/trae_agent_dispatch.py \
   --task "美化登录界面，创建现代化的登录页面" \
   --agent auto
 ```
@@ -55,7 +55,7 @@ python3 ~/.trae/skills/trae-multi-agent/scripts/trae_agent_dispatch.py \
 在你的 `~/.zshrc` 或 `~/.bashrc` 中添加：
 
 ```bash
-alias trae-agent='python3 ~/.trae/skills/trae-multi-agent/scripts/trae_agent_dispatch.py'
+alias dss='python3 ~/DevSquad/scripts/trae_agent_dispatch.py'
 ```
 
 然后重新加载配置：

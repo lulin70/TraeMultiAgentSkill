@@ -134,9 +134,9 @@ def log(message: str, level: str = 'INFO'):
     print(f"{color}[{timestamp}] [{level}] {message}{reset_color}")
 
 
-def handle_mas_command(command: str, context_manager: DualLayerContextManager) -> str:
+def handle_dss_command(command: str, context_manager: DualLayerContextManager) -> str:
     """
-    处理 MAS (Multi Agent Skill) 命令
+    处理 DSS (DevSquad) 命令
     
     Args:
         command: 命令字符串
@@ -148,57 +148,57 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     # 解析命令
     parts = command.split(' ', 1)
     if len(parts) < 1:
-        return "❌ 命令格式错误，请使用：/mas <功能> <参数>"
+        return "❌ 命令格式错误，请使用：/dss <功能> <参数>"
     
     action = parts[0].lower()
     
     # 处理 help 命令
     if action == "help":
         return """
-✅ MAS (Multi Agent Skill) 命令帮助：
+✅ DSS (DevSquad) 命令帮助：
 
 **Vibe Coding 功能：**
-- /mas plan <项目信息> - 生成项目计划
-- /mas optimize <任务描述> - 优化提示词
-- /mas extract <内容> - 提取知识
-- /mas search <查询> - 搜索知识
-- /mas recommend <上下文> - 推荐知识
+- /dss plan <项目信息> - 生成项目计划
+- /dss optimize <任务描述> - 优化提示词
+- /dss extract <内容> - 提取知识
+- /dss search <查询> - 搜索知识
+- /dss recommend <上下文> - 推荐知识
 
 **智能体调度：**
-- /mas agent <角色> <任务> - 调度特定智能体执行任务
+- /dss agent <角色> <任务> - 调度特定智能体执行任务
   角色：architect, product-manager, tester, solo-coder, ui-designer, devops
 
 **工作流：**
-- /mas workflow <工作流> <任务> - 执行特定工作流
+- /dss workflow <工作流> <任务> - 执行特定工作流
   工作流：standard-dev, rapid-prototype, bug-fix, vibe-coding
 
 **项目全生命周期：**
-- /mas lifecycle <任务> - 执行项目全生命周期模式（8 阶段标准工作流程：需求→架构→UI→测试→任务→开发→测试→发布）
+- /dss lifecycle <任务> - 执行项目全生命周期模式（8 阶段标准工作流程：需求→架构→UI→测试→任务→开发→测试→发布）
 
 **知识管理：**
-- /mas knowledge list - 列出所有知识
-- /mas knowledge export - 导出知识
-- /mas knowledge import <文件> - 导入知识
-- /mas knowledge delete <知识ID> - 删除知识
+- /dss knowledge list - 列出所有知识
+- /dss knowledge export - 导出知识
+- /dss knowledge import <文件> - 导入知识
+- /dss knowledge delete <知识ID> - 删除知识
 
 **项目管理：**
-- /mas project init <项目名称> - 初始化项目
-- /mas project config <配置项> <值> - 配置项目
-- /mas project status - 查看项目状态
+- /dss project init <项目名称> - 初始化项目
+- /dss project config <配置项> <值> - 配置项目
+- /dss project status - 查看项目状态
 
 **工具：**
-- /mas code generate <描述> - 生成代码
-- /mas code analyze <代码文件> - 分析代码
-- /mas doc generate <内容> - 生成文档
-- /mas doc analyze <文档文件> - 分析文档
+- /dss code generate <描述> - 生成代码
+- /dss code analyze <代码文件> - 分析代码
+- /dss doc generate <内容> - 生成文档
+- /dss doc analyze <文档文件> - 分析文档
 
 **系统：**
-- /mas status - 查看系统状态
-- /mas stats - 查看统计信息
-- /mas version - 查看版本信息
-- /mas config <配置项> <值> - 配置系统
-- /mas logs - 查看系统日志
-- /mas rules - 查看核心规则库
+- /dss status - 查看系统状态
+- /dss stats - 查看统计信息
+- /dss version - 查看版本信息
+- /dss config <配置项> <值> - 配置系统
+- /dss logs - 查看系统日志
+- /dss rules - 查看核心规则库
         """
     
     # 处理其他命令
@@ -245,7 +245,7 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     elif action == "agent":
         agent_parts = params.split(' ', 1)
         if len(agent_parts) < 2:
-            return "❌ 命令格式错误，请使用：/mas agent <角色> <任务>"
+            return "❌ 命令格式错误，请使用：/dss agent <角色> <任务>"
         agent_type = agent_parts[0]
         agent_task = agent_parts[1]
         log(f'🤖 调度智能体 {agent_type} 执行任务：{agent_task}', 'INFO')
@@ -256,7 +256,7 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     elif action == "workflow":
         workflow_parts = params.split(' ', 1)
         if len(workflow_parts) < 2:
-            return "❌ 命令格式错误，请使用：/mas workflow <工作流> <任务>"
+            return "❌ 命令格式错误，请使用：/dss workflow <工作流> <任务>"
         workflow_type = workflow_parts[0]
         workflow_task = workflow_parts[1]
         log(f'🔄 执行工作流 {workflow_type}：{workflow_task}', 'INFO')
@@ -266,7 +266,7 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     # 处理项目全生命周期模式
     elif action == "lifecycle":
         if not params:
-            return "❌ 命令格式错误，请使用：/mas lifecycle <任务>"
+            return "❌ 命令格式错误，请使用：/dss lifecycle <任务>"
         log(f'📋 执行项目全生命周期模式：{params}', 'INFO')
         # 这里应该调用项目全生命周期功能，相当于使用 --project-full-lifecycle 参数
         return "✅ 已启动项目全生命周期模式（8 阶段标准工作流程：需求→架构→UI→测试→任务→开发→测试→发布）"
@@ -293,7 +293,7 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     elif action == "knowledge":
         knowledge_parts = params.split(' ', 1)
         if len(knowledge_parts) < 1:
-            return "❌ 命令格式错误，请使用：/mas knowledge <子命令>"
+            return "❌ 命令格式错误，请使用：/dss knowledge <子命令>"
         knowledge_action = knowledge_parts[0].lower()
         
         if knowledge_action == "list":
@@ -306,14 +306,14 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
             return "✅ 知识导出：待实现"
         elif knowledge_action == "import":
             if len(knowledge_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas knowledge import <文件>"
+                return "❌ 命令格式错误，请使用：/dss knowledge import <文件>"
             file_path = knowledge_parts[1]
             log(f'📥 导入知识：{file_path}', 'INFO')
             # 这里应该导入知识
             return f"✅ 知识导入：待实现"
         elif knowledge_action == "delete":
             if len(knowledge_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas knowledge delete <知识ID>"
+                return "❌ 命令格式错误，请使用：/dss knowledge delete <知识ID>"
             knowledge_id = knowledge_parts[1]
             log(f'🗑️ 删除知识：{knowledge_id}', 'INFO')
             # 这里应该删除知识
@@ -325,12 +325,12 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     elif action == "project":
         project_parts = params.split(' ', 1)
         if len(project_parts) < 1:
-            return "❌ 命令格式错误，请使用：/mas project <子命令>"
+            return "❌ 命令格式错误，请使用：/dss project <子命令>"
         project_action = project_parts[0].lower()
         
         if project_action == "init":
             if len(project_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas project init <项目名称>"
+                return "❌ 命令格式错误，请使用：/dss project init <项目名称>"
             project_name = project_parts[1]
             log(f'🚀 初始化项目：{project_name}', 'INFO')
             # 这里应该初始化项目
@@ -338,7 +338,7 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
         elif project_action == "config":
             config_parts = project_parts[1].split(' ', 1)
             if len(config_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas project config <配置项> <值>"
+                return "❌ 命令格式错误，请使用：/dss project config <配置项> <值>"
             config_item = config_parts[0]
             config_value = config_parts[1]
             log(f'⚙️  配置项目：{config_item} = {config_value}', 'INFO')
@@ -355,19 +355,19 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     elif action == "code":
         code_parts = params.split(' ', 1)
         if len(code_parts) < 1:
-            return "❌ 命令格式错误，请使用：/mas code <子命令>"
+            return "❌ 命令格式错误，请使用：/dss code <子命令>"
         code_action = code_parts[0].lower()
         
         if code_action == "generate":
             if len(code_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas code generate <描述>"
+                return "❌ 命令格式错误，请使用：/dss code generate <描述>"
             code_description = code_parts[1]
             log(f'💻 生成代码：{code_description}', 'INFO')
             # 这里应该生成代码
             return "✅ 代码生成：待实现"
         elif code_action == "analyze":
             if len(code_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas code analyze <代码文件>"
+                return "❌ 命令格式错误，请使用：/dss code analyze <代码文件>"
             code_file = code_parts[1]
             log(f'🔍 分析代码：{code_file}', 'INFO')
             # 这里应该分析代码
@@ -378,19 +378,19 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     elif action == "doc":
         doc_parts = params.split(' ', 1)
         if len(doc_parts) < 1:
-            return "❌ 命令格式错误，请使用：/mas doc <子命令>"
+            return "❌ 命令格式错误，请使用：/dss doc <子命令>"
         doc_action = doc_parts[0].lower()
         
         if doc_action == "generate":
             if len(doc_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas doc generate <内容>"
+                return "❌ 命令格式错误，请使用：/dss doc generate <内容>"
             doc_content = doc_parts[1]
             log(f'📄 生成文档：{doc_content}', 'INFO')
             # 这里应该生成文档
             return "✅ 文档生成：待实现"
         elif doc_action == "analyze":
             if len(doc_parts) < 2:
-                return "❌ 命令格式错误，请使用：/mas doc analyze <文档文件>"
+                return "❌ 命令格式错误，请使用：/dss doc analyze <文档文件>"
             doc_file = doc_parts[1]
             log(f'📋 分析文档：{doc_file}', 'INFO')
             # 这里应该分析文档
@@ -407,7 +407,7 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
     elif action == "config":
         config_parts = params.split(' ', 1)
         if len(config_parts) < 2:
-            return "❌ 命令格式错误，请使用：/mas config <配置项> <值>"
+            return "❌ 命令格式错误，请使用：/dss config <配置项> <值>"
         config_item = config_parts[0]
         config_value = config_parts[1]
         log(f'⚙️  配置系统：{config_item} = {config_value}', 'INFO')
@@ -433,7 +433,7 @@ def handle_mas_command(command: str, context_manager: DualLayerContextManager) -
             return "❌ 核心规则库不可用"
     
     else:
-        return f"❌ 未知的 MAS 功能：{action}"
+        return f"❌ 未知的 DSS 功能：{action}"
 
 
 def recognize_vibe_intent(task: str) -> Optional[str]:
@@ -529,10 +529,10 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
             skill_root=skill_root
         )
         
-        # 2. 检查是否是 MAS 命令
-        if task.startswith('/mas '):
-            # 处理 MAS 命令
-            mas_command = task[5:].strip()  # 去掉 '/mas ' 前缀
+        # 2. 检查是否是 DSS 命令
+        if task.startswith('/dss '):
+            # 处理 DSS 命令
+            mas_command = task[5:].strip()  # 去掉 '/dss ' 前缀
             
             # 检查是否是 lifecycle 命令
             if mas_command.startswith('lifecycle '):
@@ -557,8 +557,8 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
                 log(result, 'SUCCESS')
                 return True
             else:
-                # 处理其他 MAS 命令
-                result = handle_mas_command(mas_command, context_manager)
+                # 处理其他 DSS 命令
+                result = handle_dss_command(mas_command, context_manager)
                 log(result, 'SUCCESS')
                 return True
         
@@ -584,7 +584,7 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
                 log(result, 'SUCCESS')
                 return True
             else:
-                result = handle_mas_command(f"{vibe_intent} {task}", context_manager)
+                result = handle_dss_command(f"{vibe_intent} {task}", context_manager)
                 log(result, 'SUCCESS')
                 return True
         

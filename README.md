@@ -33,15 +33,15 @@ Supports Chinese-English bilingual.
 ## 🎉 Earlier Updates (V2 Era)
 
 - ✅ **Core Rules Integration (v2.4.1)** - Integrated Claude Code's 14 core prompt rules into Vibe Coding prompt optimization system, improving prompt quality
-- ✅ **Project Full Lifecycle Command (v2.4.1)** - Added /mas lifecycle command to start complete project lifecycle with one click
-- ✅ **Core Rules Query (v2.4.1)** - Added /mas rules command to view integrated core rules library
+- ✅ **Project Full Lifecycle Command (v2.4.1)** - Added /dss lifecycle command to start complete project lifecycle with one click
+- ✅ **Core Rules Query (v2.4.1)** - Added /dss rules command to view integrated core rules library
 - ✅ **Critical Review Report (v2.4.1)** - Completed multi-role (PM, Architect, UI Designer, Developer, Test Manager) critical review, identifying improvement directions
 - ✅ **Repository Structure Optimization (v2.4.1)** - Cleaned up unnecessary files, optimized directory structure, improved maintainability
 
 ## 🎉 March 2026 Updates
 
 - ✅ **Vibe Coding Integration (v2.4)** - Planning-driven development philosophy, including planning engine, prompt evolution system, enhanced context manager
-- ✅ **/mas Command System (v2.4)** - Unified command interface supporting Vibe Coding features, agent dispatch, workflow execution, knowledge management, etc.
+- ✅ **/dss Command System (v2.4)** - Unified command interface supporting Vibe Coding features, agent dispatch, workflow execution, knowledge management, etc.
 - ✅ **Knowledge Extraction and Management System (v2.4)** - Automatically extracts knowledge from dialogues, code, and documents, supports classification, search, and recommendation
 - ✅ **Natural Language Triggering Mechanism (v2.4)** - Triggers Vibe Coding features through natural language commands
 - ✅ **Multi-Role Code Walkthrough (v2.3)** - Architect, PM, Solo Coder, UI Designer, Test Expert analyze code from multiple perspectives, generate aligned unified code map
@@ -141,7 +141,7 @@ Supports Chinese-English bilingual.
    - **Intelligent Code Generation** - Generates code based on natural language descriptions
    - Core files: `scripts/vibe_coding/planning_engine.py`, `scripts/vibe_coding/prompt_evolution.py`, `scripts/dual_layer_context_manager.py`
 
-8. **/mas Command System** ⌨️
+8. **/dss Command System** ⌨️
    - **Vibe Coding Features** - plan, optimize, extract, search, recommend
    - **Agent Dispatch** - agent command to dispatch specific agents
    - **Workflow Execution** - workflow command to execute workflows
@@ -156,7 +156,7 @@ Supports Chinese-English bilingual.
 9. **Core Rules System** (v2.4.1) 📋
    - **Claude Code Core Rules Integration** - 14 core prompt rules
    - **Rule Application** - Automatically applies core rules during prompt generation and optimization
-   - **Rule Query** - View all core rules via /mas rules command
+   - **Rule Query** - View all core rules via /dss rules command
    - **Rule Classification** - Universal rules and role-specific rules
    - Core files: `scripts/vibe_coding/prompt_evolution.py`
 
@@ -169,7 +169,7 @@ Supports Chinese-English bilingual.
    - Core files: `scripts/dual_layer_context_manager.py` (KnowledgeExtractor and KnowledgeManager classes)
 
 10. **Natural Language Triggering Mechanism** 🗣️
-    - **Command Recognition** - Recognizes /mas commands
+    - **Command Recognition** - Recognizes /dss commands
     - **Intent Recognition** - Recognizes natural language intents
     - **Context Awareness** - Provides intelligent recommendations based on dialogue context
     - **Multi-Language Support** - Supports Chinese and English natural language commands
@@ -212,13 +212,13 @@ Each role is equipped with complete work rules and quality standards:
 
 ### Prerequisites / 前置要求
 
-- Python 3.8+
-- Trae IDE
+- Python 3.9+
+- Any AI coding environment (Trae IDE / Claude Code / OpenClaw)
 - Basic command line knowledge
 
 ### Basic Usage / 基础使用
 
-Use directly in Trae without additional commands:
+Use directly without additional commands:
 
 ```
 # Architecture design task
@@ -236,52 +236,52 @@ Use directly in Trae without additional commands:
 
 The agent will automatically identify the task type and dispatch the corresponding role!
 
-### Using /mas Command System / 使用 /mas 命令系统
+### Using /dss Command System / 使用 /dss 命令系统
 
-Use the /mas command system in Trae:
+Use the /dss command system in Trae:
 
 ```
 # View help
-/mas help
+/dss help
 
 # Vibe Coding features
-/mas plan Implement a Python web application
-/mas optimize Help me write a Python function
-/mas extract Python is an interpreted language widely used for web development
-/mas search Python design patterns
-/mas recommend I need to learn Python web development
+/dss plan Implement a Python web application
+/dss optimize Help me write a Python function
+/dss extract Python is an interpreted language widely used for web development
+/dss search Python design patterns
+/dss recommend I need to learn Python web development
 
 # Agent dispatch
-/mas agent architect Design system architecture
-/mas agent solo-coder Implement user login functionality
+/dss agent architect Design system architecture
+/dss agent solo-coder Implement user login functionality
 
 # Workflow execution
-/mas workflow standard-dev Implement e-commerce system
-/mas workflow vibe-coding Develop new feature
+/dss workflow standard-dev Implement e-commerce system
+/dss workflow vibe-coding Develop new feature
 
 # Knowledge management
-/mas knowledge list
-/mas knowledge export
-/mas knowledge import knowledge.json
-/mas knowledge delete know-123
+/dss knowledge list
+/dss knowledge export
+/dss knowledge import knowledge.json
+/dss knowledge delete know-123
 
 # Project management
-/mas project init New project
-/mas project config language Python
-/mas project status
+/dss project init New project
+/dss project config language Python
+/dss project status
 
 # Tools
-/mas code generate Implement a sorting algorithm
-/mas code analyze src/main.py
-/mas doc generate Project documentation
-/mas doc analyze README.md
+/dss code generate Implement a sorting algorithm
+/dss code analyze src/main.py
+/dss doc generate Project documentation
+/dss doc analyze README.md
 
 # System
-/mas status
-/mas stats
-/mas version
-/mas config debug true
-/mas logs
+/dss status
+/dss stats
+/dss version
+/dss config debug true
+/dss logs
 ```
 
 ### Advanced Usage / 高级使用

@@ -403,11 +403,11 @@ class UserIntentRecognizer:
             recommendations.append("您可以通过产品经理角色分析需求，然后由开发工程师实现")
         elif intent_type == IntentType.PROJECT_LIFECYCLE:
             recommendations.append("建议使用项目全生命周期模式：需求分析→架构设计→UI设计→测试设计→任务分解→开发实现→测试验证→发布评审")
-            recommendations.append("使用命令 /mas lifecycle <任务> 启动完整项目流程")
+            recommendations.append("使用命令 /dss lifecycle <任务> 启动完整项目流程")
         elif intent_type == IntentType.PLANNING:
-            recommendations.append("使用命令 /mas plan <项目信息> 生成项目计划")
+            recommendations.append("使用命令 /dss plan <项目信息> 生成项目计划")
         elif intent_type == IntentType.KNOWLEDGE_MANAGEMENT:
-            recommendations.append("使用命令 /mas extract/search/recommend 进行知识管理")
+            recommendations.append("使用命令 /dss extract/search/recommend 进行知识管理")
         elif intent_type == IntentType.QUESTION:
             pattern_result = self.recognize_pattern(context.current_message)
             if pattern_result and pattern_result.solution:

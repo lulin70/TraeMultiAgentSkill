@@ -54,7 +54,7 @@ python3 scripts/trae_agent_dispatch.py --task "启动项目" --project-full-life
 ## 技术栈
 
 - **Python 3.8+**：核心调度脚本
-- **Trae IDE**：集成开发环境
+- **Trae IDE, Claude Code, OpenClaw, or any Python environment**：集成开发环境
 - **Markdown**：文档格式
 - **JSON**：配置格式
 
