@@ -2,116 +2,112 @@
 name: multi-agent-team-v3
 slug: multi-agent-team-v3
 description: |
-  V3.2 多智能体协作平台 — 基于 Coordinator/Worker/Scratchpad 模式的完整多Agent协作系统。
-  集成15大核心模块：Coordinator协调器 + Scratchpad共享黑板 + Worker执行者 + Consensus共识引擎 +
-  BatchScheduler并行调度 + ContextCompressor上下文压缩 + PermissionGuard权限守卫 +
-  Skillifier技能学习 + WarmupManager启动预热 + MemoryBridge记忆桥接 +
-  PromptAssembler提示词组装 + PromptVariantGenerator变体生成 + MCEAdapter记忆分类适配器。
-  ~828个测试全通过。支持中英文双语。
+  V3.3 Multi-Agent Collaboration Platform — Complete multi-agent collaboration system
+  based on Coordinator/Worker/Scratchpad pattern.
+  16 core modules: Coordinator + Scratchpad + Worker + ConsensusEngine +
+  BatchScheduler + ContextCompressor + PermissionGuard +
+  Skillifier + WarmupManager + MemoryBridge (MCE+Claw) +
+  PromptAssembler + PromptVariantGenerator + MCEAdapter + WorkBuddyClawSource.
+  ~828 tests, all passing. Supports EN/CN/JP trilingual.
 ---
 
-# Multi-Agent Team V3.2 — 多智能体协作平台
+# Multi-Agent Team V3.3 — Multi-Agent Collaboration Platform
 
-## 核心定位
+## Core Positioning
 
-本 Skill 将 Trae 从「单AI助手」升级为「多AI团队」。当用户提出任务时，不再由单一角色处理，而是：
+This Skill upgrades Trae from a "single AI assistant" to a "multi-AI team". When a task is submitted, it is no longer handled by a single role:
 
 ```
-用户任务 → [意图分析] → [角色匹配] → [Coordinator编排]
-        → [多个Worker并行执行] → [Scratchpad实时共享]
-        → [Consensus共识决策] → [MCE分类增强] → [结果汇总返回]
+User Task → [Intent Analysis] → [Role Matching] → [Coordinator Orchestration]
+           → [Parallel Worker Execution] → [Scratchpad Real-time Sharing]
+           → [Consensus Decision] → [MCE Classification Enhancement] → [Result Aggregation]
 ```
 
-## 架构总览（15大模块）
+## Architecture Overview (16 Core Modules)
 
-| # | 模块 | 文件 | 职责 |
-|---|------|------|------|
-| 0 | **MultiAgentDispatcher** | `dispatcher.py` | 统一调度入口，一键完成全流程协作（集成所有模块） |
-| 1 | **Coordinator** | `coordinator.py` | 全局编排者，分解任务、分配Worker、收集结果、解决冲突 |
-| 2 | **Scratchpad** | `scratchpad.py` | 共享黑板，Worker间实时交换发现/决策/冲突 |
-| 3 | **Worker** | `worker.py` | 工作者，每个角色一个实例，独立执行并写入Scratchpad |
-| 4 | **ConsensusEngine** | `consensus.py` | 共识引擎，权重投票+否决权+升级人工机制 |
-| 5 | **BatchScheduler** | `batch_scheduler.py` | 并行/串行混合调度，自动判断并发安全性 |
-| 6 | **ContextCompressor** | `context_compressor.py` | 4级上下文压缩(NONE/SNIP/SESSION_MEMORY/FULL_COMPACT) |
-| 7 | **PermissionGuard** | `permission_guard.py` | 4级权限守卫(PLAN/DEFAULT/AUTO/BYPASS) |
-| 8 | **Skillifier** | `skillifier.py` | 从成功操作模式中自动生成新Skill |
-| 9 | **WarmupManager** | `warmup_manager.py` | 3层启动预热(EAGER/ASYNC/LAZY) + 进程级缓存 |
-| 10 | **MemoryBridge** | `memory_bridge.py` | 7类型记忆桥接 + 倒排索引 + TF-IDF + 遗忘曲线 + MCE集成 |
-| 11 | **TestQualityGuard** | `test_quality_guard.py` | 测试质量审计(API校验/反模式检测/维度覆盖) |
-| 12 | **PromptAssembler** | `prompt_assembler.py` | 动态提示词组装(复杂度检测/3级变体/5种风格/压缩感知) |
-| 13 | **PromptVariantGenerator** | `prompt_variant_generator.py` | Skillify闭环反哺(模式→变体/A/B测试/自动晋升淘汰) |
-| 14 | **MCEAdapter** | `mce_adapter.py` | MCE记忆分类引擎适配器(懒加载/优雅降级/线程安全) |
-| 15 | **WorkBuddyClawSource** | `memory_bridge.py` | WorkBuddy Claw只读桥接(索引检索/日更记忆/AI新闻流) |
+| # | Module | File | Responsibility |
+|---|-------|------|---------------|
+| 0 | **MultiAgentDispatcher** | `dispatcher.py` | Unified dispatch entry point (integrates all modules) |
+| 1 | **Coordinator** | `coordinator.py` | Global orchestrator: decompose tasks, assign Workers, collect results, resolve conflicts |
+| 2 | **Scratchpad** | `scratchpad.py` | Shared blackboard for real-time info exchange between Workers |
+| 3 | **Worker** | `worker.py` | Executor: one instance per role, independent execution with Scratchpad writes |
+| 4 | **ConsensusEngine** | `consensus.py` | Consensus engine: weighted voting + veto power + escalation mechanism |
+| 5 | **BatchScheduler** | `batch_scheduler.py` | Parallel/sequential hybrid scheduling with auto safety check |
+| 6 | **ContextCompressor** | `context_compressor.py` | 4-level context compression (NONE/SNIP/SESSION_MEMORY/FULL_COMPACT) |
+| 7 | **PermissionGuard** | `permission_guard.py` | 4-level permission guard (PLAN/DEFAULT/AUTO/BYPASS) |
+| 8 | **Skillifier** | `skillifier.py` | Auto-generate new Skills from successful operation patterns |
+| 9 | **WarmupManager** | `warmup_manager.py` | 3-layer startup warmup (EAGER/ASYNC/LAZY) + process-level cache |
+| 10 | **MemoryBridge** | `memory_bridge.py` | 7-type memory bridge + inverted index + TF-IDF + forgetting curve + MCE+Claw integration |
+| 11 | **TestQualityGuard** | `test_quality_guard.py` | Test quality audit (API validation / anti-pattern detection / dimension coverage) |
+| 12 | **PromptAssembler** | `prompt_assembler.py` | Dynamic prompt assembly (complexity detection / 3 variants / 5 styles / compression-aware) |
+| 13 | **PromptVariantGenerator** | `prompt_variant_generator.py` | Skillify closed-loop feedback (pattern→variant / A-B test / auto promote-deprecate) |
+| 14 | **MCEAdapter** | `mce_adapter.py` | MCE memory classification engine adapter (lazy-load / graceful-degrade / thread-safe / v0.4 tenant support) |
+| 15 | **WorkBuddyClawSource** | `memory_bridge.py` (class) | WorkBuddy Claw read-only bridge (INDEX search / daily logs / AI news feed) |
 
 ---
 
-## 快速使用（必须遵循）
+## Quick Start (Must Follow)
 
-### 方式一：一键协作（推荐用于大多数场景）
+### Method 1: One-Click Collaboration (Recommended for most scenarios)
 
 ```python
 from scripts.collaboration.dispatcher import MultiAgentDispatcher
 
 disp = MultiAgentDispatcher()
-result = disp.dispatch("用户描述的任务")
+result = disp.dispatch("User's described task")
 print(result.to_markdown())
 disp.shutdown()
 ```
 
-**何时使用方式一**：
-- 用户要求"设计XX"、"实现XX"、"分析XX"等单一指令任务
-- 需要快速得到多角色协作结果
-- 不需要精细控制参与角色
+**When to use Method 1**:
+- User requests like "Design XX", "Implement XX", "Analyze XX"
+- Need quick multi-role collaboration results
+- No need for fine-grained role control
 
-### 方式二：指定角色协作
+### Method 2: Specify Roles
 
 ```python
-from scripts.collaboration.dispatcher import MultiAgentDispatcher
-
 disp = MultiAgentDispatcher()
-result = disp.dispatch("设计用户认证系统", roles=["architect", "tester"])
+result = disp.dispatch("Design user auth system", roles=["architect", "tester"])
 print(result.to_markdown())
 disp.shutdown()
 ```
 
-### 方式三：Dry-Run 模拟（仅分析不执行）
+### Method 3: Dry-Run Simulation (Analyze only, no execution)
 
 ```python
-disp = MultiAgentDispatcher()
-result = disp.dispatch("测试任务", dry_run=True)
+result = disp.dispatch("Test task", dry_run=True)
 print(result.summary)
 disp.shutdown()
 ```
 
-### 方式四：便捷函数（单行调用）
+### Method 4: Convenience Function (One-liner)
 
 ```python
 from scripts.collaboration.dispatcher import quick_collaborate
-result = quick_collaborate("帮我设计一个微服务架构")
+result = quick_collaborate("Help me design a microservice architecture")
 print(result.to_markdown())
 ```
 
 ---
 
-## 角色系统（5个内置角色）
+## Role System (5 Built-in Roles)
 
-| Role ID | 名称 | 触发关键词 | 核心职责 |
-|---------|------|-----------|---------|
-| `architect` | 架构师 | 架构、设计、选型、性能、模块、接口、部署 | 系统架构设计、技术选型、性能优化 |
-| `product-manager` | 产品经理 | 需求、PRD、用户故事、竞品、验收 | 需求分析、PRD编写、产品规划 |
-| `tester` | 测试专家 | 测试、质量、验收、自动化、缺陷 | 测试策略、用例设计、质量保障 |
-| `solo-coder` | 独立开发者 | 实现、开发、代码、修复、优化 | 功能开发、编码实现、单元测试 |
-| `ui-designer` | UI设计师 | UI、界面、前端、视觉、原型 | UI设计、交互设计、原型制作 |
+| Role ID | Name | Trigger Keywords | Core Responsibility |
+|---------|------|------------------|---------------------|
+| `architect` | Architect | architecture, design, selection, performance, module, interface, deploy | System architecture, tech selection, performance optimization |
+| `product-manager` | Product Manager | requirements, PRD, user story, competitor, acceptance | Requirements analysis, PRD writing, product planning |
+| `tester` | Test Expert | test, quality, acceptance, automation, defect | Test strategy, case design, quality assurance |
+| `solo-coder` | Solo Coder | implementation, development, code, fix, optimize | Feature dev, coding impl, unit testing |
+| `ui-designer` | UI Designer | UI, interface, frontend, visual, prototype | UI design, interaction design, prototyping |
 
-**自动匹配规则**：不指定roles时，系统根据任务关键词自动匹配最合适的角色组合。
+**Auto-match rule**: When roles are not specified, the system automatically matches the best role combination based on task keywords.
 
 ---
 
-## 完整工作流程（当你被调用时）
+## Complete Workflow (When This Skill is Invoked)
 
-当用户触发本 Skill 时，按以下步骤执行：
-
-### Step 1: 创建调度器
+### Step 1: Create Dispatcher
 
 ```python
 from scripts.collaboration.dispatcher import MultiAgentDispatcher
@@ -128,31 +124,31 @@ disp = MultiAgentDispatcher(
 )
 ```
 
-### Step 2: 分析任务并匹配角色
+### Step 2: Analyze Task & Match Roles
 
 ```python
 matched = disp.analyze_task(user_task)
 for role in matched:
-    print(f"{role['name']} (置信度: {role['confidence']:.0%}) - {role['reason']}")
+    print(f"{role['name']} (confidence: {role['confidence']:.0%}) - {role['reason']}")
 ```
 
-### Step 3: 执行协作
+### Step 3: Execute Collaboration
 
 ```python
 result = disp.dispatch(
     task_description=user_task,
-    roles=None,          # None=自动匹配，或指定如 ["architect", "tester"]
+    roles=None,          # None=auto match, or specify ["architect", "tester"]
     mode="auto",         # auto/parallel/sequential/consensus
-    dry_run=False,       # True=仅模拟
+    dry_run=False,       # True=simulation only
 )
 ```
 
-### Step 4: 检查结果
+### Step 4: Check Results
 
 ```python
-print(f"成功: {result.success}")
-print(f"参与角色: {result.matched_roles}")
-print(f"耗时: {result.duration_seconds:.2f}s")
+print(f"Success: {result.success}")
+print(f"Roles: {result.matched_roles}")
+print(f"Duration: {result.duration_seconds:.2f}s")
 print(result.summary)
 
 if result.worker_results:
@@ -160,14 +156,14 @@ if result.worker_results:
         print(f"[{wr['role']}] {wr['output'][:200]}")
 ```
 
-### Step 5: 输出 Markdown 报告给用户
+### Step 5: Output Markdown Report
 
 ```python
 report = result.to_markdown()
 print(report)
 ```
 
-### Step 6: 清理资源
+### Step 6: Cleanup
 
 ```python
 disp.shutdown()
@@ -175,201 +171,202 @@ disp.shutdown()
 
 ---
 
-## 高级功能使用指南
+## Advanced Features Guide
 
-### 上下文压缩（长对话防溢出）
+### Context Compression (Prevent Long Conversation Overflow)
 
-当对话过长时，ContextCompressor 自动触发：
-- **Level 1 SNIP**: 精细剪裁旧对话，保留关键决策和结论
-- **Level 2 SessionMemory**: 提取重要信息到记忆后清空上下文
-- **Level 3 FullCompact**: LLM生成一页摘要（最激进）
+When conversations get too long, ContextCompressor triggers automatically:
+- **Level 1 SNIP**: Fine-grained trimming of old dialogue, preserving key decisions and conclusions
+- **Level 2 SessionMemory**: Extract important info to memory then clear context
+- **Level 3 FullCompact**: LLM generates one-page summary (most aggressive)
 
-查看压缩状态：
+Check compression status:
 ```python
 stats = disp.coordinator.get_compression_stats()
 memory = disp.coordinator.get_session_memory()
 ```
 
-### 权限检查（安全操作守卫）
+### Permission Guard (Secure Operation Sentinel)
 
-PermissionGuard 自动检查危险操作：
-- **PLAN级别**: 只允许读操作
-- **DEFAULT级别**: 写操作需确认
-- **AUTO级别**: AI分类器自动判断
-- **BYPASS级别**: 完全跳过（最高信任）
+PermissionGuard auto-checks dangerous operations:
+- **PLAN level**: Read-only operations only
+- **DEFAULT level**: Write ops require confirmation
+- **AUTO level**: AI classifier auto-judgment
+- **BYPASS level**: Full skip (highest trust)
 
-权限记录在 `result.permission_checks` 中。
+Permission records stored in `result.permission_checks`.
 
-### 记忆桥接（跨会话记忆）
+### Memory Bridge (Cross-session Memory)
 
-MemoryBridge 提供7种记忆类型：
-- `knowledge` — 知识条目
-- `episodic` — 情节记忆（任务执行记录）
-- `semantic` — 语义记忆
-- `feedback` — 用户反馈
-- `pattern` — 成功模式
-- `analysis` — 分析案例
-- `correction` — 纠正记录
+MemoryBridge provides 7 memory types:
+- `knowledge` — Knowledge entries
+- `episodic` — Episodic memories (task execution records)
+- `semantic` — Semantic memories
+- `feedback` — User feedback
+- `pattern` — Successful patterns
+- `analysis` — Analysis cases
+- `correction` — Correction records
 
-遗忘曲线：7天=1.0, 30天≈0.8, 60天≈0.5, 90天≈0.3
+Forgetting curve: 7d=1.0, 30d≈0.8, 60d≈0.5, 90d≈0.3
 
-查看记忆状态：
+Check memory status:
 ```python
 status = disp.get_status()
 mem_stats = status.get("memory_stats")
 ```
 
-### 启动预热（减少冷启动延迟）
+### Startup Warmup (Reduce Cold-start Latency)
 
-WarmupManager 三层预热：
-- **EAGER层**: 同步预加载关键资源（~15ms）
-- **ASYNC层**: 异步后台预热（~300ms）
-- **LAZY层**: 按需加载
+WarmupManager 3-layer warmup:
+- **EAGER layer**: Synchronous preload of critical resources (~15ms)
+- **ASYNC layer**: Async background warmup (~300ms)
+- **LAZY layer**: On-demand loading
 
-查看预热状态：
+Check warmup status:
 ```python
 status = disp.get_status()
 warmup = status.get("warmup_metrics")
 ```
 
-### Skill 学习（从成功中进化）
+### Skill Learning (Evolve from Success)
 
-Skillifier 自动从成功操作序列中提取可复用模式：
+Skillifier auto-extracts reusable patterns from successful operation sequences:
 ```python
 proposals = result.skill_proposals
 for p in proposals:
-    print(f"新Skill候选: {p['title']} (置信度: {p['confidence']:.0%})")
+    print(f"New Skill candidate: {p['title']} (confidence: {p['confidence']:.0%})")
 ```
 
-### 共识决策（多角色冲突解决）
+### Consensus Decision (Multi-role Conflict Resolution)
 
-当Worker间出现分歧时，ConsensusEngine 自动启动投票：
-- 权重投票（按角色重要性加权）
-- 否决权机制（关键角色一票否决）
-- 升级人工（无法达成时标记待人工裁决）
+When Workers disagree, ConsensusEngine initiates voting:
+- Weighted voting (weighted by role importance)
+- Veto power (key role can single-handedly block)
+- Escalation to human (mark as pending human decision when consensus unreachable)
 
-共识记录在 `result.consensus_records` 中。
-
----
-
-## 调度模式说明
-
-| 模式 | 说明 | 适用场景 |
-|------|------|---------|
-| `auto` | 自动选择最优模式 | 默认推荐 |
-| `parallel` | 所有角色并行执行 | 角色间无依赖 |
-| `sequential` | 按顺序串行执行 | 有依赖关系 |
-| `consensus` | 执行后强制共识投票 | 需要一致决策 |
+Consensus records in `result.consensus_records`.
 
 ---
 
-## 系统状态查询
+## Dispatch Mode Table
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| `auto` | Auto-select optimal mode | Default recommended |
+| `parallel` | All roles execute concurrently | No inter-role dependencies |
+| `sequential` | Execute in order | Has dependency chain |
+| `consensus` | Force consensus vote after execution | Needs unanimous decision |
+
+---
+
+## System Status Query
 
 ```python
 status = disp.get_status()
-# 返回：
+# Returns:
 # {
-#   "version": "3.0",
-#   "components": {...},       # 各组件启用状态
-#   "dispatch_count": N,        # 已执行调度次数
-#   "scratchpad_stats": {...},  # 黑板统计
-#   "warmup_metrics": {...},    # 预热指标（如启用）
-#   "memory_stats": {...},      # 记忆统计（如启用）
+#   "version": "3.3",
+#   "components": {...},        # Component enabled status
+#   "dispatch_count": N,         # Completed dispatch count
+#   "scratchpad_stats": {...}, # Blackboard stats
+#   "warmup_metrics": {...},    # Warmup metrics (if enabled)
+#   "memory_stats": {...},      # Memory stats (if enabled)
 # }
 
 history = disp.get_history(limit=10)
-# 返回最近N次调度的完整结果
+# Returns last N dispatch complete results
 ```
 
 ---
 
-## 错误处理
+## Error Handling
 
-所有异常都被捕获在 `DispatchResult` 中，不会抛出：
+All exceptions are captured inside `DispatchResult`, never thrown:
 
 ```python
-result = disp.dispatch("任何任务")
+result = disp.dispatch("Any task")
 if not result.success:
-    print("错误:", result.errors)
-    print("摘要:", result.summary)
+    print("Errors:", result.errors)
+    print("Summary:", result.summary)
 ```
 
-常见错误及处理：
-- `FILE_CREATE` / 权限相关 → PermissionGuard拦截，检查 `result.permission_checks`
-- 记忆写入失败 → MemoryBridge存储问题，检查目录权限
-- 压缩失败 → ContextCompressor问题，通常不影响主流程
+Common errors and handling:
+- `FILE_CREATE` / Permission related → PermissionGuard blocked, check `result.permission_checks`
+- Memory write failure → MemoryBridge storage issue, check directory permissions
+- Compression failure → ContextCompressor issue, usually doesn't affect main flow
 
 ---
 
-## 语言规则
+## Language Rules
 
-- 自动识别用户语言（中文/英文）
-- 所有输出使用与用户相同的语言
-- 角色名称映射：架构师→Architect, 产品经理→Product Manager, etc.
+- Auto-detect user language (Chinese/English/Japanese)
+- All output uses same language as user
+- Role name mapping: 架构师→Architect, PM→Product Manager, etc.
 
 ---
 
-## 测试铁律（⚠️ AI 编写测试时必须遵守）
+## Testing Iron Rules (⚠️ Must Follow When AI Writes Tests)
 
-> 本节解决 AI 辅助开发中测试质量的三大顽疾。**违反任何一条都是严重错误。**
+> This section addresses three chronic issues in AI-assisted test development.
+> **Violating any rule is a serious error.**
 
-### 铁律 1：文档先行 — 禁止凭空写 API 调用
+### Iron Rule 1: Documentation First — Never Write API Calls From Memory
 
 ```
-❌ 错误做法: 凭记忆/猜测写参数名
-   result = obj.method(bad_param="value")  # 参数名是猜的
+❌ WRONG: Guess parameter names from memory
+   result = obj.method(bad_param="value")  # Parameter name is guessed
 
-✅ 正确做法: 先读源码确认签名，再写测试
-   # 1. 用 AST 提取或直接阅读源码确认参数
-   # 2. 使用 TestQualityGuard 自动校验
+✅ CORRECT: Read source code to confirm signature first, then write tests
+   # 1. Use AST extraction or read source directly to confirm params
+   # 2. Use TestQualityGuard for auto-validation
    from scripts.collaboration.test_quality_guard import quick_audit
    report = quick_audit("module.py", "module_test.py")
-   print(report.to_markdown())  # 查看是否有 API 参数错误
+   print(report.to_markdown())  # Check for API param errors
 ```
 
-**强制要求**：
-- 写任何测试之前，必须先 `import` 目标模块并检查实际签名
-- 禁止使用不存在的参数名（如 `id` vs `record_id`, `action` vs `action_type`）
-- 可使用 `TestQualityGuard.quick_audit()` 自动检测
+**Mandatory requirements**:
+- Before writing any test, must `import` target module and verify actual signature
+- Forbidden to use non-existent parameter names (e.g., `id` vs `record_id`)
+- Can use `TestQualityGuard.quick_audit()` for auto-detection
 
-### 铁律 2：失败即报告 — 禁止为通过而修改断言
+### Iron Rule 2: Failure Means Report — Never Modify Assertions to Pass
 
 ```
-❌ 严重错误: 测试失败时修改断言来"通过"
-   # 原始: assertEqual(result, expected_value)
-   # 改成: assertTrue(result > 0)          ← 这是作弊！
-   # 改成: assertGreater(score, 0.0)      ← 0.0 阈值必然通过！
+❌ CRITICAL ERROR: Modify assertions when test fails to "pass"
+   # Original: assertEqual(result, expected_value)
+   # Changed to: assertTrue(result > 0)          ← This is cheating!
+   # Changed to: assertGreater(score, 0.0)      ← 0.0 threshold always passes!
 
-✅ 正确做法: 失败时分析根因，修复实现或修正测试逻辑
-   # 1. 先确认 API 签名是否正确（铁律1）
-   # 2. 确认测试数据是否合理
-   # 3. 如果实现确实有 bug → 报告给架构师/开发者
-   # 4. 只有当测试本身逻辑错误时才修改断言
+✅ CORRECT: Analyze root cause on failure, fix implementation or correct test logic
+   # 1. Confirm API signature is correct (Iron Rule 1)
+   # 2. Verify test data is reasonable
+   # 3. If implementation has real bug → report to architect/developer
+   # 4. Only modify assertions if test logic itself is wrong
 ```
 
-**禁止的反模式**（TestQualityGuard 会自动检测）：
-| 反模式 | 严重级别 | 说明 |
-|--------|---------|------|
-| 宽松断言 (`assertTrue`) | MINOR | 应优先用 `assertEqual/assertIn` |
-| 无效阈值 (`>0.0`) | MINOR | 必须设置有意义的阈值 |
-| 裸 `except:` | MAJOR | 必须指定异常类型 |
-| 魔法数字 (>999) | MINOR | 提取为命名常量 |
+**Forbidden anti-patterns** (auto-detected by TestQualityGuard):
+| Anti-pattern | Severity | Description |
+|------------|----------|-------------|
+| Loose assertion (`assertTrue`) | MINOR | Prefer `assertEqual/assertIn` |
+| Invalid threshold (`>0.0`) | MINOR | Must set meaningful thresholds |
+| Bare `except:` | MAJOR | Must specify exception type |
+| Magic numbers (>999) | MINOR | Extract to named constants |
 
-### 铁律 3：维度完整 — 禁止只测 happy path
+### Iron Rule 3: Dimension Completeness — Never Only Test Happy Path
 
-每个模块的测试套件**必须**覆盖以下维度：
+Every module's test suite **must** cover these dimensions:
 
-| 维度 | 符号 | 最低占比 | 说明 |
-|------|------|---------|------|
-| **Happy Path** | ✅ | ≥50% | 正常输入 → 预期输出 |
-| **Error Case** | 🔴 | **≥15%** | 非法输入/空值/越界 → 异常或错误返回 |
-| **Boundary** | 🟡 | ≥10% | 空字符串、零值、最大值、None |
-| **Performance** | ⚡ | **≥5%** | 关键路径耗时基准（如 `<100ms`） |
-| **Configuration** | ⚙️ | ≥5% | 不同配置项组合 |
-| **Integration** | 🔗 | ≥10% | 模块间协作场景 |
-| **Security** | 🔒 | 按需 | 权限/注入/越权（如有安全相关） |
+| Dimension | Symbol | Min % | Description |
+|-----------|--------|-------|-------------|
+| **Happy Path** | ✅ | ≥50% | Normal input → Expected output |
+| **Error Case** | 🔴 | **≥15%** | Illegal input / empty / out-of-bounds → Exception or error return |
+| **Boundary** | 🟡 | ≥10% | Empty string, zero value, max value, None |
+| **Performance** | ⚡ | **≥5%** | Critical path timing baseline (e.g., `<100ms`) |
+| **Configuration** | ⚙️ | ≥5% | Different config combinations |
+| **Integration** | 🔗 | ≥10% | Inter-module collaboration scenarios |
+| **Security** | 🔒 | As needed | Permission / injection / privilege escalation (if security-related) |
 
-**自动检查工具**：
+**Auto-check tool**:
 ```python
 from scripts.collaboration.test_quality_guard import TestQualityGuard
 
@@ -379,94 +376,99 @@ guard = TestQualityGuard(
 )
 report = guard.audit()
 print(report.to_markdown())
-# 输出: 评分 + 问题清单 + 各维度覆盖情况 + 反模式检测
+# Output: Score + Issue list + Dimension coverage + Anti-pattern detection
 ```
 
-### 测试函数模板（必须遵循的格式）
+### Test Function Template (Must Follow Format)
 
 ```python
-def test_<功能>_<场景>(self):
-    """验证: <具体要验证什么，一句话说清楚>
+def test_<feature>_<scenario>(self):
+    """Verify: <What exactly to verify, one sentence>
 
-    场景说明: <什么条件下触发>
-    预期结果: <应该发生什么>
+    Scenario: <What condition triggers this>
+    Expected: <What should happen>
     """
-    # Arrange - 准备数据和依赖
+    # Arrange - Prepare data and dependencies
 
-    # Act - 执行被测操作
+    # Act - Execute operation under test
 
-    # Assert - 验证结果（使用精确断言，不用 assertTrue 绕过）
+    # Assert - Verify results (use precise assertions, never use assertTrue to bypass)
 ```
 
 ---
 
-## 交付工作流铁律（⚠️ 每次推进后必须执行）
+## Delivery Workflow Iron Rules (⚠️ Must Execute After Every Push)
 
-> 本节定义「推进→测试→走读→注释→文档→Git」的标准闭环流程。**违反任何一步都是严重错误。**
+> This section defines the standard closed-loop workflow: Implement→Test→Walkthrough→Annotate→Docs→Git.
+> **Violating any step is a serious error.**
 
-### 铁律：推进后的必做闭环
+### Iron Rule: Mandatory Post-push Closed Loop
 
 ```
-推进实现 → 测试验证(全量回归) → 代码走读 → 注释补全 → 文档更新 → Git推送
+Implement → Test(Regression All) → Code Walkthrough → Annotate → Docs Update → Cleanup → Git Push
 ```
 
-**每一步的强制要求**：
+**Mandatory actions per step**:
 
-| 步骤 | 强制动作 | 验证标准 |
-|------|---------|---------|
-| **1. 推进实现** | 按 Plan/Spec 编写/修改代码 | 功能完整，无 TODO 占位 |
-| **2. 测试验证** | 新增测试 + 全量回归 | 0 failure, 0 error, 100% pass |
-| **3. 代码走读** | 逐文件阅读新增/修改的每一行 | 理解每个方法的输入输出和边界行为 |
-| **4. 注释补全** | 公共方法 docstring (Args/Returns) + 关键逻辑行内注释 | 无"裸方法"(无docstring的public method) |
-| **5. 文档更新** | **全量相关文档同步**（见下方「文档覆盖清单」） | 所有文档版本号/模块数/测试数一致，无过时内容 |
-| **6. 清理收尾** | 删除过程文档/临时文档/临时代码 | 无残留的 `_tmp`/`_draft`/`_old` 文件 |
-| **7. Git 推送** | commit message 含版本号+变更摘要+测试数 | push 成功，remote 可见 |
+| Step | Mandatory Action | Verification Criteria |
+|------|-----------------|----------------------|
+| **1. Implement** | Write/modify code per Plan/Spec | Feature complete, no TODO placeholders |
+| **2. Test** | New tests + full regression | 0 failure, 0 error, 100% pass |
+| **3. Walkthrough** | Read every new/modified line in each file | Understand each method's I/O and edge behavior |
+| **4. Annotate** | Public method docstring (Args/Returns) + key logic inline comments | No "naked methods" (public method without docstring) |
+| **5. Docs Update** | **Sync ALL relevant docs** (see checklist below) | All docs have consistent version/module count/test count, no stale content |
+| **6. Cleanup** | Delete process docs / temp docs / temp code | No residual `_tmp`/`_draft`/`_old` files |
+| **7. Git Push** | commit message includes version+change summary+test count | push success, visible on remote |
 
-### 铁律：文档覆盖清单（⚠️ 步骤 5 必须检查以下全部类别）
+### Iron Rule: Doc Coverage Checklist (Step 5 must check ALL categories)
 
-> **原则：与变更相关的需求/设计/测试/API/安装依赖/SKILL 各类文档，只要相关都要更新。**
+> **Principle: All doc types related to the change must be updated — requirements/design/test/API/install/SKILL/etc.**
 
-| 文档类别 | 检查项 | 本次变更是否涉及 |
-|----------|--------|-----------------|
-| **需求文档** | `docs/spec/*.md` — 规格说明书状态更新 (待评审→实现中→已实现) | ✅ 必查 |
-| **设计文档** | `docs/architecture/*.md` — 架构演进记录、Phase 追加 | ✅ 必查 |
-| **规划文档** | `docs/planning/*.md` — 共识决议 action items 勾选、扩展说明 | ✅ 必查 |
-| **SKILL 文档** | `SKILL.md` — 模块表、测试表、版本历史、规则 | ✅ 必查 |
-| **项目概览** | `README.md` (EN) / `README-CN.md` (中文) / `README-JP.md` (日本語) — 版本号、模块表、时间线 | ✅ 必查 |
-| **变更日志** | `CHANGELOG.md` — 新版本条目 (Added/Changed/Fixed) | ✅ 必查 |
-| **状态文档** | `IMPLEMENTATION_STATUS.md` — 当前版本、模块清单、测试汇总 | ✅ 必查 |
-| **配置文档** | `CONFIGURATION.md` — 新增外部集成配置选项 | 🔍 有集成时必更 |
-| **API 文档** | 如有 API 变更则更新对应接口文档 | 🔍 有 API 变更时必更 |
-| **安装依赖** | `INSTALL.md` / `requirements.txt` — 有新依赖时更新 | 🔍 有新依赖时必更 |
-| **测试计划** | 测试用例文档反映新增测试覆盖范围 | 🔍 大幅变更时建议更新 |
+| Doc Category | Check Item | Relevant? |
+|-------------|-----------|----------|
+| **Requirements** | `docs/spec/*.md` — Spec status update (pending→in-progress→implemented) | ✅ Must check |
+| **Design** | `docs/architecture/*.md` — Architecture evolution record, Phase additions | ✅ Must check |
+| **Planning** | `docs/planning/*.md` — Consensus action items checked, extension notes | ✅ Must check |
+| **SKILL Docs** | `SKILL.md` — Module table, test table, version history, rules | ✅ Must check |
+| **Project Overview** | `README.md` (EN) / `README-CN.md` (CN) / `README-JP.md` (JP) — Version, modules, timeline | ✅ Must check |
+| **Changelog** | `CHANGELOG.md` — New version entries (Added/Changed/Fixed) | ✅ Must check |
+| **Status Doc** | `IMPLEMENTATION_STATUS.md` — Current version, module list, test summary | ✅ Must check |
+| **Config** | `CONFIGURATION.md` — New external integration config options | 🔍 If has integrations |
+| **API Docs** | Update interface docs if API changes | 🔍 If API changed |
+| **Install Deps** | `INSTALL.md` / `requirements.txt` — Update if new deps | 🔍 If new deps |
+| **Test Plan** | Reflect new test coverage scope | 🔍 For major changes |
 
-### 铁律：清理收尾规则（⚠️ 步骤 6）
+### Iron Rule: Cleanup Rules (Step 6)
 
-> **原则：过程文档和临时产物不应留在代码库中。**
+> **Principle: Process docs and temporary artifacts should NOT remain in codebase.**
 
-| 清理类别 | 处理方式 | 示例 |
-|----------|---------|------|
-| 过程性分析脚本 | 保留有价值的，删除一次性用途的 | `*_review.py`, `*_analysis.py` → 评估后决定 |
-| 临时调试文件 | **必须删除** | `test_*.py.tmp`, `debug_*.py`, `*_bak.*` |
-| 草稿/废弃文档 | **必须删除** | `*_DRAFT.md`, `*_old.md`, `*_tmp.md` |
-| 未使用的占位代码 | **必须删除** 或替换为真实实现 | `pass # TODO`, `raise NotImplementedError` |
-| 重复/冗余文件 | 合并或删除 | 多个版本的同一文档只保留最新版 |
+| Cleanup Category | Action | Examples |
+|-----------------|--------|---------|
+| Process analysis scripts | Keep valuable ones, delete one-off | `*_review.py`, `*_analysis.py` → evaluate then decide |
+| Temp debug files | **Must delete** | `test_*.py.tmp`, `debug_*.py`, `*.bak.*` |
+| Draft/deprecated docs | **Must delete** | `*_DRAFT.md`, `*_old.md`, `*_tmp.md` |
+| Unused placeholder code | **Must delete** or replace with real impl | `pass # TODO`, `raise NotImplementedError` |
+| Duplicate/redundant files | Merge or delete | Keep only latest version of same doc |
 
-**Annotation Standards (Language Separation)**:
-- **Documentation (SKILL.md / README.md)**: Use **English**
-- **README-CN.md**: Use **Chinese** (中文版文档)
-- **Code docstring**: Use **English** (Args / Returns / Example)
-- **Inline comments**: Use **English** (explaining business logic)
+### Annotation Standards (Language Separation)
+
+| Category | Language |
+|----------|----------|
+| **Documentation (SKILL.md / README.md)** | **English** |
+| **README-CN.md** | **Chinese (简体)** |
+| **README-JP.md** | **Japanese (日本語)** |
+| **Code docstring** | **English** (Args / Returns / Example) |
+| **Inline comments** | **English** (explaining business logic) |
 
 ---
 
-## 测试覆盖
+## Test Coverage
 
-| 模块 | 测试数 | 质量评分 | 状态 |
-|------|--------|---------|------|
-| PromptOptimization (提示词优化) | 59 | ✅ | ✅ PASS |
-| TestQualityGuard (质量守卫) | 42 | 自身审计通过 | ✅ PASS |
-| Dispatcher (统一调度) | 54 | ✅ | ✅ PASS |
+| Module | Tests | Quality Score | Status |
+|--------|-------|--------------|--------|
+| PromptOptimization | 59 | ✅ | ✅ PASS |
+| TestQualityGuard | 42 | Self-audit passed | ✅ PASS |
+| Dispatcher | 54 | ✅ | ✅ PASS |
 | Coordinator + Scratchpad + Worker | 96 | ✅ | ✅ PASS |
 | ContextCompressor | 72 | ✅ | ✅ PASS |
 | PermissionGuard | 105 | ✅ | ✅ PASS |
@@ -474,23 +476,23 @@ def test_<功能>_<场景>(self):
 | WarmupManager | 103 | ✅ | ✅ PASS |
 | MemoryBridge | 96 | ✅ | ✅ PASS |
 | Enhanced E2E | 46 | ✅ | ✅ PASS |
-| MCEAdapter (MCE适配器) | 23 | ✅ | ✅ PASS |
-| Dispatcher UX (报告增强) | 24 | ✅ | ✅ PASS |
-| Claw Integration (Claw桥接) | 33 | ✅ | ✅ PASS |
-| **总计** | **~828** | **✅ ALL PASS** | |
+| MCEAdapter | 23 | ✅ | ✅ PASS |
+| Dispatcher UX | 24 | ✅ | ✅ PASS |
+| Claw Integration | 33 | ✅ | ✅ PASS |
+| **Total** | **~828** | **✅ ALL PASS** | |
 
 ---
 
 ## Version History
 
-- **v3.3** (2026-04-17): WorkBuddy Claw Integration - WorkBuddyClawSource(只读桥接/INDEX索引检索/日更记忆/AI新闻流) + Dispatcher AI News自动注入 + Annotation Standards (EN docs/docstring/inline) + 33 new tests
-- **v3.2** (2026-04-17): MVP Three Lines - E2E Full Demo(10-step flow/CLI) + Dispatcher UX Enhancement(structured/compact/detailed 3-format report) + MCEAdapter Memory Classification Adapter(lazy-load/graceful-degrade) + Delivery Workflow Iron Rule (walkthrough→annotate→docs→Git loop)
+- **v3.3** (2026-04-17): WorkBuddy Claw Integration - WorkBuddyClawSource(read-only bridge/INDEX search/daily logs/AI news feed) + Dispatcher AI News auto-inject + Annotation Standards (EN docs/docstring/inline) + Code comment audit (all EN) + MCE v0.4 support (tenant/permission) + Multi-language README (EN/CN/JP) + 33 new tests
+- **v3.2** (2026-04-17): MVP Three Lines - E2E Full Demo(10-step flow/CLI) + Dispatcher UX Enhancement(structured/compact/detailed 3-format report) + MCEAdapter Memory Classification Adapter(lazy-load/graceful-degrade) + Delivery Workflow Iron Rule
 - **v3.1** (2026-04-16): Prompt Optimization System - Dynamic Prompt Assembly(3 variants) + Skillify Closed-loop Feedback(A/B promotion) + Compression-Aware Adaptation
-- **v3.0.1** (2026-04-16): 代码注释全面补全(6大核心模块docstring 100%覆盖) + TestQualityGuard测试质量审计系统集成
-- **v3.0** (2026-04-16): 完整重构为 Coordinator/Worker/Scratchpad 协作架构，11大模块（含Dispatcher+TestQualityGuard），~710测试全通过
-- **v2.5** (2026-04-06): Memory Classification Engine 集成
-- **v2.4** (2026-04-01~03): Vibe Coding + 核心规则 + 生命周期识别
-- **v2.3** (2026-03-28): 多角色代码走读 + 3D可视化
-- **v2.2** (2026-03-21): 长程 Agent (Checkpoint + Handoff)
-- **v2.1** (2026-03-17): 双层上下文 + AI语义匹配
-- **v2.0/v1.0** (2026-03-16): 初始版本
+- **v3.0.1** (2026-04-16): Comprehensive code annotation (6 core modules 100% docstring coverage) + TestQualityGuard integration
+- **v3.0** (2026-04-16): Complete redesign to Coordinator/Worker/Scratchpad architecture, 11 core modules (incl. Dispatcher+TestQualityGuard), ~710 tests all passing
+- **v2.5** (2026-04-06): Memory Classification Engine integration
+- **v2.4** (2026-04-01~03): Vibe Coding + Core Rules + Lifecycle recognition
+- **v2.3** (2026-03-28): Multi-role code walkthrough + 3D visualization
+- **v2.2** (2026-03-21): Long-running Agent (Checkpoint + Handoff)
+- **v2.1** (2026-03-17): Dual-layer context + AI semantic matching
+- **v2.0/v1.0** (2026-03-16): Initial release

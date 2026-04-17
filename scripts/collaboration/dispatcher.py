@@ -1,29 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-V3 Multi-Agent 协作调度器 (Dispatcher)
+V3 Multi-Agent Collaboration Dispatcher (Unified Entry Point)
 
-这是 v3.0 的统一入口，将所有协作组件串联为一条可用的流水线：
+This is the V3 unified entry point that chains all collaboration components
+into a single usable pipeline:
 
-    用户任务 → [意图识别] → [角色分配] → [Coordinator编排]
-           → [Worker并行执行] → [Scratchpad共享] → [共识决策]
-           → [上下文压缩] → [权限检查] → [记忆沉淀] → [结果返回]
+    User Task → [Intent Recognition] → [Role Assignment] → [Coordinator Orchestration]
+             → [Parallel Worker Execution] → [Scratchpad Sharing] → [Consensus Decision]
+             → [Context Compression] → [Permission Check] → [Memory Capture] → [Result Return]
 
-集成组件：
-- WarmupManager: 启动预热，减少冷启动延迟
-- Coordinator + Worker + Scratchpad: 多Agent协作核心
-- BatchScheduler: 并行/串行混合调度
-- ConsensusEngine: 共识决策机制
-- ContextCompressor: 上下文压缩，防止溢出
-- PermissionGuard: 权限守卫，安全操作检查
-- Skillifier: 从成功模式中学习，生成新Skill
-- MemoryBridge: 跨会话记忆桥接
+Integrated Components:
+- WarmupManager: Startup warmup to reduce cold-start latency
+- Coordinator + Worker + Scratchpad: Multi-agent collaboration core
+- BatchScheduler: Parallel/sequential hybrid scheduling
+- ConsensusEngine: Weighted voting consensus mechanism with veto power
+- ContextCompressor: 4-level context compression to prevent overflow
+- PermissionGuard: Permission guard for secure operation checks
+- Skillifier: Learns from successful patterns to generate new Skills
+- MemoryBridge: Cross-session memory bridge (with MCE + WorkBuddy Claw integration)
 
-使用示例:
+Example Usage:
     from scripts.collaboration.dispatcher import MultiAgentDispatcher
 
     disp = MultiAgentDispatcher()
-    result = disp.dispatch("设计一个用户认证系统")
+    result = disp.dispatch("Design a user authentication system")
     print(result.summary)
 """
 
@@ -246,17 +247,17 @@ class MultiAgentDispatcher:
                  mce_adapter=None):
         """
         Args:
-            persist_dir: Scratchpad 持久化目录
-            enable_warmup: 是否启用启动预热
-            enable_compression: 是否启用上下文压缩
-            enable_permission: 是否启用权限检查
-            enable_memory: 是否启用记忆桥接
-            enable_skillify: 是否启用Skill学习
-            enable_quality_guard: 是否启用测试质量自动审计 (P1)
-            compression_threshold: 压缩触发阈值(token数)
-            memory_dir: 记忆存储目录
-            permission_level: 默认权限级别
-            mce_adapter: MCE 记忆分类引擎适配器 (可选, v3.2)
+            persist_dir: Scratchpad persistence directory
+            enable_warmup: Whether to enable startup warmup
+            enable_compression: Whether to enable context compression
+            enable_permission: Whether to enable permission checking
+            enable_memory: Whether to enable memory bridge
+            enable_skillify: Whether to enable Skill learning
+            enable_quality_guard: Whether to enable test quality auto-audit (P1)
+            compression_threshold: Compression trigger threshold (token count)
+            memory_dir: Memory storage directory
+            permission_level: Default permission level
+            mce_adapter: MCE memory classification engine adapter (optional, v3.2)
         """
         self.enable_quality_guard = enable_quality_guard
         self.persist_dir = persist_dir or tempfile.mkdtemp(prefix="mas_v3_")

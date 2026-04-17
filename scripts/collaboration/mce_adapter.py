@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-MCEAdapter — Memory Classification Engine 适配器
+MCEAdapter — Memory Classification Engine Adapter
 
-v3.2 MVP Line-B: 将本地 MCE (memory-classification-engine) 集成到 TraeMultiAgentSkill
+V3.2 MVP Line-B: Integrates local MCE (memory-classification-engine) into TraeMultiAgentSkill.
+Updated for MCE v0.4 with tenant management and permission checking support.
 
-设计原则:
-  - 不修改 MCE 源码 —— 它是独立项目
-  - MCE 作为可选依赖 —— import 失败时自动降级为无 MCE 模式
-  - 所有调用 try/except 包裹 —— 零侵入，不影响主流程
-  - 懒加载 (lazy init) —— 不影响冷启动速度
+Design Principles:
+  - Never modify MCE source code — it is an independent project
+  - MCE as optional dependency — auto-degrade on import failure
+  - All calls wrapped in try/except — zero intrusion, no impact on main flow
+  - Lazy initialization (lazy init) — no impact on cold start speed
 
-接入方式: Facade 直接 import (不用 HTTP SDK)
-集成点: Phase A (capture_execution) 优先, Phase B/C 可选后续迭代
+Integration Method: Facade direct import (not HTTP SDK)
+Integration Points: Phase A (capture_execution) priority, Phase B/C optional future iterations
 
-使用示例:
+MCE Version Compatibility:
+  - v0.1.0: Initial integration (process_message, store_memory, retrieve_memories)
+  - v0.4.0: Current — adds tenant management, check_permission, analyze_sensitivity
+
+Example Usage:
     adapter = MCEAdapter(enable=True)
     if adapter.is_available:
-        result = adapter.classify("用户成功登录系统")
-        print(result)  # {'type': 'decision', 'confidence': 0.92, ...}
+        result = adapter.classify("User successfully logged in")
+        print(result)  # MCEResult(memory_type='decision', confidence=0.92, ...)
+        permitted = adapter.check_permission("sensitive_data_query")
+        print(permitted)  # True/False
     else:
-        print("MCE 不可用, 使用默认分类")
+        print("MCE unavailable, using default classification")
 """
 
 from dataclasses import dataclass, field
@@ -88,27 +95,25 @@ class MCEStatus:
 
 class MCEAdapter:
     """
-    MCE 记忆分类引擎适配器
+    Memory Classification Engine Adapter
 
-    通过 Facade 模式封装 memory_classification_engine,
-    提供统一的 classify / store / retrieve 接口。
-    当 MCE 不可用时优雅降级（返回 None 或默认值）。
+    Wraps memory_classification_engine via Facade pattern,
+    providing unified classify / store / retrieve interfaces.
+    Gracefully degrades (returns None or defaults) when MCE is unavailable.
 
-    与现有组件的集成点:
-      Phase A: memory_bridge.capture_execution() → adapter.classify(output) → 带类型存储
-      Phase B: memory_bridge.recall() → adapter.retrieve_memories() → 类型过滤
-      Phase C: scratchpad.write() → adapter.classify(content) → 条目带类型标注
-      Dispatcher: dispatch() 内存沉淀步骤 → adapter 作为可选增强
+    Integration Points with Existing Components:
+      Phase A: memory_bridge.capture_execution() → adapter.classify(output) → typed storage
+      Phase B: memory_bridge.recall() → adapter.retrieve_memories() → type filtering
+      Phase C: scratchpad.write() → adapter.classify(content) → entry type annotation
+      Dispatcher: dispatch() memory capture step → adapter as optional enhancement
 
-    使用示例:
+    Example Usage:
         adapter = MCEAdapter(enable=True)
-        result = adapter.classify("用户完成了登录操作")
-        if result:
-            print(f"类型: {result.memory_type}, 置信度: {result.confidence}")
-        else:
-            print("MCE 不可用，使用默认处理")
+        if adapter.is_available:
+            result = adapter.classify("User preference: dark mode")
+            print(result.memory_type)  # "preference"
 
-    线程安全: 所有公共方法都是线程安全的（内部 RLock 保护）
+    Thread Safety: All public methods are thread-safe (internal RLock protection)
     """
 
     _instance = None
@@ -116,15 +121,16 @@ class MCEAdapter:
 
     def __init__(self, enable: bool = False):
         """
-        初始化 MCE 适配器
+        Initialize MCE adapter
 
         Args:
-            enable: 是否启用 MCE (False 则跳过所有初始化)
+            enable: Whether to enable MCE (False skips all initialization)
         """
         import threading
         self._lock = threading.RLock()
         self._status = MCEStatus()
         self._facade = None
+        self._tenant_id: Optional[str] = "default"
 
         if enable:
             self._try_init()
@@ -307,29 +313,79 @@ class MCEAdapter:
 
     def force_reinit(self):
         """
-        强制重新初始化（用于配置变更后）
+        Force re-initialization (for use after config changes)
 
-        先关闭旧连接，再尝试重新初始化。
+        Closes old connection first, then attempts re-initialization.
         """
         self.shutdown()
         self._try_init()
 
+    def set_tenant(self, tenant_id: str) -> bool:
+        """
+        Set active tenant for MCE v0.4 multi-tenant support.
+
+        Args:
+            tenant_id: Tenant identifier string
+
+        Returns:
+            bool: True if tenant was set successfully, False otherwise
+        """
+        with self._lock:
+            if not self.is_available or not self._facade:
+                return False
+            try:
+                if hasattr(self._facade, 'create_tenant'):
+                    self._facade.create_tenant(tenant_id)
+                self._tenant_id = tenant_id
+                return True
+            except Exception:
+                return False
+
+    def check_permission(self, text: str) -> bool:
+        """
+        Check permission/sensitivity of text via MCE v0.4 privacy service.
+
+        Uses MCE's check_permission or analyze_sensitivity method to determine
+        if a text contains sensitive information that should be handled carefully.
+
+        Args:
+            text: Text content to check for sensitivity
+
+        Returns:
+            bool: True if text passes permission check (not sensitive), False if blocked
+        """
+        with self._lock:
+            if not self.is_available or not self._facade:
+                return True  # Default: allow when MCE unavailable
+            try:
+                if hasattr(self._facade, 'check_permission'):
+                    result = self._facade.check_permission(text)
+                    return bool(result) if result is not None else True
+                elif hasattr(self._facade, 'analyze_sensitivity'):
+                    result = self._facade.analyze_sensitivity(text)
+                    if isinstance(result, dict):
+                        return result.get('allowed', True)
+                    return True
+                return True  # No privacy service available, allow by default
+            except Exception:
+                return True  # Graceful degrade: allow on error
+
     @staticmethod
     def _normalize_result(raw: Any) -> MCEResult:
         """
-        标准化 MCE 返回值为 MCEResult
+        Normalize MCE return value to MCEResult format.
 
-        兼容多种可能的返回格式:
-        - Dict 含 'type' 字段
-        - Dict 含 'memory_type' 字段
-        - 字符串
-        - 其他格式 → 默认值
+        Handles multiple possible return formats:
+        - Dict with 'type' field
+        - Dict with 'memory_type' field
+        - String value
+        - Other formats → default values
 
         Args:
-            raw: MCE classify_message 的原始返回值
+            raw: Raw return value from MCE classify_message
 
         Returns:
-            MCEResult: 标准化的分类结果
+            MCEResult: Normalized classification result
         """
         if raw is None:
             return MCEResult()

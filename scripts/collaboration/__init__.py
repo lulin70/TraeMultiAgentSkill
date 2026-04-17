@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-协作系统 (Collaboration System)
+Collaboration System (Multi-Agent Framework)
 
-基于 Claude Code Coordinator 模式的多 Agent 协作框架。
+A multi-agent collaboration framework based on the Claude Code Coordinator pattern.
 
-核心组件：
-- Scratchpad: 共享黑板，Worker 间交换信息
-- Worker: 工作者，执行具体任务
-- Coordinator: 协调者，管理全局协作
-- ConsensusEngine: 共识引擎，处理投票和决策
-- BatchScheduler: 批处理调度器，支持并行/串行混合
+Core Components:
+- Scratchpad: Shared blackboard for inter-worker information exchange
+- Worker: Executor that performs specific tasks
+- Coordinator: Orchestrator managing global collaboration
+- ConsensusEngine: Consensus engine handling voting and decisions
+- BatchScheduler: Batch scheduler supporting parallel/sequential hybrid mode
 
-使用示例:
-    from collaboration import Coordinator, Scratchpad
+Example Usage:
+    from scripts.collaboration import Coordinator, Scratchpad
 
     scratchpad = Scratchpad()
     coordinator = Coordinator(scratchpad=scratchpad)
 
-    plan = coordinator.plan_task("设计用户认证系统", [
+    plan = coordinator.plan_task("Design user authentication system", [
         {"role_id": "architect"},
         {"role_id": "tester"},
         {"role_id": "product-manager"},
