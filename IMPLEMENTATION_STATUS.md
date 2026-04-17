@@ -94,7 +94,9 @@
 | Doc | Path | Purpose |
 |-----|------|---------|
 | SKILL.md | Root | Skill definition (EN) |
-| README.md | Root | Project overview (EN) |
+| README.md | Root | Project overview (EN, default) |
+| README-CN.md | Root | Project overview (中文) |
+| README-JP.md | Root | Project overview (日本語) |
 | CHANGELOG.md | Root | Version history (EN) |
 | IMPLEMENTATION_STATUS.md | Root | This file |
 | v3-upgrade-proposal.md | docs/architecture/ | Architecture evolution plan |

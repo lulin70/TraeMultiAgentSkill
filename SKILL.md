@@ -432,7 +432,7 @@ def test_<功能>_<场景>(self):
 | **设计文档** | `docs/architecture/*.md` — 架构演进记录、Phase 追加 | ✅ 必查 |
 | **规划文档** | `docs/planning/*.md` — 共识决议 action items 勾选、扩展说明 | ✅ 必查 |
 | **SKILL 文档** | `SKILL.md` — 模块表、测试表、版本历史、规则 | ✅ 必查 |
-| **项目概览** | `README.md` / `README_EN.md` / `README-CN.md` — 版本号、模块表、时间线 | ✅ 必查 |
+| **项目概览** | `README.md` (EN) / `README-CN.md` (中文) / `README-JP.md` (日本語) — 版本号、模块表、时间线 | ✅ 必查 |
 | **变更日志** | `CHANGELOG.md` — 新版本条目 (Added/Changed/Fixed) | ✅ 必查 |
 | **状态文档** | `IMPLEMENTATION_STATUS.md` — 当前版本、模块清单、测试汇总 | ✅ 必查 |
 | **配置文档** | `CONFIGURATION.md` — 新增外部集成配置选项 | 🔍 有集成时必更 |
