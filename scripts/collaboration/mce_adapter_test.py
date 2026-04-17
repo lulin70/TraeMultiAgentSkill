@@ -78,7 +78,12 @@ class MockMCEEngine:
 
 @dataclass
 class MockFacade:
-    """模拟 MemoryClassificationEngineFacade"""
+    """
+    模拟 MemoryClassificationEngineFacade
+
+    测试用替身，包装 MockMCEEngine 以匹配 MCE Facade 接口签名。
+    使 MCEAdapter(enable=True) 可在无真实 MCE 环境下完成初始化。
+    """
     _engine: Any = None
 
     def __init__(self, engine=None):
@@ -301,6 +306,12 @@ class TestNormalizeResult(unittest.TestCase):
 
 
 def run_all_tests():
+    """
+    加载并运行本模块全部测试用例
+
+    Returns:
+        int: 通过的测试用例数 (testsRun - failures - errors)
+    """
     suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)

@@ -686,9 +686,14 @@ class MemoryBridge:
         初始化记忆桥接器
 
         Args:
-            base_dir: 记忆存储根目录
-            config: 记忆配置
+            base_dir: 记忆存储根目录 (默认: data/memory-bank)
+            config: 记忆配置项 (MemoryConfig, 默认使用默认配置)
             mce_adapter: MCE 记忆分类引擎适配器 (可选, v3.2 集成)
+                传入后自动启用以下增强:
+                - capture_execution(): 自动用 MCE 分类 scratchpad 内容,
+                  preference→FEEDBACK, decision→EPISODIC, fact→KNOWLEDGE
+                - recall(): 自动用 MCE 对查询文本做意图分类并过滤结果
+                - shutdown(): 联动关闭 MCE 连接
         """
         self.config = config or MemoryConfig.default()
         if base_dir is None:

@@ -579,7 +579,24 @@ def format_final_report(task: str, roles: List[str],
                         resolutions: List, report: str,
                         elapsed: float,
                         output_format: str = "markdown") -> str:
-    """格式化最终报告"""
+    """
+    格式化最终报告为 Markdown 或 JSON
+
+    报告包含: 任务摘要 → 角色分工表 → 协作统计 → 各角色发现摘要 → 后续建议
+
+    Args:
+        task: 原始任务描述
+        roles: 参与的角色ID列表
+        exec_results: 角色ID→WorkerResult 的执行结果字典
+        prompt_variants: 角色ID→{complexity/variant/tokens} 提示词变体信息
+        resolutions: ConsensusEngine 解决的冲突列表
+        report: Coordinator 生成的原始报告文本
+        elapsed: 总耗时(秒)
+        output_format: 输出格式 ("markdown" 或 "json")
+
+    Returns:
+        str: 格式化后的完整报告文本
+    """
     if output_format == "json":
         return json.dumps({
             "task": task[:100],
@@ -662,6 +679,19 @@ def format_final_report(task: str, roles: List[str],
 # ============================================================
 
 def main():
+    """
+    CLI 入口函数
+
+    解析命令行参数并运行 E2E Demo。
+
+    支持参数:
+        --task TEXT      自定义任务描述 (默认使用内置电商认证方案)
+        --roles ROLE...  指定参与角色 (architect/product_manager/solo-coder/tester/ui-designer)
+        --json           使用 JSON 格式输出 (默认 Markdown)
+
+    Returns:
+        int: 0 表示成功执行
+    """
     parser = argparse.ArgumentParser(description="TraeMultiAgentSkill E2E Full Demo")
     parser.add_argument("--task", type=str, default=None,
                         help="自定义任务描述")

@@ -301,6 +301,12 @@ class TestReportHierarchy(unittest.TestCase):
 
 
 def run_all_tests():
+    """
+    加载并运行本模块全部测试用例
+
+    Returns:
+        int: 通过的测试用例数 (testsRun - failures - errors)
+    """
     suite = unittest.TestLoader().loadTestsFromModule(sys.modules[__name__])
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)

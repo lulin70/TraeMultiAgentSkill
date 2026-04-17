@@ -32,13 +32,29 @@ from typing import Any, Dict, List, Optional
 
 @dataclass
 class MCEResult:
-    """MCE 分类结果"""
+    """
+    MCE 分类结果数据模型
+
+    封装 MCE 引擎返回的标准化分类结果。
+
+    Attributes:
+        memory_type: 记忆类型标签 (preference/decision/correction/fact/task/general)
+        confidence: 分类置信度 (0.0~1.0)
+        tier: 存储层级 (tier2/tier3/tier4/episodic/knowledge)
+        metadata: 额外元数据 (引擎原始返回中的其他字段)
+    """
     memory_type: str = ""
     confidence: float = 0.0
     tier: str = "tier2"
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict:
+        """
+        序列化为字典格式
+
+        Returns:
+            Dict: 包含 type/confidence/tier/metadata 的字典
+        """
         return {
             "type": self.memory_type,
             "confidence": round(self.confidence, 4),
@@ -49,7 +65,16 @@ class MCEResult:
 
 @dataclass
 class MCEStatus:
-    """MCE 适配器状态"""
+    """
+    MCE 适配器运行状态快照
+
+    Attributes:
+        available: MCE 引擎是否可用 (初始化成功为 True)
+        version: MCE 引擎版本号
+        init_error: 初始化失败时的错误信息 (成功时为 None)
+        classify_count: 成功分类调用次数
+        classify_fail_count: 分类失败/超时次数
+    """
     available: bool = False
     version: str = ""
     init_error: Optional[str] = None

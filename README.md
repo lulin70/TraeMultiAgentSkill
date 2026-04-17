@@ -465,6 +465,7 @@ TraeMultiAgentSkill/
 
 | 时间 | Phase | 模块 | 核心能力 | 测试 |
 |------|-------|------|---------|------|
+| **v3.2** | **MVP** | **E2E Demo / UX / MCEAdapter** | **10步完整流程/结构化报告(3格式)/MCE分类适配器** | **47+** |
 | v3.1 | **Opt** | **PromptOptimization** | **动态Prompt裁剪/Skillify闭环/压缩感知** | **59** |
 | v3.0 | P1 | Coordinator+基础协作 | 多Agent协调/共识/批调度 | E2E 96 |
 | v3.0 | Entry | MultiAgentDispatcher | 统一调度入口/一键协作 | 54 |
