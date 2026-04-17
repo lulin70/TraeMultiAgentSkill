@@ -153,6 +153,9 @@ from .mce_adapter import (
     MCEStatus,
     get_global_mce_adapter,
 )
+from .memory_bridge import (
+    WorkBuddyClawSource,
+)
 
 __all__ = [
     "Scratchpad",
@@ -258,4 +261,5 @@ __all__ = [
     "MCEResult",
     "MCEStatus",
     "get_global_mce_adapter",
+    "WorkBuddyClawSource",
 ]

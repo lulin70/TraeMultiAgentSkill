@@ -46,7 +46,8 @@
 | v3.2-A1 | **E2E Full Demo** | `demo/e2e_full_demo.py` | *(脚本)* | 生产级10步完整流程演示(CLI+JSON) |
 | v3.2-A2 | **Dispatcher UX** | dispatcher.py (增强) | **24** | 结构化报告(摘要→角色→发现→冲突→行动项) |
 | v3.2-B1 | **MCEAdapter** | mce_adapter.py | **23** | MCE记忆分类适配器(懒加载/降级/线程安全) |
-| **合计** | — | — | **~795** | — |
+| v3.3-A1 | **WorkBuddyClawSource** | memory_bridge.py | **33** | WorkBuddy Claw只读桥接(索引检索/日更/AI新闻) |
+| **合计** | — | — | **~828** | — |
 
 ## 快速开始
 
@@ -465,7 +466,8 @@ TraeMultiAgentSkill/
 
 | 时间 | Phase | 模块 | 核心能力 | 测试 |
 |------|-------|------|---------|------|
-| **v3.2** | **MVP** | **E2E Demo / UX / MCEAdapter** | **10步完整流程/结构化报告(3格式)/MCE分类适配器** | **47+** |
+| **v3.3** | **Claw** | **WorkBuddyClawSource / AI News Inject** | **Claw只读桥接/AI新闻自动注入** | **33** |
+| v3.2 | **MVP** | **E2E Demo / UX / MCEAdapter** | **10步完整流程/结构化报告(3格式)/MCE分类适配器** | **47+** |
 | v3.1 | **Opt** | **PromptOptimization** | **动态Prompt裁剪/Skillify闭环/压缩感知** | **59** |
 | v3.0 | P1 | Coordinator+基础协作 | 多Agent协调/共识/批调度 | E2E 96 |
 | v3.0 | Entry | MultiAgentDispatcher | 统一调度入口/一键协作 | 54 |

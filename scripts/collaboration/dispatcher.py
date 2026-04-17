@@ -571,6 +571,35 @@ class MultiAgentDispatcher:
                 except Exception as mce_err:
                     errors.append(f"MCE classify error: {mce_err}")
 
+            if self.memory_bridge and self.enable_memory:
+                try:
+                    ai_news_keywords = [
+                        "ai news", "industry trend", "latest progress", "trend",
+                        "ai coding", "embodied intelligence", "large model", "llm",
+                        "cursor", "claude", "gpt", "deepseek", "anthropic",
+                        "\u65b0\u95fb", "\u884c\u4e1a\u52a8\u6001", "\u6700\u65b0\u8fdb\u5c55",
+                    ]
+                    task_lower = task_description.lower()
+                    should_inject = any(kw in task_lower for kw in ai_news_keywords)
+                    if should_inject:
+                        news_items = self.memory_bridge.get_workbuddy_ai_news(days=3)
+                        if news_items:
+                            news_summary = "\n".join(
+                                f"- [{n.title}] {n.content[:200]}..."
+                                for n in news_items[:3]
+                            )
+                            self.scratchpad.write(
+                                ScratchpadEntry(
+                                    worker_id="system",
+                                    entry_type=EntryType.FINDING,
+                                    content=f"[WorkBuddy AI News Feed]\n{news_summary}",
+                                    confidence=0.95,
+                                    tags=["ai-news", "auto-injected"],
+                                )
+                            )
+                except Exception as inject_err:
+                    errors.append(f"AI news inject error: {inject_err}")
+
             step12_time = time.time()
 
             skill_proposals = []

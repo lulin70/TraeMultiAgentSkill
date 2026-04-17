@@ -7,7 +7,7 @@ description: |
   BatchScheduler并行调度 + ContextCompressor上下文压缩 + PermissionGuard权限守卫 +
   Skillifier技能学习 + WarmupManager启动预热 + MemoryBridge记忆桥接 +
   PromptAssembler提示词组装 + PromptVariantGenerator变体生成 + MCEAdapter记忆分类适配器。
-  ~795个测试全通过。支持中英文双语。
+  ~828个测试全通过。支持中英文双语。
 ---
 
 # Multi-Agent Team V3.2 — 多智能体协作平台
@@ -420,10 +420,11 @@ def test_<功能>_<场景>(self):
 | **5. 文档更新** | SKILL.md + README.md + v3-upgrade-proposal.md 同步更新 | 版本号、模块数、测试数三者一致 |
 | **6. Git 推送** | commit message 含版本号+变更摘要+测试数 | push 成功，remote 可见 |
 
-**注释规范（中英文分离）**：
-- **文档 (SKILL.md / README.md)**: 使用 **中文**
-- **代码 docstring**: 使用 **英文** (Args / Returns / Example)
-- **代码行内注释**: 使用 **中文** (解释业务逻辑)
+**Annotation Standards (Language Separation)**:
+- **Documentation (SKILL.md / README.md)**: Use **English**
+- **README-CN.md**: Use **Chinese** (中文版文档)
+- **Code docstring**: Use **English** (Args / Returns / Example)
+- **Inline comments**: Use **English** (explaining business logic)
 
 ---
 
