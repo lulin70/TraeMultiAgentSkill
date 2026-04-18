@@ -288,7 +288,7 @@ MIT License — [LICENSE](LICENSE) を参照
 | リンク | URL |
 |--------|-----|
 | **GitHub (本リポ)** | https://github.com/lulin70/DevSquad |
-| **オリジナル / 上流** | https://github.com/weiransoft/DevSquad |
+| **オリジナル / 上流** | https://github.com/weiransoft/TraeMultiAgentSkill |
 | **インストール** | [INSTALL.md](INSTALL.md) |
 | **スキルマニュアル** | [SKILL.md](SKILL.md) / [SKILL-CN.md](SKILL-CN.md) / [SKILL-JP.md](SKILL-JP.md) |
 | **英語 Readme** | [README.md](README.md) |

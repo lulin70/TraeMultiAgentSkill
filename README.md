@@ -241,7 +241,7 @@ MIT License — see [LICENSE](LICENSE) for details.
 | Link | URL |
 |------|-----|
 | **GitHub (This Repo)** | https://github.com/lulin70/DevSquad |
-| **Original / Upstream** | https://github.com/weiransoft/DevSquad |
+| **Original / Upstream** | https://github.com/weiransoft/TraeMultiAgentSkill |
 | **Installation** | See [INSTALL.md](INSTALL.md) |
 | **Skill Manual** | [SKILL.md](SKILL.md) / [SKILL-CN.md](SKILL-CN.md) / [SKILL-JP.md](SKILL-JP.md) |
 | **Chinese Readme** | [README-CN.md](README-CN.md) |

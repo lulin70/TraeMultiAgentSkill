@@ -320,7 +320,7 @@ MIT License — 详见 [LICENSE](LICENSE)
 | 链接 | URL |
 |------|-----|
 | **GitHub（本仓库）** | https://github.com/lulin70/DevSquad |
-| **原始 / 上游仓库** | https://github.com/weiransoft/DevSquad |
+| **原始 / 上游仓库** | https://github.com/weiransoft/TraeMultiAgentSkill |
 | **安装指南** | [INSTALL.md](INSTALL.md) |
 | **Skill 手册** | [SKILL.md](SKILL.md) / [SKILL-CN.md](SKILL-CN.md) / [SKILL-JP.md](SKILL-JP.md) |
 | **英文 Readme** | [README.md](README.md) |
