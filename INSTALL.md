@@ -1,5 +1,15 @@
 # DevSquad — Installation Guide
 
+> **⚠️ Path Placeholder Notice**: Throughout this guide, `/path/to/DevSquad` is a template.
+> Replace it with your actual installation path before running any command:
+> ```bash
+> # Example: if you cloned to ~/projects/DevSquad
+> # Replace /path/to/DevSquad → /Users/YOUR_USERNAME/projects/DevSquad
+>
+> # Quick check your actual path:
+> pwd   # run this inside the DevSquad directory
+> ```
+
 ## Prerequisites
 
 - **Python 3.9+** (pure Python, no compiled dependencies)

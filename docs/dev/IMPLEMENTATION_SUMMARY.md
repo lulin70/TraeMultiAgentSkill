@@ -368,7 +368,7 @@ scripts/
 
 1. **运行测试**
 ```bash
-cd /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts
+cd /path/to/DevSquad/scripts
 python3 test_v2_components.py
 ```
 

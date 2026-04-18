@@ -17,16 +17,16 @@
 
 ```bash
 # 基本用法
-python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py <项目路径>
+python /path/to/DevSquad/scripts/code_map_generator_v2.py <项目路径>
 
 # 指定工作空间 (用于多项目 workspace)
-python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py <项目路径> --workspace <工作空间路径>
+python /path/to/DevSquad/scripts/code_map_generator_v2.py <项目路径> --workspace <工作空间路径>
 
 # 指定输出文件
-python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py <项目路径> --output <输出路径>
+python /path/to/DevSquad/scripts/code_map_generator_v2.py <项目路径> --output <输出路径>
 
 # 仅分析特定目录
-python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py <项目路径> --scope src/api
+python /path/to/DevSquad/scripts/code_map_generator_v2.py <项目路径> --scope src/api
 ```
 
 ### 多项目 Workspace 场景
@@ -58,7 +58,7 @@ python code_map_generator_v2.py /workspace/project-a --workspace /workspace
 请先生成项目代码地图，以便我更好地理解代码结构：
 - 项目路径: <项目路径>
 - 工作空间路径: <工作空间路径> (可选)
-- 执行命令: python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py <项目路径> --workspace <工作空间路径>
+- 执行命令: python /path/to/DevSquad/scripts/code_map_generator_v2.py <项目路径> --workspace <工作空间路径>
 - 生成的代码地图将保存到项目根目录的 CODE_MAP.md 文件
 ```
 
@@ -70,7 +70,7 @@ python code_map_generator_v2.py /workspace/project-a --workspace /workspace
 - name: generate-code-map
   description: 生成项目代码地图
   script: |
-    python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py {{project_root}} --workspace {{workspace_root}} --output {{project_root}}/CODE_MAP.md
+    python /path/to/DevSquad/scripts/code_map_generator_v2.py {{project_root}} --workspace {{workspace_root}} --output {{project_root}}/CODE_MAP.md
   output: CODE_MAP.md
 ```
 

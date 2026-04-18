@@ -2,7 +2,7 @@
 
 ## 📋 文档概览
 
-本文档是对 `/Users/wangwei/claw/.trae/skills/trae-multi-agent` 技能进行全面分析和改进的总结报告，基于 SimpleSkill 规范和 HouYiAgent 最佳实践。
+本文档是对 `/path/to/DevSquad` 技能进行全面分析和改进的总结报告，基于 SimpleSkill 规范和 HouYiAgent 最佳实践。
 
 ## 🎯 分析背景
 

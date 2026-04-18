@@ -17,7 +17,7 @@
 ```
 请生成项目代码地图：
 ```
-python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py <项目路径>
+python /path/to/DevSquad/scripts/code_map_generator_v2.py <项目路径>
 ```
 
 2. **阅读代码地图**
@@ -62,7 +62,7 @@ python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_genera
 
 1. **生成/更新代码地图**（如果已有可跳过）
 ```
-python /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts/code_map_generator_v2.py <项目路径>
+python /path/to/DevSquad/scripts/code_map_generator_v2.py <项目路径>
 ```
 
 2. **搜索相关代码**

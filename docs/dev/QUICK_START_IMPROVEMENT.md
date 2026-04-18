@@ -234,7 +234,7 @@ if success:
 
 1. 复制示例文件
 ```bash
-cd /Users/wangwei/claw/.trae/skills/trae-multi-agent
+cd /path/to/DevSquad
 cp skill-manifest-example.yaml skill-manifest.yaml
 ```
 

@@ -377,7 +377,7 @@ manager.complete_task("ARCH-002")
 ### 步骤 1: 创建新模块
 
 ```bash
-cd /Users/wangwei/claw/.trae/skills/trae-multi-agent/scripts
+cd /path/to/DevSquad/scripts
 touch dual_layer_context_manager.py
 ```
 

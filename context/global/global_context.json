@@ -96,23 +96,23 @@
       "patterns": [],
       "created_at": "2026-03-24T13:00:49.445451"
     },
-    "exp-审查 /Users/wangwei/claw/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题": {
-      "id": "exp-审查 /Users/wangwei/claw/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题",
-      "task_id": "审查 /Users/wangwei/claw/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题",
+    "exp-审查 /path/to/user/project/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题": {
+      "id": "exp-审查 /path/to/user/project/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题",
+      "task_id": "审查 /path/to/user/project/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题",
       "task_type": "general",
       "success": true,
-      "description": "任务：审查 /Users/wangwei/claw/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题",
+      "description": "任务：审查 /path/to/user/project/bio-med-ollama-agent 项目代码，重点关注安全漏洞、性能瓶颈、资源泄漏等问题",
       "lessons_learned": [],
       "best_practices": [],
       "patterns": [],
       "created_at": "2026-03-24T16:34:38.358685"
     },
-    "exp-作为架构师，全面 review /Users/wangwei/claw/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。": {
-      "id": "exp-作为架构师，全面 review /Users/wangwei/claw/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。",
-      "task_id": "作为架构师，全面 review /Users/wangwei/claw/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。",
+    "exp-作为架构师，全面 review /path/to/user/project/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。": {
+      "id": "exp-作为架构师，全面 review /path/to/user/project/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。",
+      "task_id": "作为架构师，全面 review /path/to/user/project/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。",
       "task_type": "general",
       "success": true,
-      "description": "任务：作为架构师，全面 review /Users/wangwei/claw/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。",
+      "description": "任务：作为架构师，全面 review /path/to/user/project/bio-med-ollama-agent 项目的所有代码逻辑，特别是业务逻辑、状态流转、并发控制和错误处理机制，识别深层的逻辑漏洞和架构风险并输出报告。",
       "lessons_learned": [],
       "best_practices": [],
       "patterns": [],

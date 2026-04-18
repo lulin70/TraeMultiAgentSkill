@@ -152,7 +152,7 @@
 ## 📁 核心文件
 
 ```
-/Users/wangwei/claw/.trae/skills/trae-multi-agent/
+/path/to/DevSquad/
 ├── scripts/
 │   ├── dual_layer_context_manager.py  # 双层上下文管理器
 │   ├── ai_semantic_matcher.py         # AI 语义匹配器
