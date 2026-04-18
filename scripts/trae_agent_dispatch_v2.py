@@ -509,20 +509,20 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
     try:
         # 1. 初始化双层上下文管理器
         # 注意：project_root 可能是实际的业务项目目录（如 /path/to/business/project）
-        # 也可能是 skill 根目录（如 /path/to/.trae/skills/trae-multi-agent）
+        # 也可能是 skill 根目录（如 /path/to/.trae/skills/devsquad）
         # 需要根据路径结构正确设置 skill_root
         
         # 将 project_root 转换为 Path 对象
         project_root_path = Path(project_root)
         
-        # 检查 project_root 是否已经包含 .trae/skills/trae-multi-agent
+        # 检查 project_root 是否已经包含 .trae/skills/devsquad
         # 如果是，说明传入的 project_root 本身就是 skill 根目录
         if '.trae' in project_root_path.parts and 'skills' in project_root_path.parts:
-            # project_root 本身就是 skill 根目录（如 /path/to/.trae/skills/trae-multi-agent）
+            # project_root 本身就是 skill 根目录（如 /path/to/.trae/skills/devsquad）
             skill_root = project_root
         else:
-            # 需要拼接 .trae/skills/trae-multi-agent
-            skill_root = str(project_root_path / '.trae' / 'skills' / 'trae-multi-agent')
+            # 需要拼接 .trae/skills/devsquad
+            skill_root = str(project_root_path / '.trae' / 'skills' / 'devsquad')
         
         context_manager = DualLayerContextManager(
             project_root=project_root,
@@ -596,7 +596,7 @@ def dispatch_agent_v2(agent_type: str, task: str, task_id: Optional[str],
         
         # 5. 创建工作流引擎
         workflow_engine = WorkflowEngine(
-            storage_path=str(Path(project_root) / '.trae' / 'skills' / 'trae-multi-agent')
+            storage_path=str(Path(project_root) / '.trae' / 'skills' / 'devsquad')
         )
         
         # 6. 创建任务定义

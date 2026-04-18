@@ -46,7 +46,7 @@ class TaskCompletionChecker:
             # 默认使用 任务文件
             self.task_file = self.project_root / "WoAgent" / "docs" / "tests" / "任务文件"
         
-        self.progress_file = self.project_root / ".trae" / "skills" / "trae-multi-agent" / "progress" / "task_progress.json"
+        self.progress_file = self.project_root / ".trae" / "skills" / "devsquad" / "progress" / "task_progress.json"
         
         # 确保进度目录存在
         self.progress_file.parent.mkdir(parents=True, exist_ok=True)

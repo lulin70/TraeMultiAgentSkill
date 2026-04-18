@@ -378,7 +378,7 @@ def main():
     
     # 注册技能示例
     manifest = SkillManifest(
-        name="trae-multi-agent",
+        name="devsquad",
         version="1.0.0",
         description="多智能体协作技能",
         author="Trae Team",

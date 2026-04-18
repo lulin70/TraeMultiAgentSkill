@@ -274,7 +274,7 @@ def main():
     parser.add_argument("project_root", help="项目根目录路径")
     parser.add_argument("--output", default="code_map.json", help="输出JSON文件路径")
     parser.add_argument("--markdown", default="PROJECT_STRUCTURE.md", help="输出Markdown文件路径")
-    parser.add_argument("--docs-dir", default=".trae/skills/trae-multi-agent/docs/spec-kit", help="文档保存目录")
+    parser.add_argument("--docs-dir", default=".trae/skills/devsquad/docs/spec-kit", help="文档保存目录")
     
     args = parser.parse_args()
     

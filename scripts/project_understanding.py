@@ -351,7 +351,7 @@ class ProjectUnderstanding:
 def main():
     parser = argparse.ArgumentParser(description="生成项目理解文档")
     parser.add_argument("project_root", help="项目根目录路径")
-    parser.add_argument("--output", default=".trae/skills/trae-multi-agent/docs/project-understanding", help="输出目录路径")
+    parser.add_argument("--output", default=".trae/skills/devsquad/docs/project-understanding", help="输出目录路径")
     
     args = parser.parse_args()
     
