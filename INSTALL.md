@@ -1,159 +1,241 @@
-# Trae Multi-Agent Skill 安装指南
+# DevSquad — Installation Guide
 
-## 快速安装
+## Prerequisites
 
-### 方法 1：设置环境变量（推荐）
+- **Python 3.9+** (pure Python, no compiled dependencies)
+- **Any AI coding environment**: Trae IDE / Claude Code / OpenClaw / Terminal
+- **No external dependencies required** (all integrations use graceful degradation)
 
-将以下行添加到你的 shell 配置文件（`~/.zshrc` 或 `~/.bashrc`）:
+## Quick Start (3 Methods)
+
+### Method 1: CLI — Recommended for most users
 
 ```bash
-export DSS_SKILL_PATH="$HOME/claw/.trae/skills/devsquad"
+# Clone or download DevSquad
+git clone https://github.com/lulin70/DevSquad.git
+cd DevSquad
+
+# Run a task immediately
+python3 scripts/cli.py dispatch --task "Design user authentication system" --roles architect coder tester
+
+# Check status
+python3 scripts/cli.py status
+
+# List available roles
+python3 scripts/cli.py roles
 ```
 
-然后重新加载配置：
+That's it. No environment variables, no installation steps.
+
+### Method 2: Environment Variable + Wrapper Script
+
+Add to your `~/.zshrc` or `~/.bashrc`:
 
 ```bash
-source ~/.zshrc
+export DSS_SKILL_PATH="/path/to/DevSquad"
 ```
 
-### 方法 2：创建符号链接（推荐）
+Then use from anywhere:
 
 ```bash
-# 创建全局可执行的符号链接
-ln -s /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent.py /usr/local/bin/trae-agent
-
-# 或者使用 brew link 方式（如果有 brew）
-brew link --force devsquad
+python3 $DSS_SKILL_PATH/scripts/trae_agent.py --task "Analyze requirements" --agent architect
 ```
 
-### 方法 3：使用包装脚本
+### Method 3: Python Import
 
-在任何项目中，直接使用包装脚本的绝对路径：
+```python
+import sys
+sys.path.insert(0, '/path/to/DevSquad')
 
-```bash
-python3 /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent.py \
-  --task "你的任务描述" \
-  --agent architect
+from scripts.collaboration.dispatcher import MultiAgentDispatcher
+
+disp = MultiAgentDispatcher()
+result = disp.dispatch("Design REST API for user management")
+print(result.to_markdown())
+disp.shutdown()
 ```
 
-## 使用方法
+## CLI Reference (`scripts/cli.py`)
 
-安装完成后，可以在任何项目目录下直接使用：
+```
+Usage: cli.py {dispatch, status,roles} [options]
 
-```bash
-# 调用架构师
-trae-agent --task "设计系统架构" --agent architect
+Commands:
+  dispatch (run, d)   Execute a multi-agent collaboration task
+  status (s)          Show system status and capabilities
+  roles (ls)          List available agent roles
 
-# 调用产品经理
-trae-agent --task "分析需求" --agent product-manager
-
-# 调用测试专家
-trae-agent --task "制定测试策略" --agent tester
-
-# 调用开发工程师
-trae-agent --task "实现功能" --agent solo-coder
-
-# 调用 UI 设计师
-trae-agent --task "设计登录页面" --agent ui-designer
-
-# 调用 DevOps 工程师
-trae-agent --task "配置 CI/CD" --agent devops
+Dispatch Options:
+  --task, -t TEXT       Task description (required)
+  --roles, -r LIST      Roles: architect/pm/coder/tester/ui/devops/
+                         security/data/reviewer/optimizer (default: auto-match)
+  --mode, -m MODE       Execution mode: auto/parallel/sequential/consensus
+  --format, -f FORMAT   Output: markdown/json/compact/structured/detailed
+  --dry-run             Simulate without execution
+  --quick, -q           Use quick_dispatch (3 format variants)
+  --action-items        Include H/M/L priority action items
+  --timing              Include execution timing data
+  --no-warmup           Disable startup warmup
+  --no-compression      Disable context compression
+  --skip-permission      Skip permission checks
+  --no-memory           Disable memory bridge
+  --permission-level    PLAN/DEFAULT/AUTO/BYPASS
 ```
 
-## 命令行参数
-
-- `--task`: 任务描述（必需）
-- `--agent`: 智能体角色（可选，默认：auto）
-  - `architect` - 架构师
-  - `product-manager` - 产品经理
-  - `tester` - 测试专家
-  - `solo-coder` - 独立开发者
-  - `ui-designer` - UI 设计师
-  - `devops` - DevOps 工程师
-- `--project-root`: 项目根目录（可选，默认：当前目录）
-- `--task-file`: 任务文件路径（可选）
-- `--output`: 输出文件路径（可选）
-- `--verbose`: 启用详细输出模式
-- `--dry-run`: 仅模拟执行，不实际调用智能体
-
-## 验证安装
+### Usage Examples
 
 ```bash
-# 检查是否能找到 skill
-trae-agent --help
+# Basic dispatch (auto-matches roles)
+python3 scripts/cli.py dispatch -t "Design microservices e-commerce backend"
 
-# 测试调用
-trae-agent --task "测试" --agent architect --dry-run
+# Specify roles explicitly
+python3 scripts/cli.py dispatch -t "Review auth module" -r reviewer security tester
+
+# JSON output for piping
+python3 scripts/cli.py dispatch -t "Optimize database queries" -f json
+
+# Quick compact output
+python3 scripts/cli.py quick -t "Analyze API surface" -f compact
+
+# Consensus mode (any veto blocks)
+python3 scripts/cli.py dispatch -t "Architecture decision" -m consensus
+
+# Dry run (analyze only, no execution)
+python3 scripts/cli.py dispatch -t "Test task" --dry-run
 ```
 
-## 故障排查
+## Available Roles (10)
 
-### 找不到 skill
+| Role | Best For |
+|------|----------|
+| `architect` | System design, tech stack, API design |
+| `pm` | Requirements, user stories, acceptance criteria |
+| `coder` | Implementation, code generation, refactoring |
+| `tester` | Test strategy, edge cases, coverage gaps |
+| `ui` | UX flow, interaction design, accessibility |
+| `devops` | CI/CD pipeline, deployment, monitoring |
+| `security` | Threat modeling, vulnerability audit |
+| `data` | Data modeling, analytics, migrations |
+| `reviewer` | Code review, best practices |
+| `optimizer` | Performance optimization, caching |
 
-如果提示 "找不到 devsquad skill"，请检查：
+## Integration Guides
 
-1. 环境变量是否正确设置：
-   ```bash
-   echo $DSS_SKILL_PATH
-   ```
+### Trae IDE (Native)
 
-2. skill 路径是否存在：
-   ```bash
-   ls -la $DSS_SKILL_PATH
-   ```
-
-3. 重新加载 shell 配置：
-   ```bash
-   source ~/.zshrc
-   ```
-
-### 权限问题
-
-如果遇到权限错误，确保脚本有执行权限：
+1. Open any project in Trae IDE
+2. Ensure DevSquad is at a known path
+3. Set `DSS_SKILL_PATH` in Trae's terminal settings, or use full path:
 
 ```bash
-chmod +x /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent.py
-chmod +x /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent_dispatch.py
-chmod +x /Users/wangwei/claw/.trae/skills/devsquad/scripts/trae_agent_dispatch_v2.py
+python3 /path/to/DevSquad/scripts/cli.py dispatch -t "your task"
 ```
 
-## 长程 Agent 功能 (v2.2)
+The `skill-manifest.yaml` provides native Trae integration metadata.
 
-本版本新增基于 Anthropic《Effective Harnesses for Long-Running Agents》思想的长程 Agent 支持：
+### Claude Code
 
-### 新增组件
+DevSquad includes `CLAUDE.md` at project root. When Claude Code opens this directory,
+it automatically loads project context including architecture, entry points, and role system.
 
-1. **CheckpointManager** (`scripts/checkpoint_manager.py`)
-   - 检查点保存和恢复
-   - 数据完整性校验
-   - 交接文档生成
+Custom skill available at `.claude/skills/multi-agent-team/SKILL.md`.
 
-2. **TaskListManager** (`scripts/task_list_manager.py`)
-   - 任务清单管理
-   - 优先级排序
-   - Markdown 导出
+### OpenClaw (MCP Server)
 
-3. **WorkflowEngineV2** (`scripts/workflow_engine_v2.py`)
-   - 增强版工作流引擎
-   - 自动检查点保存
-   - Agent 交接班支持
-
-### 运行测试
+Start the MCP server for tool-based integration:
 
 ```bash
-# 运行长程 Agent 功能测试
-cd /Users/wangwei/claw/.trae/skills/devsquad
-python3 scripts/tests/run_tests.py
+pip install mcp  # optional, for MCP protocol support
+python3 scripts/mcp_server.py            # stdio mode (default)
+python3 scripts/mcp_server.py --port 8080  # SSE mode
 ```
 
-**预期输出**: 24 个测试全部通过 ✅
+Exposes 6 tools: `multiagent_dispatch`, `multiagent_quick`, `multiagent_roles`,
+`multiagent_status`, `multiagent_analyze`, `multiagent_shutdown`.
 
-## 卸载
+## Verification
 
 ```bash
-# 如果创建了符号链接
-rm /usr/local/bin/trae-agent
+cd /path/to/DevSquad
 
-# 删除环境变量（从 ~/.zshrc 或 ~/.bashrc 中移除）
-unset DSS_SKILL_PATH
+# 1. Status check
+python3 scripts/cli.py status
+# Expected: {"name": "DevSquad", "status": "ready", ...}
+
+# 2. Role listing
+python3 scripts/cli.py roles
+# Expected: 10 roles listed
+
+# 3. Dry-run test
+python3 scripts/cli.py dispatch -t "test" -r architect --dry-run
+# Expected: [DRY RUN] message
+
+# 4. Core tests
+python3 -m pytest scripts/collaboration/ -v
+# Expected: ~176 passed (core), ~828 total
+```
+
+## Troubleshooting
+
+### "Module not found" errors
+
+Ensure you're running from the DevSquad root directory, or add it to sys.path:
+
+```bash
+# Option A: cd first
+cd /path/to/DevSquad && python3 scripts/cli.py ...
+
+# Option B: set PYTHONPATH
+PYTHONPATH=/path/to/DevSquad python3 scripts/cli.py ...
+```
+
+### MCE warnings on startup
+
+The Memory Classification Engine (MCE) adapter uses lazy loading.
+Warning messages about model/connection are normal — DevSquad degrades gracefully
+when MCE is unavailable. No action needed.
+
+### Permission denied
+
+```bash
+chmod +x scripts/*.py  # if needed
+```
+
+## Uninstalling
+
+```bash
+# Remove cloned directory
+rm -rf /path/to/DevSquad
+
+# Remove env var from ~/.zshrc or ~/.bashrc
+# Delete the line: export DSS_SKILL_PATH="..."
+
+# Remove symlink (if created)
+rm /usr/local/bin/dss  # or whatever symlink name was used
+```
+
+## Project Structure
+
+```
+DevSquad/
+├── scripts/
+│   ├── cli.py                    # Primary CLI entry point
+│   ├── mcp_server.py             # MCP server (OpenClaw/Cursor)
+│   ├── trae_agent.py             # Legacy wrapper script
+│   ├── trae_agent_dispatch_v2.py # Core dispatcher (legacy)
+│   └── collaboration/            # ★ 16 core modules
+│       ├── dispatcher.py         # MultiAgentDispatcher
+│       ├── coordinator.py        # Global orchestrator
+│       ├── scratchpad.py         # Shared blackboard
+│       ├── worker.py             # Role executor
+│       ├── consensus.py          # Weighted voting + veto
+│       ├── memory_bridge.py      # Cross-session memory
+│       ├── mce_adapter.py        # MCE v0.4 adapter
+│       └── *_test.py             # Test suites (~828 cases)
+├── SKILL.md                      # English skill manual
+├── SKILL-CN.md                   # Chinese skill manual
+├── README.md                     # English readme
+├── CLAUDE.md                     # Claude Code instructions
+├── ABOUT.md                      # Project overview
+└── INSTALL.md                    # This file
 ```
