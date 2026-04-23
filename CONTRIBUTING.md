@@ -78,30 +78,22 @@ DevSquad/
 
 ## Role System
 
-DevSquad has **5 core roles** with full prompt templates and **5 planned roles**:
+DevSquad has **7 core roles** with full prompt templates:
 
 | Core Role | ID | Aliases |
 |-----------|-----|---------|
 | Architect | `architect` | `arch` |
 | Product Manager | `product-manager` | `pm` |
-| Coder | `solo-coder` | `coder`, `dev` |
+| Security Expert | `security` | `sec` |
 | Tester | `tester` | `test`, `qa` |
+| Coder | `solo-coder` | `coder`, `dev` |
+| DevOps | `devops` | `infra` |
 | UI Designer | `ui-designer` | `ui` |
 
-| Planned Role | ID | Status |
-|-------------|-----|--------|
-| DevOps | `devops` | Planned |
-| Security | `security` | Planned |
-| Data Engineer | `data` | Planned |
-| Reviewer | `reviewer` | Planned |
-| Optimizer | `optimizer` | Planned |
-
 When adding a new role, update:
-1. `ROLE_TEMPLATES` in `scripts/collaboration/dispatcher.py`
+1. `ROLE_REGISTRY` in `scripts/collaboration/models.py`
 2. `ROLE_WEIGHTS` in `scripts/collaboration/models.py`
-3. `ROLE_ALIASES` in `scripts/collaboration/dispatcher.py` (if short ID needed)
-4. `ROLES` list in `scripts/cli.py`
-5. Role table in `README.md`, `SKILL.md`, `SKILL-CN.md`, `SKILL-JP.md`
+3. Role table in `README.md`, `SKILL.md`, `SKILL-CN.md`, `SKILL-JP.md`
 
 ## Code Style
 

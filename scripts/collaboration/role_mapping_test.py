@@ -80,7 +80,7 @@ class TestRoleCompleteness(unittest.TestCase):
 
     CLI_ROLES = [
         "architect", "pm", "coder", "tester", "ui",
-        "devops", "security", "data", "reviewer", "optimizer",
+        "devops", "security",
     ]
 
     def test_01_all_cli_roles_resolvable(self):
@@ -94,10 +94,10 @@ class TestRoleCompleteness(unittest.TestCase):
             )
 
     def test_02_core_roles_count(self):
-        self.assertEqual(len(get_core_roles()), 5, "Should have exactly 5 core roles with prompt templates")
+        self.assertEqual(len(get_core_roles()), 7, "Should have exactly 7 core roles with prompt templates")
 
     def test_03_planned_roles_count(self):
-        self.assertEqual(len(get_planned_roles()), 5, "Should have exactly 5 planned roles")
+        self.assertEqual(len(get_planned_roles()), 0, "Should have 0 planned roles (all promoted to core)")
 
     def test_04_total_roles_match_cli(self):
         total = len(ROLE_REGISTRY)
@@ -148,14 +148,14 @@ class TestDispatchWithAliasedRoles(unittest.TestCase):
 
     def test_04_dispatch_with_all_cli_roles(self):
         all_roles = ["architect", "pm", "coder", "tester", "ui",
-                     "devops", "security", "data", "reviewer", "optimizer"]
+                     "devops", "security"]
         result = self.dispatcher.dispatch(
             task_description="Test task",
             roles=all_roles,
             dry_run=True,
         )
         self.assertTrue(result.success)
-        self.assertEqual(len(result.matched_roles), 10)
+        self.assertEqual(len(result.matched_roles), 7)
 
 
 class TestRoleTemplateIntegrity(unittest.TestCase):

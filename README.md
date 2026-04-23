@@ -103,20 +103,17 @@ result = disp.quick_dispatch(task, output_format="detailed",
 disp.shutdown()
 ```
 
-## 5 Core Roles + 5 Planned Roles
+## 7 Core Roles
 
-| Role | ID | Best For | Status |
-|------|----|----------|--------|
-| Architect | `architect` / `arch` | System design, tech stack, API design | ✅ Core |
-| Product Manager | `product-manager` / `pm` | Requirements, user stories, acceptance criteria | ✅ Core |
-| Coder | `solo-coder` / `coder` / `dev` | Implementation, code generation, refactoring | ✅ Core |
-| Tester | `tester` / `test` / `qa` | Test strategy, edge cases, coverage gaps | ✅ Core |
-| UI Designer | `ui-designer` / `ui` | UX flow, interaction design, accessibility | ✅ Core |
-| DevOps | `devops` | CI/CD pipeline, deployment, monitoring | 🔜 Planned |
-| Security | `security` | Threat modeling, vulnerability audit | 🔜 Planned |
-| Data Engineer | `data` | Data modeling, analytics, migrations | 🔜 Planned |
-| Reviewer | `reviewer` | Code review, best practices | 🔜 Planned |
-| Optimizer | `optimizer` | Performance optimization, caching | 🔜 Planned |
+| Role | ID | Aliases | Best For |
+|------|----|---------|----------|
+| Architect | `architect` | `arch` | System design, tech stack, performance/security/data architecture |
+| Product Manager | `product-manager` | `pm` | Requirements, user stories, acceptance criteria |
+| Security Expert | `security` | `sec` | Threat modeling, vulnerability audit, compliance |
+| Tester | `tester` | `test`, `qa` | Test strategy, quality assurance, edge cases |
+| Coder | `solo-coder` | `coder`, `dev` | Implementation, code review, performance optimization |
+| DevOps | `devops` | `infra` | CI/CD, containerization, monitoring, infrastructure |
+| UI Designer | `ui-designer` | `ui` | UX flow, interaction design, accessibility |
 
 **Auto-match**: If no roles specified, the dispatcher automatically matches based on task intent.
 

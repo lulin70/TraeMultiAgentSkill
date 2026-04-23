@@ -127,18 +127,15 @@ disp.shutdown()
 
 ## Role Reference
 
-| Role | ID | Aliases | Status |
-|------|----|---------|--------|
-| Architect | `architect` | `arch` | ✅ Core |
-| Product Manager | `product-manager` | `pm` | ✅ Core |
-| Coder | `solo-coder` | `coder`, `dev` | ✅ Core |
-| Tester | `tester` | `test`, `qa` | ✅ Core |
-| UI Designer | `ui-designer` | `ui` | ✅ Core |
-| DevOps | `devops` | — | 🔜 Planned |
-| Security | `security` | — | 🔜 Planned |
-| Data Engineer | `data` | — | 🔜 Planned |
-| Reviewer | `reviewer` | — | 🔜 Planned |
-| Optimizer | `optimizer` | — | 🔜 Planned |
+| Role | ID | Aliases | Best For |
+|------|----|---------|----------|
+| Architect | `architect` | `arch` | System design, tech stack, performance/security/data architecture |
+| Product Manager | `product-manager` | `pm` | Requirements, user stories, acceptance criteria |
+| Security Expert | `security` | `sec` | Threat modeling, vulnerability audit, compliance |
+| Tester | `tester` | `test`, `qa` | Test strategy, quality assurance, edge cases |
+| Coder | `solo-coder` | `coder`, `dev` | Implementation, code review, performance optimization |
+| DevOps | `devops` | `infra` | CI/CD, containerization, monitoring, infrastructure |
+| UI Designer | `ui-designer` | `ui` | UX flow, interaction design, accessibility |
 
 ## CLI Options
 

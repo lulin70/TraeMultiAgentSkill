@@ -182,7 +182,7 @@ python3 scripts/cli.py status
 
 # 2. Role listing
 python3 scripts/cli.py roles
-# Expected: 5 core roles + 5 planned roles listed
+# Expected: 7 core roles listed
 
 # 3. Dry-run test
 python3 scripts/cli.py dispatch -t "test" -r architect --dry-run
@@ -399,7 +399,7 @@ python scripts\cli.py status
 
 # 2. Role listing
 python scripts\cli.py roles
-# Expected: 5 core roles + 5 planned roles listed
+# Expected: 7 core roles listed
 
 # 3. Dry-run test
 python scripts\cli.py dispatch -t "test" -r architect --dry-run

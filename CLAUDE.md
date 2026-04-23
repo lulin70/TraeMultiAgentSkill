@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**DevSquad** is a **V3.3 Multi-Agent Orchestration Engine** for software development. It transforms a single AI assistant into a specialized development squad with 5 core roles + 5 planned roles. Based on the Coordinator/Worker/Scratchpad pattern for parallel agent collaboration.
+**DevSquad** is a **V3.3 Multi-Agent Orchestration Engine** for software development. It transforms a single AI assistant into a specialized development squad with 7 core roles. Based on the Coordinator/Worker/Scratchpad pattern for parallel agent collaboration.
 
 **16 Core Modules**: Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor (4-level), PermissionGuard (4-level), Skillifier, WarmupManager (3-layer), MemoryBridge (MCE+Claw), TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource.
 
@@ -80,7 +80,7 @@ DevSquad/
 - **Testing**: pytest-based, 176 core collaboration tests
 - **Style**: PEP 8, dataclasses for models, type hints throughout
 
-## Role System (5 Core + 5 Planned)
+## Role System (7 Core Roles)
 
 | Role | Responsibility |
 |---------------------|
