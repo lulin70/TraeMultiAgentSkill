@@ -206,7 +206,7 @@ DevSquad/
 │       ├── consensus.py          # Weighted voting + veto
 │       ├── memory_bridge.py      # Cross-session memory
 │       ├── mce_adapter.py        # MCE v0.4 adapter
-│       └── *_test.py             # Test suites (~41 cases)
+│       └── *_test.py             # Test suites (~825+ cases)
 ├── SKILL.md                      # English skill manual
 ├── SKILL-CN.md                   # Chinese skill manual
 ├── SKILL-JP.md                   # Japanese skill manual
@@ -244,59 +244,6 @@ MIT License — see [LICENSE](LICENSE) for details.
 | **Original / Upstream** | https://github.com/weiransoft/TraeMultiAgentSkill |
 | **Installation** | See [INSTALL.md](INSTALL.md) |
 | **Skill Manual** | [SKILL.md](SKILL.md) / [SKILL-CN.md](SKILL-CN.md) / [SKILL-JP.md](SKILL-JP.md) |
+| **Examples** | [EXAMPLES.md](EXAMPLES.md) |
 | **Chinese Readme** | [README-CN.md](README-CN.md) |
 | **Japanese Readme** | [README-JP.md](README-JP.md) |
-
-## Usage Examples
-
-### Scenario 1: Architecture Design Session
-
-```
-User: "Design a microservices e-commerce backend"
-→ DevSquad auto-matches: architect + devops + security
-→ Output: Tech stack recommendation + service boundaries + security model
-```
-
-```python
-from scripts.collaboration.dispatcher import MultiAgentDispatcher
-
-disp = MultiAgentDispatcher()
-result = disp.dispatch("Design a microservices e-commerce backend")
-print(result.to_markdown())
-# → Structured report with findings, conflicts, and H/M/L action items
-disp.shutdown()
-```
-
-### Scenario 2: Code Review with Security Focus
-
-```python
-# Target specific roles for a focused review
-result = disp.quick_dispatch(
-    "Review auth.py for security vulnerabilities",
-    output_format="detailed",
-    include_action_items=True,
-)
-# → Security findings + test gaps + improvement suggestions
-```
-
-### Scenario 3: Full-Stack Analysis
-
-```python
-# Auto-match mode — let DevSquad pick the right team
-result = disp.dispatch("Analyze our project's production readiness")
-# → Multi-role assessment with consensus decision
-```
-
-### Scenario 4: Quick Compact Output (for terminal/piping)
-
-```bash
-python3 scripts/cli.py quick -t "Optimize database queries" -f compact
-# → One-line summary per role, machine-friendly
-```
-
-### Scenario 5: JSON Output for Integration
-
-```bash
-python3 scripts/cli.py dispatch -t "Analyze API surface" -f json
-# → Parsed by downstream tools, CI/CD pipelines, or dashboards
-```
