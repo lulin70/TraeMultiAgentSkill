@@ -44,12 +44,14 @@ That's it. No environment variables, no installation steps.
 
 By default, DevSquad runs in **mock mode** — Workers return assembled prompts without calling an LLM. To get real AI analysis output, configure a backend:
 
+> **🔒 Security**: API keys are read from environment variables only. There is no `--api-key` command-line flag — this prevents keys from appearing in shell history or process listings.
+
 ```bash
-# Option A: OpenAI (GPT-4) — set environment variable (recommended)
+# Option A: OpenAI (GPT-4)
 export OPENAI_API_KEY="sk-..."
 python3 scripts/cli.py dispatch -t "Design auth system" -r architect --backend openai
 
-# Option B: Anthropic (Claude) — set environment variable (recommended)
+# Option B: Anthropic (Claude)
 export ANTHROPIC_API_KEY="sk-ant-..."
 python3 scripts/cli.py dispatch -t "Design auth system" -r architect --backend anthropic
 
@@ -65,7 +67,7 @@ export OPENAI_MODEL="your-model-name"
 python3 scripts/cli.py dispatch -t "Design auth system" -r architect --backend openai
 ```
 
-> **⚠️ Security Warning**: Always use environment variables for API keys. Never pass `--api-key` on the command line — it will be visible in shell history and process listings. If you must use `--api-key`, ensure your shell history is cleared afterward.
+**Tip**: Add `export` lines to your `~/.zshrc` or `~/.bashrc` for persistence across sessions.
 
 **Install optional dependencies:**
 
@@ -159,20 +161,17 @@ python3 scripts/cli.py dispatch -t "Architecture decision" -m consensus
 python3 scripts/cli.py dispatch -t "Test task" --dry-run
 ```
 
-## Available Roles (10)
+## Available Roles (7 Core)
 
-| Role | Best For |
-|------|----------|
-| `architect` | System design, tech stack, API design |
-| `pm` | Requirements, user stories, acceptance criteria |
-| `coder` | Implementation, code generation, refactoring |
-| `tester` | Test strategy, edge cases, coverage gaps |
-| `ui` | UX flow, interaction design, accessibility |
-| `devops` | CI/CD pipeline, deployment, monitoring |
-| `security` | Threat modeling, vulnerability audit |
-| `data` | Data modeling, analytics, migrations |
-| `reviewer` | Code review, best practices |
-| `optimizer` | Performance optimization, caching |
+| Role | ID | Best For |
+|------|----|----------|
+| Architect | `arch` | System design, tech stack, performance/security/data architecture |
+| Product Manager | `pm` | Requirements, user stories, acceptance criteria |
+| Security Expert | `sec` | Threat modeling, vulnerability audit, compliance |
+| Tester | `test` | Test strategy, quality assurance, edge cases |
+| Coder | `coder` | Implementation, code review, performance optimization |
+| DevOps | `infra` | CI/CD, containerization, monitoring, infrastructure |
+| UI Designer | `ui` | UX flow, interaction design, accessibility |
 
 ## Integration Guides
 

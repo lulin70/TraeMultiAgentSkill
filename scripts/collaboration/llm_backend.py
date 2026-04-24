@@ -10,9 +10,10 @@ Usage:
     # Default (mock) - returns assembled prompt as-is
     worker = Worker(..., llm_backend=None)
 
-    # Custom backend
+    # Custom backend (API keys from environment variables)
     from scripts.collaboration.llm_backend import OpenAIBackend
-    backend = OpenAIBackend(api_key="...", model="gpt-4")
+    import os
+    backend = OpenAIBackend(api_key=os.environ["OPENAI_API_KEY"], model="gpt-4")
     worker = Worker(..., llm_backend=backend)
 """
 

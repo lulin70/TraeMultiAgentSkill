@@ -27,31 +27,32 @@ BACKENDS = ["mock", "trae", "openai", "anthropic"]
 VERSION = "3.3.0"
 
 
-def _create_backend(backend_type: str, api_key: str = None,
+def _create_backend(backend_type: str,
                     base_url: str = None, model: str = None):
     if backend_type == "mock" or backend_type is None:
         return None
     from scripts.collaboration.llm_backend import create_backend
-    if api_key:
-        import warnings
-        warnings.warn(
-            "Passing --api-key on command line exposes it in shell history. "
-            "Use environment variables (OPENAI_API_KEY / ANTHROPIC_API_KEY) instead.",
-            UserWarning, stacklevel=2,
-        )
     kwargs = {}
-    if api_key:
-        kwargs["api_key"] = api_key
     if base_url:
         kwargs["base_url"] = base_url
     if model:
         kwargs["model"] = model
     if backend_type == "openai":
-        kwargs.setdefault("api_key", os.environ.get("OPENAI_API_KEY"))
+        api_key = os.environ.get("OPENAI_API_KEY")
+        if not api_key:
+            print("Error: OPENAI_API_KEY environment variable not set.", file=sys.stderr)
+            print("  export OPENAI_API_KEY=\"sk-...\"", file=sys.stderr)
+            return None
+        kwargs["api_key"] = api_key
         kwargs.setdefault("base_url", os.environ.get("OPENAI_BASE_URL"))
         kwargs.setdefault("model", os.environ.get("OPENAI_MODEL", "gpt-4"))
     elif backend_type == "anthropic":
-        kwargs.setdefault("api_key", os.environ.get("ANTHROPIC_API_KEY"))
+        api_key = os.environ.get("ANTHROPIC_API_KEY")
+        if not api_key:
+            print("Error: ANTHROPIC_API_KEY environment variable not set.", file=sys.stderr)
+            print("  export ANTHROPIC_API_KEY=\"sk-ant-...\"", file=sys.stderr)
+            return None
+        kwargs["api_key"] = api_key
         kwargs.setdefault("model", os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-20250514"))
     return create_backend(backend_type, **kwargs)
 
@@ -68,7 +69,7 @@ def cmd_dispatch(args):
     if args.permission_level:
         kwargs["permission_level"] = PermissionLevel(args.permission_level.upper())
 
-    backend = _create_backend(args.backend, args.api_key, args.base_url, args.model)
+    backend = _create_backend(args.backend, args.base_url, args.model)
     if backend is not None:
         kwargs["llm_backend"] = backend
 
@@ -155,10 +156,13 @@ Examples:
   %(prog)s status
   %(prog)s --version
 
-Environment Variables:
+Environment Variables (API keys are read from env vars only, never command line):
   DEVSQUAD_LLM_BACKEND   Default LLM backend (mock/openai/anthropic)
-  OPENAI_API_KEY         OpenAI API key (for --backend openai)
-  ANTHROPIC_API_KEY      Anthropic API key (for --backend anthropic)
+  OPENAI_API_KEY         OpenAI API key (required for --backend openai)
+  OPENAI_BASE_URL        Custom API endpoint (for OpenAI-compatible APIs)
+  OPENAI_MODEL           Model name (default: gpt-4)
+  ANTHROPIC_API_KEY      Anthropic API key (required for --backend anthropic)
+  ANTHROPIC_MODEL        Model name (default: claude-sonnet-4-20250514)
         """,
     )
     parser.add_argument("--version", action="version", version=f"DevSquad {VERSION}")
@@ -172,7 +176,6 @@ Environment Variables:
     p_dispatch.add_argument("--format", "-f", choices=FORMATS, default="markdown", help="Output format")
     p_dispatch.add_argument("--backend", "-b", choices=BACKENDS, default=os.environ.get("DEVSQUAD_LLM_BACKEND", "mock"),
                             help="LLM backend (default: mock, or DEVSQUAD_LLM_BACKEND env)")
-    p_dispatch.add_argument("--api-key", help="API key for LLM backend (WARNING: visible in shell history; prefer OPENAI_API_KEY/ANTHROPIC_API_KEY env vars)")
     p_dispatch.add_argument("--base-url", help="Custom API base URL (or use OPENAI_BASE_URL env)")
     p_dispatch.add_argument("--model", help="Model name (or use OPENAI_MODEL/ANTHROPIC_MODEL env)")
     p_dispatch.add_argument("--dry-run", action="store_true", help="Simulate without execution")
