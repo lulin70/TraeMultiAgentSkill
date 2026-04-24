@@ -25,6 +25,13 @@ build/
 .coverage
 htmlcov/
 
+# --- Secrets & Credentials ---
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+
 # --- Runtime Data (SQLite) ---
 *.db
 *.db-shm

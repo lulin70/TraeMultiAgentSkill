@@ -32,6 +32,13 @@ def _create_backend(backend_type: str, api_key: str = None,
     if backend_type == "mock" or backend_type is None:
         return None
     from scripts.collaboration.llm_backend import create_backend
+    if api_key:
+        import warnings
+        warnings.warn(
+            "Passing --api-key on command line exposes it in shell history. "
+            "Use environment variables (OPENAI_API_KEY / ANTHROPIC_API_KEY) instead.",
+            UserWarning, stacklevel=2,
+        )
     kwargs = {}
     if api_key:
         kwargs["api_key"] = api_key
@@ -165,7 +172,7 @@ Environment Variables:
     p_dispatch.add_argument("--format", "-f", choices=FORMATS, default="markdown", help="Output format")
     p_dispatch.add_argument("--backend", "-b", choices=BACKENDS, default=os.environ.get("DEVSQUAD_LLM_BACKEND", "mock"),
                             help="LLM backend (default: mock, or DEVSQUAD_LLM_BACKEND env)")
-    p_dispatch.add_argument("--api-key", help="API key for LLM backend (or use OPENAI_API_KEY/ANTHROPIC_API_KEY env)")
+    p_dispatch.add_argument("--api-key", help="API key for LLM backend (WARNING: visible in shell history; prefer OPENAI_API_KEY/ANTHROPIC_API_KEY env vars)")
     p_dispatch.add_argument("--base-url", help="Custom API base URL (or use OPENAI_BASE_URL env)")
     p_dispatch.add_argument("--model", help="Model name (or use OPENAI_MODEL/ANTHROPIC_MODEL env)")
     p_dispatch.add_argument("--dry-run", action="store_true", help="Simulate without execution")

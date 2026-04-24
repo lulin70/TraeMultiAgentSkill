@@ -48,7 +48,7 @@ Results are collected on the Scratchpad, conflicts resolved via ConsensusEngine,
 ```bash
 python3 scripts/cli.py dispatch \
     -t "Choose database for analytics platform" \
-    -r architect data \
+    -r architect sec \
     --mode consensus
 ```
 
@@ -71,7 +71,7 @@ Quick dispatch produces a concise structured report with prioritized action item
 ```bash
 python3 scripts/cli.py dispatch \
     -t "Review codebase for performance issues" \
-    -r optimizer reviewer \
+    -r architect coder \
     --format json
 ```
 
