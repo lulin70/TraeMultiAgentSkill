@@ -166,79 +166,80 @@ class TestT2_TaskAnalysis:
         assert "architect" in result.matched_roles
 
 
-class TestT3_FullDispatch(unittest.TestCase):
+class TestT3_FullDispatch:
     """T3: 完整调度流程"""
 
-    def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix="mas_test_t3_")
-        self.disp = MultiAgentDispatcher(
-            persist_dir=self.tmp,
+    @pytest.fixture
+    def dispatcher(self):
+        """创建启用所有组件的 dispatcher fixture"""
+        tmp = tempfile.mkdtemp(prefix="mas_test_t3_")
+        disp = MultiAgentDispatcher(
+            persist_dir=tmp,
             enable_warmup=True,
             enable_compression=True,
             enable_permission=True,
             enable_memory=True,
             enable_skillify=True,
         )
+        yield disp
+        disp.shutdown()
+        shutil.rmtree(tmp, ignore_errors=True)
 
-    def tearDown(self):
-        self.disp.shutdown()
-        shutil.rmtree(self.tmp, ignore_errors=True)
+    def test_01_single_role_dispatch(self, dispatcher):
+        result = dispatcher.dispatch("设计用户认证模块的架构")
+        assert isinstance(result, DispatchResult)
+        assert isinstance(result.summary, str)
+        assert result.duration_seconds > 0
 
-    def test_01_single_role_dispatch(self):
-        result = self.disp.dispatch("设计用户认证模块的架构")
-        self.assertIsInstance(result, DispatchResult)
-        self.assertIsInstance(result.summary, str)
-        self.assertGreater(result.duration_seconds, 0)
-
-    def test_02_multi_role_dispatch(self):
-        result = self.disp.dispatch("设计架构并编写测试方案",
+    def test_02_multi_role_dispatch(self, dispatcher):
+        result = dispatcher.dispatch("设计架构并编写测试方案",
                                      roles=["architect", "tester"])
-        self.assertIsInstance(result.matched_roles, list)
-        self.assertGreaterEqual(len(result.matched_roles), 2)
+        assert isinstance(result.matched_roles, list)
+        assert len(result.matched_roles) >= 2
 
-    def test_03_dispatch_has_worker_results(self):
-        result = self.disp.dispatch("实现一个简单的功能")
-        self.assertIsInstance(result.worker_results, list)
+    def test_03_dispatch_has_worker_results(self, dispatcher):
+        result = dispatcher.dispatch("实现一个简单的功能")
+        assert isinstance(result.worker_results, list)
 
-    def test_04_dispatch_has_scratchpad(self):
-        result = self.disp.dispatch("分析项目结构")
-        self.assertIsInstance(result.scratchpad_summary, str)
+    def test_04_dispatch_has_scratchpad(self, dispatcher):
+        result = dispatcher.dispatch("分析项目结构")
+        assert isinstance(result.scratchpad_summary, str)
 
-    def test_05_dispatch_to_dict_roundtrip(self):
-        result = self.disp.dispatch("快速任务")
+    def test_05_dispatch_to_dict_roundtrip(self, dispatcher):
+        result = dispatcher.dispatch("快速任务")
         d = result.to_dict()
-        self.assertIn("success", d)
-        self.assertIn("task_description", d)
-        self.assertIn("matched_roles", d)
-        self.assertIn("duration_seconds", d)
+        assert "success" in d
+        assert "task_description" in d
+        assert "matched_roles" in d
+        assert "duration_seconds" in d
 
-    def test_06_dispatch_to_markdown_valid(self):
-        result = self.disp.dispatch("生成报告的任务")
+    def test_06_dispatch_to_markdown_valid(self, dispatcher):
+        result = dispatcher.dispatch("生成报告的任务")
         md = result.to_markdown()
-        self.assertIn("#", md)
-        self.assertGreater(len(md), 50)
+        assert "#" in md
+        assert len(md) > 50
 
-    def test_07_timing_info_present(self):
-        result = self.disp.dispatch("计时测试")
-        self.assertIn("timing", result.details)
-        self.assertIsInstance(result.details["timing"], dict)
+    def test_07_timing_info_present(self, dispatcher):
+        result = dispatcher.dispatch("计时测试")
+        assert "timing" in result.details
+        assert isinstance(result.details["timing"], dict)
         timing = result.details["timing"]
-        self.assertIn("analyze", timing)
-        self.assertIn("execute", timing)
+        assert "analyze" in timing
+        assert "execute" in timing
 
-    def test_08_dry_run_mode(self):
-        result = self.disp.dispatch("模拟任务", dry_run=True)
-        self.assertTrue(result.success)
-        self.assertIn("DRY RUN", result.summary)
-        self.assertEqual(len(result.worker_results), 0)
+    def test_08_dry_run_mode(self, dispatcher):
+        result = dispatcher.dispatch("模拟任务", dry_run=True)
+        assert result.success
+        assert "DRY RUN" in result.summary
+        assert len(result.worker_results) == 0
 
-    def test_09_consensus_mode(self):
-        result = self.disp.dispatch("需要共识的决策", mode="consensus")
-        self.assertIsInstance(result.consensus_records, list)
+    def test_09_consensus_mode(self, dispatcher):
+        result = dispatcher.dispatch("需要共识的决策", mode="consensus")
+        assert isinstance(result.consensus_records, list)
 
-    def test_10_sequential_mode(self):
-        result = self.disp.dispatch("顺序执行任务", mode="sequential")
-        self.assertIsInstance(result, DispatchResult)
+    def test_10_sequential_mode(self, dispatcher):
+        result = dispatcher.dispatch("顺序执行任务", mode="sequential")
+        assert isinstance(result, DispatchResult)
 
 
 class TestT4_ComponentIntegration(unittest.TestCase):
