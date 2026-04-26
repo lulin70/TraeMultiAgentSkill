@@ -95,74 +95,75 @@ class TestT1_DispatcherDataModels:
             assert len(info["keywords"]) > 0, f"{rid} has no keywords"
 
 
-class TestT2_TaskAnalysis(unittest.TestCase):
+class TestT2_TaskAnalysis:
     """T2: 任务分析与角色匹配"""
 
-    def setUp(self):
-        self.tmp = tempfile.mkdtemp(prefix="mas_test_t2_")
-        self.disp = MultiAgentDispatcher(
-            persist_dir=self.tmp,
+    @pytest.fixture
+    def dispatcher(self):
+        """创建测试用的 dispatcher fixture"""
+        tmp = tempfile.mkdtemp(prefix="mas_test_t2_")
+        disp = MultiAgentDispatcher(
+            persist_dir=tmp,
             enable_warmup=False,
             enable_memory=False,
             enable_skillify=False,
         )
+        yield disp
+        disp.shutdown()
+        shutil.rmtree(tmp, ignore_errors=True)
 
-    def tearDown(self):
-        self.disp.shutdown()
-        shutil.rmtree(self.tmp, ignore_errors=True)
-
-    def test_01_match_architect(self):
-        roles = self.disp.analyze_task("设计微服务架构，支持高并发")
+    def test_01_match_architect(self, dispatcher):
+        roles = dispatcher.analyze_task("设计微服务架构，支持高并发")
         role_ids = [r["role_id"] for r in roles]
-        self.assertIn("architect", role_ids)
+        assert "architect" in role_ids
 
-    def test_02_match_tester(self):
-        roles = self.disp.analyze_task("编写单元测试和自动化测试用例")
+    def test_02_match_tester(self, dispatcher):
+        roles = dispatcher.analyze_task("编写单元测试和自动化测试用例")
         role_ids = [r["role_id"] for r in roles]
-        self.assertIn("tester", role_ids)
+        assert "tester" in role_ids
 
-    def test_03_match_solo_coder(self):
-        roles = self.disp.analyze_task("实现用户登录功能代码开发")
+    def test_03_match_solo_coder(self, dispatcher):
+        roles = dispatcher.analyze_task("实现用户登录功能代码开发")
         role_ids = [r["role_id"] for r in roles]
-        self.assertIn("solo-coder", role_ids)
+        assert "solo-coder" in role_ids
 
-    def test_04_match_ui_designer(self):
-        roles = self.disp.analyze_task("设计前端UI界面和交互原型")
+    def test_04_match_ui_designer(self, dispatcher):
+        roles = dispatcher.analyze_task("设计前端UI界面和交互原型")
         role_ids = [r["role_id"] for r in roles]
-        self.assertIn("ui-designer", role_ids)
+        assert "ui-designer" in role_ids
 
-    def test_05_match_product_manager(self):
-        roles = self.disp.analyze_task("编写PRD需求文档和用户故事")
+    def test_05_match_product_manager(self, dispatcher):
+        roles = dispatcher.analyze_task("编写PRD需求文档和用户故事")
         role_ids = [r["role_id"] for r in roles]
-        self.assertIn("product-manager", role_ids)
+        assert "product-manager" in role_ids
 
-    def test_06_multi_role_match(self):
-        roles = self.disp.analyze_task("设计系统架构并编写测试用例")
+    def test_06_multi_role_match(self, dispatcher):
+        roles = dispatcher.analyze_task("设计系统架构并编写测试用例")
         role_ids = [r["role_id"] for r in roles]
-        self.assertIn("architect", role_ids)
-        self.assertIn("tester", role_ids)
+        assert "architect" in role_ids
+        assert "tester" in role_ids
 
-    def test_07_no_match_fallback(self):
-        roles = self.disp.analyze_task("随便说点什么不相关的话")
-        self.assertGreater(len(roles), 0)
-        self.assertEqual(roles[0]["role_id"], "solo-coder")
+    def test_07_no_match_fallback(self, dispatcher):
+        roles = dispatcher.analyze_task("随便说点什么不相关的话")
+        assert len(roles) > 0
+        assert roles[0]["role_id"] == "solo-coder"
 
-    def test_08_confidence_ordering(self):
-        roles = self.disp.analyze_task("设计架构并测试")
+    def test_08_confidence_ordering(self, dispatcher):
+        roles = dispatcher.analyze_task("设计架构并测试")
         confidences = [r["confidence"] for r in roles]
-        self.assertEqual(confidences, sorted(confidences, reverse=True))
+        assert confidences == sorted(confidences, reverse=True)
 
-    def test_09_return_structure(self):
-        roles = self.disp.analyze_task("测试任务")
+    def test_09_return_structure(self, dispatcher):
+        roles = dispatcher.analyze_task("测试任务")
         for r in roles:
-            self.assertIn("role_id", r)
-            self.assertIn("name", r)
-            self.assertIn("confidence", r)
-            self.assertIn("reason", r)
+            assert "role_id" in r
+            assert "name" in r
+            assert "confidence" in r
+            assert "reason" in r
 
-    def test_10_explicit_roles_override(self):
-        result = self.disp.dispatch("测试任务", roles=["architect"])
-        self.assertIn("architect", result.matched_roles)
+    def test_10_explicit_roles_override(self, dispatcher):
+        result = dispatcher.dispatch("测试任务", roles=["architect"])
+        assert "architect" in result.matched_roles
 
 
 class TestT3_FullDispatch(unittest.TestCase):
