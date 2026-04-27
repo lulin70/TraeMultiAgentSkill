@@ -144,10 +144,10 @@
 - [x] P1-4: 静默异常修复 (dispatcher/scratchpad/llm_cache 共10处)
 
 ### Phase 3: 上游功能采纳（3-5天）
-- [ ] P1-5: AI 语义匹配
-- [ ] P1-6: 检查点管理
-- [ ] P1-7: 工作流引擎
-- [ ] P1-8: 任务完成检查
+- [x] P1-5: AI 语义匹配（AISemanticMatcher, 双语关键词+LLM Backend, 35 tests）
+- [x] P1-6: 检查点管理（CheckpointManager, SHA256完整性+Handoff+自动清理）
+- [x] P1-7: 工作流引擎（WorkflowEngine, 任务自动拆分+步骤执行+断点恢复+Agent交接）
+- [x] P1-8: 任务完成检查（TaskCompletionChecker, DispatchResult/ScheduleResult进度跟踪）
 
 ### Phase 4: 增强体验（3-5天）
 - [ ] P2-1 ~ P2-8
