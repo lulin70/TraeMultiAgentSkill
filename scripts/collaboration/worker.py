@@ -21,6 +21,7 @@ from .models import (
     EntryStatus,
 )
 from .scratchpad import Scratchpad
+from .usage_tracker import track_usage
 
 
 class Worker:
@@ -124,7 +125,7 @@ class Worker:
                 "finding_summary": finding,
             }
 
-            return WorkerResult(
+            result = WorkerResult(
                 worker_id=self.worker_id,
                 task_id=task.task_id,
                 success=True,
@@ -133,8 +134,17 @@ class Worker:
                 notifications_sent=len(self._notifications_outbox),
                 duration_seconds=time.time() - start_time,
             )
+            track_usage(f"worker.{self.role_id}.execute", success=True, metadata={
+                "task_id": task.task_id,
+                "duration": round(time.time() - start_time, 2)
+            })
+            return result
         except Exception as e:
             print(f"  [Worker {self.worker_id}] Error: {e}", file=sys.stderr)
+            track_usage(f"worker.{self.role_id}.execute", success=False, metadata={
+                "task_id": task.task_id,
+                "error": str(e)[:100]
+            })
             return WorkerResult(
                 worker_id=self.worker_id,
                 task_id=task.task_id,

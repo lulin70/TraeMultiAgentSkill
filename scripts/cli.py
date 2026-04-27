@@ -25,7 +25,8 @@ ROLES = get_cli_role_list()
 MODES = ["auto", "parallel", "sequential", "consensus"]
 FORMATS = ["markdown", "json", "compact", "structured", "detailed"]
 BACKENDS = ["mock", "trae", "openai", "anthropic"]
-VERSION = "3.3.0"
+from scripts.collaboration._version import __version__
+VERSION = __version__
 
 
 def _create_backend(backend_type: str,
@@ -144,7 +145,7 @@ def cmd_dispatch(args):
 def cmd_status(args):
     disp = MultiAgentDispatcher(enable_warmup=False)
     try:
-        stats = disp.get_statistics() if hasattr(disp, 'get_statistics') else {}
+        stats = disp.get_status() if hasattr(disp, 'get_status') else {}
         status = {
             "name": "DevSquad",
             "version": VERSION,

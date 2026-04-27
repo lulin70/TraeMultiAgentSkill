@@ -30,6 +30,7 @@ from .scratchpad import Scratchpad
 from .worker import Worker, WorkerFactory
 from .consensus import ConsensusEngine
 from .context_compressor import ContextCompressor, Message, MessageType, CompressionLevel, CompressedContext
+from .usage_tracker import track_usage
 
 
 class Coordinator:
@@ -131,6 +132,10 @@ class Coordinator:
             total_tasks=len(tasks),
             estimated_parallelism=1.0 if len(tasks) > 1 else 0.0,
         )
+        track_usage("coordinator.plan_task", success=True, metadata={
+            "num_roles": len(available_roles),
+            "total_tasks": len(tasks)
+        })
         return plan
 
     def spawn_workers(self, plan: ExecutionPlan,
@@ -227,6 +232,12 @@ class Coordinator:
         )
 
         self._record_execution(result)
+        track_usage("coordinator.execute_plan", success=result.success, metadata={
+            "total_tasks": result.total_tasks,
+            "completed": result.completed_tasks,
+            "failed": result.failed_tasks,
+            "duration": round(duration, 2)
+        })
         return result
 
     def _buffer_worker_messages(self, batch_results: List[WorkerResult]):
@@ -333,18 +344,28 @@ class Coordinator:
         return results, errors
 
     def _execute_parallel(self, batch: TaskBatch) -> List[WorkerResult]:
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         results = []
-        for task in batch.tasks[:batch.max_concurrency]:
-            try:
+        max_workers = min(batch.max_concurrency or len(batch.tasks), len(batch.tasks))
+        if max_workers <= 0:
+            return results
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = {}
+            for task in batch.tasks[:batch.max_concurrency]:
                 worker = self._get_worker_for_task(task)
                 if worker:
-                    r = worker.execute(task)
-                    results.append(r)
-            except Exception as e:
-                results.append(WorkerResult(
-                    worker_id="unknown", task_id=task.task_id,
-                    success=False, error=str(e))
-                )
+                    future = executor.submit(worker.execute, task)
+                    futures[future] = task.task_id
+            for future in as_completed(futures):
+                try:
+                    results.append(future.result())
+                except Exception as e:
+                    results.append(WorkerResult(
+                        worker_id="unknown",
+                        task_id=futures[future],
+                        success=False,
+                        error=str(e),
+                    ))
         return results
 
     def _get_worker_for_task(self, task: TaskDefinition) -> Optional[Worker]:
@@ -387,6 +408,11 @@ class Coordinator:
         for w in self.workers.values():
             notifications.extend(w.get_pending_notifications())
 
+        track_usage("coordinator.collect_results", success=True, metadata={
+            "findings": len(findings),
+            "decisions": len(decisions),
+            "conflicts": len(conflicts)
+        })
         return {
             "coordinator_id": self.coordinator_id,
             "scratchpad": scratchpad_summary,
@@ -446,6 +472,9 @@ class Coordinator:
                 self.scratchpad.resolve(conflict.entry_id,
                                          resolution=f"已通过共识解决")
 
+        track_usage("coordinator.resolve_conflicts", success=True, metadata={
+            "conflicts_resolved": len(resolutions)
+        })
         return resolutions
 
     def generate_report(self) -> str:

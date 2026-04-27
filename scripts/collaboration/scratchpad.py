@@ -25,6 +25,7 @@ from .models import (
     ReferenceType,
     Reference,
 )
+from .usage_tracker import track_usage
 
 
 MAX_ENTRIES_DEFAULT = 1000
@@ -103,6 +104,9 @@ class Scratchpad:
             self._entries[entry.entry_id] = entry
             self._write_count += 1
             self._persist_entry(entry)
+            track_usage("scratchpad.write", success=True, metadata={
+                "entry_type": entry.entry_type.value
+            })
             return entry.entry_id
 
     def read(self, query: str = "", since: Optional[datetime] = None,
@@ -151,6 +155,10 @@ class Scratchpad:
                 if len(results) >= limit:
                     break
             self._read_count += 1
+            track_usage("scratchpad.read", success=True, metadata={
+                "results_count": len(results),
+                "has_query": bool(query)
+            })
             return list(reversed(results))
 
     def resolve(self, entry_id: str, resolution: str = ""):

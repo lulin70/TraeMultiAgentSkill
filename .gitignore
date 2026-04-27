@@ -32,10 +32,11 @@ htmlcov/
 *.pem
 credentials.json
 
-# --- Runtime Data (SQLite) ---
+# --- Runtime Data ---
 *.db
 *.db-shm
 *.db-wal
+data/llm_cache/
 
 # --- Runtime Context (auto-generated) ---
 context/
