@@ -5,7 +5,8 @@ description: |
   V3.3.0 DevSquad — Multi-Role AI Task Orchestrator.
   One task in, multi-role AI collaboration, one conclusion out.
   7 core roles (architect/pm/security/tester/coder/devops/ui), real LLM backend
-  (OpenAI/Anthropic), CLI + MCP + Python API. ~825+ tests, all passing.
+  (OpenAI/Anthropic), CLI + MCP + Python API. 99 unit tests, all passing.
+  ThreadPoolExecutor parallel, CheckpointManager, WorkflowEngine, streaming, Docker, CI.
 ---
 
 # DevSquad V3.3.0 — Multi-Role AI Task Orchestrator
@@ -15,12 +16,12 @@ description: |
 This Skill upgrades Trae from a "single AI assistant" to a "multi-AI team". When a task is submitted, it is no longer handled by a single role:
 
 ```
-User Task → [Intent Analysis] → [Role Matching] → [Coordinator Orchestration]
-           → [Parallel Worker Execution] → [Scratchpad Real-time Sharing]
-           → [Consensus Decision] → [MCE Classification Enhancement] → [Result Aggregation]
+User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
+           → [ThreadPoolExecutor Parallel Workers] → [Scratchpad Real-time Sharing]
+           → [ConsensusEngine] → [ReportFormatter] → [Structured Report]
 ```
 
-## Architecture Overview (16 Core Modules)
+## Architecture Overview (20 Core Modules)
 
 | # | Module | File | Responsibility |
 |---|-------|------|---------------|
@@ -40,6 +41,18 @@ User Task → [Intent Analysis] → [Role Matching] → [Coordinator Orchestrati
 | 13 | **PromptVariantGenerator** | `prompt_variant_generator.py` | Skillify closed-loop feedback (pattern→variant / A-B test / auto promote-deprecate) |
 | 14 | **MCEAdapter** | `mce_adapter.py` | MCE memory classification engine adapter (lazy-load / graceful-degrade / thread-safe / v0.4 tenant support) |
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py` (class) | WorkBuddy Claw read-only bridge (INDEX search / daily logs / AI news feed) |
+| 16 | **RoleMatcher** | `role_matcher.py` | Keyword-based role matching with alias resolution (extracted from Dispatcher) |
+| 17 | **ReportFormatter** | `report_formatter.py` | Structured/compact/detailed report generation (extracted from Dispatcher) |
+| 18 | **InputValidator** | `input_validator.py` | Security validation + 16-pattern prompt injection detection |
+| 19 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM-powered semantic role matching with bilingual keyword fallback |
+| 20 | **CheckpointManager** | `checkpoint_manager.py` | SHA256 integrity, handoff documents, auto-cleanup, dispatch integration |
+| 21 | **WorkflowEngine** | `workflow_engine.py` | Task-to-workflow auto-split, step execution, checkpointing, agent handoff |
+| 22 | **TaskCompletionChecker** | `task_completion_checker.py` | DispatchResult/ScheduleResult completion tracking + progress persistence |
+| 23 | **CodeMapGenerator** | `code_map_generator.py` | Python AST-based code structure analysis + dependency graph |
+| 24 | **DualLayerContext** | `dual_layer_context.py` | Project-level + task-level context management with TTL |
+| 25 | **SkillRegistry** | `skill_registry.py` | Reusable skill registration + discovery + persistence |
+| 26 | **LLMBackend** | `llm_backend.py` | Mock/OpenAI/Anthropic with streaming support + 120s timeout |
+| 27 | **ConfigManager** | `config_loader.py` | YAML config + env var overrides (16 parameters) |
 
 ---
 

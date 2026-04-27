@@ -1,45 +1,47 @@
-# DevSquad — Multi-Agent Software Development Team
+# DevSquad — Multi-Role AI Task Orchestrator
 
 <p align="center">
-  <strong>Assemble an AI-powered software development squad on demand.</strong>
+  <strong>One task → Multi-role AI collaboration → One conclusion</strong>
 </p>
 
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-825%2B%20passing-brightgreen" />
-  <img alt="Version" src="https://img.shields.io/badge/V3.3-2026--04--17-orange" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-99%20passing-brightgreen" />
+  <img alt="Version" src="https://img.shields.io/badge/V3.3.0-2026--04--27-orange" />
+  <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
 
 ---
 
 ## What is DevSquad?
 
-DevSquad transforms a **single AI coding assistant into a specialized multi-role development team**. Instead of one AI handling your entire task, it automatically dispatches to the right combination of expert roles — architect, product manager, coder, tester, security reviewer, and more — then orchestrates their parallel collaboration through a shared workspace, resolves conflicts via consensus voting, and delivers a unified structured report.
-
-**Think of it as assembling a virtual dev team on demand, powered by AI agents that collaborate like real engineers.**
+DevSquad transforms a **single AI task into a multi-role AI collaboration**. It automatically dispatches your task to the right combination of expert roles — architect, product manager, coder, tester, security reviewer, DevOps — orchestrates their parallel collaboration through a shared workspace, resolves conflicts via weighted consensus voting, and delivers a unified structured report.
 
 ```
 You: "Design a microservices e-commerce backend"
          │
          ▼
 ┌─────────────────┐
-│  Intent Analysis  ──→ Auto-match: architect + devops + security
+│  InputValidator   ──→ Security check (XSS, SQL injection, prompt injection)
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  RoleMatcher     ──→ Auto-match: architect + devops + security
 └────────┬────────┘
          ▼
 ┌──────────┬──────────┬──────────┐
-│ Architect │  DevOps   │ Security │
+│ Architect │  DevOps   │ Security │   ← ThreadPoolExecutor parallel execution
 │(Design)   │(Infra)   │(Threat)  │
 └────┬──────┴────┬─────┴────┬────┘
      └────────────┼───────────┘
                   ▼
       ┌──────────────────┐
-      │    Scratchpad     │ ← Shared blackboard
-      │ (Real-time sync) │
+      │    Scratchpad     │ ← Shared blackboard (real-time sync)
       └────────┬─────────┘
                ▼
       ┌──────────────────┐
-      │ Consensus Engine  │ ← Weighted vote + veto
+      │ Consensus Engine  │ ← Weighted vote + veto + escalation
       └────────┬─────────┘
                ▼
       ┌──────────────────┐
@@ -47,134 +49,72 @@ You: "Design a microservices e-commerce backend"
       └──────────────────┘
 ```
 
-## 📚 Documentation
-
-**New to DevSquad?** Start here: [Documentation Index](docs/INDEX.md)
-
-- 📖 [Installation Guide](INSTALL.md) - Setup and configuration
-- 💡 [Usage Examples](EXAMPLES.md) - Real-world scenarios
-- 🏗️ [Architecture](docs/architecture/ARCHITECTURE.md) - System design
-- 📊 [Project Status](docs/PROJECT_STATUS.md) - Current state and roadmap
-- 🎯 [Optimization Plan](docs/OPTIMIZATION_PLAN_KARPATHY.md) - Improvement roadmap
-
 ## Quick Start
 
-### Prerequisites
-
-- **Python 3.9+** (pure Python, no compiled dependencies)
-- **OS**: macOS / Linux / **Windows 10+**
-- No external dependencies required (all integrations use graceful degradation)
-
-See [**INSTALL.md**](INSTALL.md) for detailed setup instructions including Windows.
-
-### 3 Ways to Use
-
-**Method 1: CLI (Recommended)**
+### Install
 
 ```bash
 git clone https://github.com/lulin70/DevSquad.git
 cd DevSquad
 
+# Option A: Run directly (no install needed)
+python3 scripts/cli.py dispatch -t "Design user authentication system"
+
+# Option B: pip install
+pip install -e .
+devsquad dispatch -t "Design user authentication system"
+```
+
+### 3 Ways to Use
+
+**1. CLI (Recommended)**
+
+```bash
 # Mock mode (default) — no API key needed
 python3 scripts/cli.py dispatch -t "Design user authentication system"
 
 # Real AI output — set environment variables first
 export OPENAI_API_KEY="sk-..."
-python3 scripts/cli.py dispatch -t "Design user authentication system" --backend openai
+export OPENAI_BASE_URL="https://api.openai.com/v1"   # optional
+export OPENAI_MODEL="gpt-4"                            # optional
+python3 scripts/cli.py dispatch -t "Design auth system" --backend openai
 
 # Specify roles (short IDs: arch/pm/test/coder/ui/infra/sec)
 python3 scripts/cli.py dispatch -t "Design auth system" -r arch sec --backend openai
 
-python3 scripts/cli.py status
-python3 scripts/cli.py roles
+# Stream output in real-time
+python3 scripts/cli.py dispatch -t "Design auth system" -r arch --backend openai --stream
+
+# Other commands
+python3 scripts/cli.py status          # System status
+python3 scripts/cli.py roles           # List available roles
+python3 scripts/cli.py --version       # Show version (3.3.0)
 ```
 
-**Method 2: Python API**
+**2. Python API**
 
 ```python
-import sys
-sys.path.insert(0, '/path/to/DevSquad')
 from scripts.collaboration.dispatcher import MultiAgentDispatcher
 
+# Mock mode (default)
 disp = MultiAgentDispatcher()
 result = disp.dispatch("Design REST API for user management")
 print(result.to_markdown())
 disp.shutdown()
-```
 
-**Method 3: Quick Dispatch (3 output formats)**
-
-```python
-from scripts.collaboration.dispatcher import MultiAgentDispatcher
-
-disp = MultiAgentDispatcher()
-
-# Structured report (default table format)
-result = disp.quick_dispatch(task, output_format="structured")
-
-# Compact (one-line per role)
-result = disp.quick_dispatch(task, output_format="compact")
-
-# Detailed (full findings + action items)
-result = disp.quick_dispatch(task, output_format="detailed",
-                              include_action_items=True)
-
+# With LLM backend
+from scripts.collaboration.llm_backend import create_backend
+backend = create_backend("openai", api_key="sk-...", base_url="https://api.openai.com/v1")
+disp = MultiAgentDispatcher(llm_backend=backend)
+result = disp.dispatch("Design auth system", roles=["architect", "security"])
+print(result.summary)
 disp.shutdown()
 ```
 
-## 7 Core Roles
-
-| Role | ID | Aliases | Best For |
-|------|----|---------|----------|
-| Architect | `architect` | `arch` | System design, tech stack, performance/security/data architecture |
-| Product Manager | `product-manager` | `pm` | Requirements, user stories, acceptance criteria |
-| Security Expert | `security` | `sec` | Threat modeling, vulnerability audit, compliance |
-| Tester | `tester` | `test`, `qa` | Test strategy, quality assurance, edge cases |
-| Coder | `solo-coder` | `coder`, `dev` | Implementation, code review, performance optimization |
-| DevOps | `devops` | `infra` | CI/CD, containerization, monitoring, infrastructure |
-| UI Designer | `ui-designer` | `ui` | UX flow, interaction design, accessibility |
-
-**Auto-match**: If no roles specified, the dispatcher automatically matches based on task intent.
-
-## 19 Core Modules
-
-| Module | Purpose |
-|--------|---------|
-| **MultiAgentDispatcher** | Unified entry point — one call does everything |
-| **Coordinator** | Global orchestration: decompose → assign → collect → resolve |
-| **Scratchpad** | Shared blackboard for inter-worker real-time communication |
-| **Worker** | Role executor — independent instance per role |
-| **ConsensusEngine** | Weighted voting + veto power + human escalation |
-| **BatchScheduler** | Parallel/sequential hybrid with auto safety detection |
-| **ContextCompressor** | 4-level compression prevents context overflow |
-| **PermissionGuard** | 4-level safety gate (PLAN → DEFAULT → AUTO → BYPASS) |
-| **Skillifier** | Learns from successful patterns, auto-generates new skills |
-| **WarmupManager** | 3-layer startup preloading (cold-start < 300ms) |
-| **MemoryBridge** | Cross-session memory (7 types, TF-IDF, forgetting curve) |
-| **MCEAdapter** | Memory Classification Engine integration (v0.4, tenant-aware) |
-| **WorkBuddyClawSource** | External knowledge bridge (INDEX search, AI news feed) |
-| **PromptAssembler** | Dynamic prompt construction (3 variants × 5 styles) |
-| **PromptVariantGenerator** | Closed-loop A/B testing for prompt optimization |
-| **TestQualityGuard** | Automated test quality audit (API validation, coverage) |
-| **LLMCache** ⭐ NEW | Intelligent caching (60-80% cost reduction, 90% faster on hits) |
-| **LLMRetryManager** ⭐ NEW | Exponential backoff retry + circuit breaker + multi-backend fallback |
-| **PerformanceMonitor** ⭐ NEW | Real-time performance tracking with P95/P99 metrics |
-
-## Cross-Platform Compatibility
-
-DevSquad works natively across multiple AI coding environments:
-
-| Platform | Integration Method | Status |
-|----------|-------------------|--------|
-| **Trae IDE** | `skill-manifest.yaml` native skill | ✅ Primary |
-| **Claude Code** | `CLAUDE.md` + `.claude/skills/` custom skill | ✅ Supported |
-| **OpenClaw** | MCP Server (`scripts/mcp_server.py`, 6 tools) | ✅ Supported |
-| **Terminal / Any IDE** | CLI (`scripts/cli.py`) or Python import | ✅ Universal |
-
-### MCP Server (for OpenClaw / Cursor / any MCP client)
+**3. MCP Server (for Cursor / any MCP client)**
 
 ```bash
-pip install mcp          # optional
+pip install mcp
 python3 scripts/mcp_server.py              # stdio mode
 python3 scripts/mcp_server.py --port 8080  # SSE mode
 ```
@@ -182,192 +122,178 @@ python3 scripts/mcp_server.py --port 8080  # SSE mode
 Exposes 6 tools: `multiagent_dispatch`, `multiagent_quick`, `multiagent_roles`,
 `multiagent_status`, `multiagent_analyze`, `multiagent_shutdown`.
 
-## Performance Optimization Modules ⭐ NEW
+## 7 Core Roles
 
-DevSquad now includes three powerful optimization modules to enhance LLM-based applications:
+| Role | CLI ID | Aliases | Weight | Best For |
+|------|--------|---------|--------|----------|
+| Architect | `arch` | `architect` | 1.5 | System design, tech stack, performance/security architecture |
+| Product Manager | `pm` | `product-manager` | 1.2 | Requirements, user stories, acceptance criteria |
+| Security Expert | `sec` | `security` | 1.1 | Threat modeling, vulnerability audit, compliance |
+| Tester | `test` | `tester`, `qa` | 1.0 | Test strategy, quality assurance, edge cases |
+| Coder | `coder` | `solo-coder`, `dev` | 1.0 | Implementation, code review, performance optimization |
+| DevOps | `infra` | `devops` | 1.0 | CI/CD, containerization, monitoring, infrastructure |
+| UI Designer | `ui` | `ui-designer` | 0.9 | UX flow, interaction design, accessibility |
 
-### 1. LLM Cache (`scripts/collaboration/llm_cache.py`)
+**Auto-match**: If no roles specified, the dispatcher automatically matches based on task keywords.
 
-Intelligent two-tier caching system that dramatically reduces API costs and improves response times.
+## Architecture
 
-**Features:**
-- Memory + Disk dual-layer caching
-- TTL-based expiration (default: 24 hours)
-- LRU eviction policy
-- Hit rate statistics and reporting
+DevSquad is built on a layered architecture with clear separation of concerns:
 
-**Benefits:**
-- 60-80% reduction in API costs
-- 90% faster response on cache hits
-- Offline testing support
-
-**Quick Start:**
-```python
-from scripts.collaboration import get_llm_cache
-
-cache = get_llm_cache()
-response = cache.get(prompt, backend="openai", model="gpt-4")
-if not response:
-    response = your_api_call(prompt)
-    cache.set(prompt, response, backend="openai", model="gpt-4")
+```
+┌─────────────────────────────────────────────────┐
+│                    CLI / MCP / API               │  Entry Points
+├─────────────────────────────────────────────────┤
+│              MultiAgentDispatcher                │  Orchestration
+│  ┌────────────┬──────────────┬────────────────┐ │
+│  │RoleMatcher │ReportFormatter│InputValidator  │ │  Extracted Components
+│  └────────────┴──────────────┴────────────────┘ │
+├─────────────────────────────────────────────────┤
+│                 Coordinator                      │  Task Planning
+│  ┌──────────┬───────────┬────────────────────┐  │
+│  │ Scratchpad│ Consensus │  BatchScheduler    │  │  Collaboration
+│  └──────────┴───────────┴────────────────────┘  │
+├─────────────────────────────────────────────────┤
+│              Worker (per role)                   │  Execution
+│  ┌────────────────────────────────────────────┐ │
+│  │ PromptAssembler → LLMBackend → Output      │ │
+│  └────────────────────────────────────────────┘ │
+├─────────────────────────────────────────────────┤
+│  LLMBackend: Mock | OpenAI | Anthropic          │  LLM Layer
+├─────────────────────────────────────────────────┤
+│  CheckpointManager | WorkflowEngine | ...       │  Infrastructure
+└─────────────────────────────────────────────────┘
 ```
 
-### 2. LLM Retry Manager (`scripts/collaboration/llm_retry.py`)
+## Key Features
 
-Robust error handling with exponential backoff, circuit breaker, and multi-backend fallback.
+### Security
+- **InputValidator**: XSS, SQL injection, command injection, HTML injection detection
+- **Prompt Injection Protection**: 16 patterns (ignore previous instructions, jailbreak, DAN mode, system prompt extraction, etc.)
+- **API Key Safety**: Environment variables only, never CLI arguments or logs
+- **PermissionGuard**: 4-level safety gate (PLAN → DEFAULT → AUTO → BYPASS)
 
-**Features:**
-- Exponential backoff retry (configurable delays)
-- Circuit breaker pattern (prevents cascade failures)
-- Multi-backend fallback (OpenAI → Anthropic → Zhipu)
-- Rate limit detection and handling
+### Performance
+- **ThreadPoolExecutor**: Real parallel execution for multi-role dispatch
+- **LLM Cache**: TTL-based LRU cache with disk persistence (60-80% cost reduction)
+- **LLM Retry**: Exponential backoff + circuit breaker + multi-backend fallback
+- **Streaming Output**: Real-time chunk-by-chunk LLM output via `--stream`
 
-**Benefits:**
-- 99%+ success rate (with retries)
-- Automatic fault tolerance
-- Graceful degradation
+### Reliability
+- **CheckpointManager**: SHA256 integrity, handoff documents, auto-cleanup
+- **WorkflowEngine**: Task-to-workflow auto-split, step execution, resume from checkpoint
+- **TaskCompletionChecker**: DispatchResult/ScheduleResult completion tracking
+- **ConsensusEngine**: Weighted voting with veto power and human escalation
 
-**Quick Start:**
-```python
-from scripts.collaboration import retry_with_fallback
+### Developer Experience
+- **Configuration File**: `~/.devsquad.yaml` with env var overrides
+- **Docker Support**: `docker build -t devsquad . && docker run devsquad dispatch -t "task"`
+- **GitHub Actions CI**: Python 3.9-3.12 matrix testing
+- **pip installable**: `pip install -e .` with optional dependencies
 
-@retry_with_fallback(max_retries=3, fallback_backends=["openai", "anthropic"])
-def call_llm(prompt: str, backend: str = "openai"):
-    return your_api_call(prompt, backend)
+## Module Reference
+
+| Module | File | Purpose |
+|--------|------|---------|
+| **MultiAgentDispatcher** | `dispatcher.py` | Unified entry point |
+| **Coordinator** | `coordinator.py` | Global orchestration: plan → assign → execute → collect |
+| **Worker** | `worker.py` | Role executor with LLM backend integration |
+| **Scratchpad** | `scratchpad.py` | Shared blackboard for inter-worker communication |
+| **ConsensusEngine** | `consensus.py` | Weighted voting + veto + escalation |
+| **RoleMatcher** | `role_matcher.py` | Keyword-based role matching with alias resolution |
+| **ReportFormatter** | `report_formatter.py` | Structured/compact/detailed report generation |
+| **InputValidator** | `input_validator.py` | Security validation + prompt injection detection |
+| **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM-powered semantic role matching |
+| **CheckpointManager** | `checkpoint_manager.py` | State persistence + handoff documents |
+| **WorkflowEngine** | `workflow_engine.py` | Task-to-workflow auto-split + step execution |
+| **TaskCompletionChecker** | `task_completion_checker.py` | Completion tracking + progress reporting |
+| **CodeMapGenerator** | `code_map_generator.py` | Python AST-based code structure analysis |
+| **DualLayerContext** | `dual_layer_context.py` | Project-level + task-level context management |
+| **SkillRegistry** | `skill_registry.py` | Reusable skill registration + discovery |
+| **LLMBackend** | `llm_backend.py` | Mock/OpenAI/Anthropic with streaming support |
+| **ConfigManager** | `config_loader.py` | YAML config + env var overrides |
+
+## Configuration
+
+Create `~/.devsquad.yaml`:
+
+```yaml
+devsquad:
+  backend: openai
+  base_url: https://api.openai.com/v1
+  model: gpt-4
+  timeout: 120
+  output_format: structured
+  strict_validation: false
+  checkpoint_enabled: true
+  cache_enabled: true
+  log_level: WARNING
 ```
 
-### 3. Performance Monitor (`scripts/collaboration/performance_monitor.py`)
+Or use environment variables (higher priority):
 
-Real-time performance tracking with detailed metrics and bottleneck detection.
-
-**Features:**
-- Automatic execution time tracking
-- CPU and memory usage monitoring
-- P95/P99 latency percentiles
-- Bottleneck detection and reporting
-
-**Benefits:**
-- Real-time performance visibility
-- Data-driven optimization
-- Historical trend analysis
-
-**Quick Start:**
-```python
-from scripts.collaboration import monitor_performance, get_monitor
-
-@monitor_performance("my_function")
-def my_function():
-    # Your code here
-    pass
-
-# Get statistics
-monitor = get_monitor()
-stats = monitor.get_stats("my_function")
-print(f"Avg: {stats['avg_duration_ms']:.1f}ms, P95: {stats['p95_duration_ms']:.1f}ms")
+```bash
+export DEVSQUAD_BACKEND=openai
+export DEVSQUAD_BASE_URL=https://api.openai.com/v1
+export DEVSQUAD_MODEL=gpt-4
+export OPENAI_API_KEY=sk-...
 ```
 
-### Integration Example
+## Environment Variables
 
-Use all three modules together for maximum benefit:
-
-```python
-from scripts.collaboration import (
-    get_llm_cache,
-    retry_with_fallback,
-    monitor_performance
-)
-
-@monitor_performance("optimized_llm_call")
-@retry_with_fallback(max_retries=3, fallback_backends=["openai", "anthropic"])
-def optimized_llm_call(prompt: str, backend: str = "openai"):
-    cache = get_llm_cache()
-    
-    # Try cache first
-    cached = cache.get(prompt, backend, "gpt-4")
-    if cached:
-        return cached
-    
-    # Call API with retry/fallback
-    response = your_api_call(prompt, backend)
-    
-    # Save to cache
-    cache.set(prompt, response, backend, "gpt-4")
-    return response
-```
-
-**Documentation:**
-- 📖 [Optimization Guide](docs/OPTIMIZATION_GUIDE.md) - Complete usage guide
-- 📊 [Review & Scoring](docs/OPTIMIZATION_REVIEW_SCORE.md) - Performance evaluation (85/100)
-- 💡 [Integration Example](scripts/collaboration/integration_example.py) - Full demo
-
-## External Integrations
-
-| Component | Status | Fallback |
-|-----------|--------|----------|
-| **MCE v0.4** (Memory Classification Engine) | Optional tenant/permission support | Graceful degrade if unavailable |
-| **WorkBuddy Claw** | Read-only bridge to external knowledge base | Skip if path not found |
-
-All integrations are optional — DevSquad works fully standalone.
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `OPENAI_API_KEY` | OpenAI API key | None (required for OpenAI backend) |
+| `OPENAI_BASE_URL` | OpenAI-compatible base URL | None |
+| `OPENAI_MODEL` | Model name | `gpt-4` |
+| `ANTHROPIC_API_KEY` | Anthropic API key | None (required for Anthropic backend) |
+| `ANTHROPIC_MODEL` | Model name | `claude-sonnet-4-20250514` |
+| `DEVSQUAD_LLM_BACKEND` | Default backend type | `mock` |
+| `DEVSQUAD_LOG_LEVEL` | Logging level | `WARNING` |
 
 ## Running Tests
 
 ```bash
-cd /path/to/DevSquad
+# Core tests (99 tests)
+python3 -m pytest scripts/collaboration/core_test.py \
+  scripts/collaboration/role_mapping_test.py \
+  scripts/collaboration/upstream_test.py -v
 
-# Core collaboration tests
-python3 -m pytest scripts/collaboration/ -v
-# Expected: ~825+ test cases, all passing
-
-# Quick status check
-python3 scripts/cli.py status
-# Expected: {"name": "DevSquad", "status": "ready", ...}
-
-# Dry-run verification
-python3 scripts/cli.py dispatch -t "test" --dry-run
+# Quick smoke test
+python3 scripts/cli.py --version    # 3.3.0
+python3 scripts/cli.py status       # System ready
+python3 scripts/cli.py roles        # List 7 roles
 ```
 
-## Project Structure
+## Documentation
 
-```
-DevSquad/
-├── scripts/
-│   ├── cli.py                    # Primary CLI entry point
-│   ├── mcp_server.py             # MCP server (OpenClaw/Cursor)
-│   ├── trae_agent.py             # Legacy wrapper (/dss command)
-│   ├── trae_agent_dispatch_v2.py # Core dispatcher (legacy)
-│   └── collaboration/            # ★ 16 core modules
-│       ├── dispatcher.py         # MultiAgentDispatcher
-│       ├── coordinator.py        # Global orchestrator
-│       ├── scratchpad.py         # Shared blackboard
-│       ├── worker.py             # Role executor
-│       ├── consensus.py          # Weighted voting + veto
-│       ├── memory_bridge.py      # Cross-session memory
-│       ├── mce_adapter.py        # MCE v0.4 adapter
-│       └── *_test.py             # Test suites (~825+ cases)
-├── SKILL.md                      # English skill manual
-├── SKILL-CN.md                   # Chinese skill manual
-├── SKILL-JP.md                   # Japanese skill manual
-├── CLAUDE.md                     # Claude Code project instructions
-├── INSTALL.md                    # Installation guide (Unix + Windows)
-├── CHANGELOG.md                  # Complete version history
-└── docs/                         # Architecture specs, plans
-```
+| Document | Description |
+|----------|-------------|
+| [INSTALL.md](INSTALL.md) | Installation guide (Unix + Windows) |
+| [EXAMPLES.md](EXAMPLES.md) | Real-world usage examples |
+| [SKILL.md](SKILL.md) | Skill manual (EN/CN/JP) |
+| [CLAUDE.md](CLAUDE.md) | Claude Code project instructions |
+| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [README-CN.md](README-CN.md) | 中文说明 |
+| [README-JP.md](README-JP.md) | 日本語説明 |
 
-## Philosophy
+## Cross-Platform Compatibility
 
-> **"One AI is a tool. Ten AI collaborators are a team."**
-
-Software development is inherently multi-disciplinary. No single perspective can match the quality of a well-coordinated team with diverse expertise. DevSquad makes that team available on demand, in seconds, for any software task.
+| Platform | Integration Method | Status |
+|----------|-------------------|--------|
+| **Trae IDE** | `skill-manifest.yaml` native skill | ✅ Primary |
+| **Claude Code** | `CLAUDE.md` + `.claude/skills/` custom skill | ✅ Supported |
+| **Cursor / MCP clients** | MCP Server (`scripts/mcp_server.py`, 6 tools) | ✅ Supported |
+| **Terminal / Any IDE** | CLI (`scripts/cli.py`) or Python import | ✅ Universal |
+| **Docker** | `docker build -t devsquad .` | ✅ Supported |
 
 ## Version History
 
 | Date | Version | Highlights |
 |------|---------|-----------|
-| 2026-04-24 | **V3.3.0** | Real LLM backend (OpenAI/Anthropic), env-var-only API keys, 7 core roles (security+devops promoted), TaskDefinition.role_prompt fix, verified real AI output |
-| 2026-04-17 | V3.2 | E2E Demo, MCE Adapter, Dispatcher UX, Delivery Workflow Iron Rule |
-| 2026-04-16 | V3.1 | Prompt Optimization System (A/B variant testing) |
+| 2026-04-27 | **V3.3.0** | Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine, TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, 99 unit tests |
+| 2026-04-17 | V3.2 | E2E Demo, MCE Adapter, Dispatcher UX |
 | 2026-04-16 | V3.0 | Complete redesign — Coordinator/Worker/Scratchpad architecture |
-| Mar 2026 | V2.x | Dual-layer context, Vibe Coding, MCE integration, code map visualization |
 
 ## License
 
@@ -379,8 +305,3 @@ MIT License — see [LICENSE](LICENSE) for details.
 |------|-----|
 | **GitHub (This Repo)** | https://github.com/lulin70/DevSquad |
 | **Original / Upstream** | https://github.com/weiransoft/TraeMultiAgentSkill |
-| **Installation** | See [INSTALL.md](INSTALL.md) |
-| **Skill Manual** | [SKILL.md](SKILL.md) / [SKILL-CN.md](SKILL-CN.md) / [SKILL-JP.md](SKILL-JP.md) |
-| **Examples** | [EXAMPLES.md](EXAMPLES.md) |
-| **Chinese Readme** | [README-CN.md](README-CN.md) |
-| **Japanese Readme** | [README-JP.md](README-JP.md) |

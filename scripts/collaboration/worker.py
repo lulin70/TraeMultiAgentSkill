@@ -56,7 +56,7 @@ class Worker:
     """
 
     def __init__(self, worker_id: str, role_id: str, role_prompt: str,
-                 scratchpad: Scratchpad, llm_backend=None):
+                 scratchpad: Scratchpad, llm_backend=None, stream: bool = False):
         """
         初始化 Worker 实例
 
@@ -72,6 +72,7 @@ class Worker:
         self.role_prompt = role_prompt
         self.scratchpad = scratchpad
         self.llm_backend = llm_backend
+        self.stream = stream
         self._notifications_outbox: List[TaskNotification] = []
         self._entries_written_count = 0
         self._last_assembled_prompt = None
@@ -403,7 +404,16 @@ class Worker:
         _rname = _rdef.name if _rdef else self.role_id
         print(f"  [{_rname}] Calling LLM backend...", file=sys.stderr)
         try:
-            response = backend.generate(result.instruction)
+            if self.stream and hasattr(backend, 'generate_stream'):
+                print(f"  [{_rname}] Streaming...", file=sys.stderr)
+                chunks = []
+                for chunk in backend.generate_stream(result.instruction):
+                    print(chunk, end="", flush=True)
+                    chunks.append(chunk)
+                print()
+                response = "".join(chunks)
+            else:
+                response = backend.generate(result.instruction)
             print(f"  [{_rname}] Response received.", file=sys.stderr)
             return response
         except Exception as e:

@@ -19,7 +19,7 @@
 
 See [**Windows Support**](#windows-support) below for Windows-specific instructions.
 
-## Quick Start (3 Methods)
+## Quick Start (4 Methods)
 
 ### Method 1: CLI — Recommended for most users
 
@@ -28,17 +28,22 @@ See [**Windows Support**](#windows-support) below for Windows-specific instructi
 git clone https://github.com/lulin70/DevSquad.git
 cd DevSquad
 
-# Run a task immediately
-python3 scripts/cli.py dispatch --task "Design user authentication system" --roles architect coder tester
+# Run a task immediately (mock mode, no API key needed)
+python3 scripts/cli.py dispatch -t "Design user authentication system"
+
+# Or install as a package
+pip install -e .
+devsquad dispatch -t "Design user authentication system"
 
 # Check status
 python3 scripts/cli.py status
 
 # List available roles
 python3 scripts/cli.py roles
-```
 
-That's it. No environment variables, no installation steps.
+# Show version
+python3 scripts/cli.py --version   # 3.3.0
+```
 
 ### LLM Backend Configuration (Optional — for real AI output)
 
@@ -77,26 +82,45 @@ pip install openai
 
 # For Anthropic backend
 pip install anthropic
+
+# Or install all optional dependencies
+pip install -e ".[openai,anthropic,dev]"
 ```
 
-### Method 2: Environment Variable + Wrapper Script
-
-Add to your `~/.zshrc` or `~/.bashrc`:
+### Method 2: Docker
 
 ```bash
-export DSS_SKILL_PATH="/path/to/DevSquad"
+# Build and run
+docker build -t devsquad .
+docker run devsquad dispatch -t "Design auth system"
+
+# With API key
+docker run -e OPENAI_API_KEY="sk-..." devsquad dispatch -t "Design auth system" --backend openai
+
+# Interactive shell
+docker run -it devsquad /bin/bash
 ```
 
-Then use from anywhere:
+### Method 3: Configuration File
 
-```bash
-python3 $DSS_SKILL_PATH/scripts/trae_agent.py --task "Analyze requirements" --agent architect
+Create `~/.devsquad.yaml` for persistent settings:
+
+```yaml
+devsquad:
+  backend: openai
+  base_url: https://api.openai.com/v1
+  model: gpt-4
+  timeout: 120
+  output_format: structured
+  strict_validation: false
+  checkpoint_enabled: true
+  cache_enabled: true
+  log_level: WARNING
 ```
 
-> **Note**: `trae_agent.py` uses legacy role names (`product-manager`, `solo-coder`, `ui-designer`).
-> For the modern 10-role system, use `scripts/cli.py` (Method 1) instead.
+Environment variables override config file values. Priority: env > file > defaults.
 
-### Method 3: Python Import
+### Method 4: Python Import
 
 ```python
 import sys
@@ -128,6 +152,7 @@ Dispatch Options:
   --backend, -b TYPE    LLM backend: mock/trae/openai/anthropic (default: mock)
   --base-url URL        Custom API base URL (or OPENAI_BASE_URL env)
   --model NAME          Model name (or OPENAI_MODEL/ANTHROPIC_MODEL env)
+  --stream              Stream LLM output in real-time (requires --backend)
   --dry-run             Simulate without execution
   --quick, -q           Use quick_dispatch (3 format variants)
   --action-items        Include H/M/L priority action items

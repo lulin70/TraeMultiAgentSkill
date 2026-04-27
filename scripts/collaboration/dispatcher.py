@@ -383,6 +383,10 @@ class MultiAgentDispatcher:
         if warnings:
             logger.warning("Suspicious patterns in task: %s", ", ".join(warnings))
 
+        injection_warnings = validator.check_prompt_injection(task_description)
+        if injection_warnings:
+            logger.warning("Prompt injection patterns detected: %s", ", ".join(injection_warnings))
+
         try:
             step1_time = time.time()
 

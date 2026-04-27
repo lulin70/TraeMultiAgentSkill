@@ -18,7 +18,7 @@ Usage:
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Generator
 
 
 class LLMBackend(ABC):
@@ -42,6 +42,22 @@ class LLMBackend(ABC):
     def is_available(self) -> bool:
         """Check if the backend is properly configured and available."""
         ...
+
+    def generate_stream(self, prompt: str, **kwargs) -> Generator[str, None, None]:
+        """
+        Stream a response from the LLM, yielding chunks as they arrive.
+
+        Default implementation falls back to generate() and yields the full response.
+        Subclasses should override for true streaming support.
+
+        Args:
+            prompt: The assembled prompt/instruction text.
+            **kwargs: Backend-specific parameters.
+
+        Yields:
+            str: Chunks of the LLM's response text.
+        """
+        yield self.generate(prompt, **kwargs)
 
 
 class MockBackend(LLMBackend):
@@ -139,6 +155,20 @@ class OpenAIBackend(LLMBackend):
         )
         return response.choices[0].message.content or ""
 
+    def generate_stream(self, prompt: str, **kwargs) -> Generator[str, None, None]:
+        client = self._get_client()
+        stream = client.chat.completions.create(
+            model=kwargs.get("model", self.model),
+            messages=[{"role": "user", "content": prompt}],
+            temperature=kwargs.get("temperature", self.temperature),
+            max_tokens=kwargs.get("max_tokens", self.max_tokens),
+            stream=True,
+        )
+        for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if content:
+                yield content
+
     def is_available(self) -> bool:
         try:
             self._get_client()
@@ -186,6 +216,16 @@ class AnthropicBackend(LLMBackend):
             messages=[{"role": "user", "content": prompt}],
         )
         return response.content[0].text if response.content else ""
+
+    def generate_stream(self, prompt: str, **kwargs) -> Generator[str, None, None]:
+        client = self._get_client()
+        with client.messages.stream(
+            model=kwargs.get("model", self.model),
+            max_tokens=kwargs.get("max_tokens", self.max_tokens),
+            messages=[{"role": "user", "content": prompt}],
+        ) as stream:
+            for text in stream.text_stream:
+                yield text
 
     def is_available(self) -> bool:
         try:

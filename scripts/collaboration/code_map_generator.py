@@ -1,0 +1,179 @@
+#!/usr/bin/env python3
+import os
+import ast
+import logging
+from pathlib import Path
+from typing import Dict, List, Any, Optional
+from dataclasses import dataclass, field
+from collections import defaultdict
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass
+class CodeNode:
+    name: str
+    node_type: str
+    file_path: str = ""
+    line_start: int = 0
+    line_end: int = 0
+    docstring: str = ""
+    children: List['CodeNode'] = field(default_factory=list)
+    imports: List[str] = field(default_factory=list)
+    calls: List[str] = field(default_factory=list)
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'name': self.name, 'type': self.node_type, 'file': self.file_path,
+            'lines': f"{self.line_start}-{self.line_end}",
+            'docstring': self.docstring[:100] if self.docstring else "",
+            'children': [c.to_dict() for c in self.children],
+            'imports': self.imports[:5], 'calls': self.calls[:5],
+        }
+
+
+class CodeMapGenerator:
+    """
+    Code map generator for Python projects.
+
+    Scans Python source files and generates a structured map of:
+    - Modules, classes, functions
+    - Import dependencies
+    - Call relationships
+    - Documentation strings
+    """
+
+    def __init__(self, project_root: str = "."):
+        self.project_root = Path(project_root)
+
+    def generate_map(self, target_dir: str = None, output_format: str = "dict") -> Any:
+        """
+        Generate a code map for the target directory.
+
+        Args:
+            target_dir: Directory to scan (relative to project_root)
+            output_format: "dict", "markdown", or "json"
+
+        Returns:
+            Code map in the specified format
+        """
+        scan_dir = self.project_root / (target_dir or "")
+        if not scan_dir.exists():
+            logger.warning("Target directory does not exist: %s", scan_dir)
+            return {} if output_format != "markdown" else ""
+
+        modules = {}
+        for py_file in sorted(scan_dir.rglob("*.py")):
+            if any(p in str(py_file) for p in ["__pycache__", "test_", "_test.py", ".venv"]):
+                continue
+            rel_path = py_file.relative_to(self.project_root)
+            module_map = self._scan_file(py_file)
+            if module_map:
+                modules[str(rel_path)] = module_map
+
+        if output_format == "markdown":
+            return self._to_markdown(modules)
+        elif output_format == "json":
+            import json
+            return json.dumps(modules, indent=2, ensure_ascii=False)
+        return modules
+
+    def _scan_file(self, file_path: Path) -> Optional[Dict[str, Any]]:
+        try:
+            source = file_path.read_text(encoding='utf-8')
+            tree = ast.parse(source)
+        except (SyntaxError, UnicodeDecodeError):
+            return None
+
+        file_imports = []
+        top_level = []
+
+        for node in ast.iter_child_nodes(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    file_imports.append(alias.name)
+            elif isinstance(node, ast.ImportFrom):
+                module = node.module or ""
+                file_imports.append(module)
+
+            if isinstance(node, ast.ClassDef):
+                top_level.append(self._parse_class(node, str(file_path)))
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                top_level.append(self._parse_function(node, str(file_path)))
+
+        return {
+            'file': str(file_path.name),
+            'imports': file_imports[:20],
+            'nodes': [n.to_dict() for n in top_level],
+            'total_classes': sum(1 for n in top_level if n.node_type == 'class'),
+            'total_functions': sum(1 for n in top_level if n.node_type == 'function'),
+        }
+
+    def _parse_class(self, node: ast.ClassDef, file_path: str) -> CodeNode:
+        docstring = ast.get_docstring(node) or ""
+        methods = []
+        for item in node.body:
+            if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                methods.append(self._parse_function(item, file_path))
+
+        return CodeNode(
+            name=node.name, node_type="class", file_path=file_path,
+            line_start=node.lineno, line_end=node.end_lineno or node.lineno,
+            docstring=docstring, children=methods,
+        )
+
+    def _parse_function(self, node: ast.FunctionDef, file_path: str) -> CodeNode:
+        docstring = ast.get_docstring(node) or ""
+        calls = []
+        for child in ast.walk(node):
+            if isinstance(child, ast.Call):
+                if isinstance(child.func, ast.Name):
+                    calls.append(child.func.id)
+                elif isinstance(child.func, ast.Attribute):
+                    calls.append(child.func.attr)
+
+        return CodeNode(
+            name=node.name, node_type="function", file_path=file_path,
+            line_start=node.lineno, line_end=node.end_lineno or node.lineno,
+            docstring=docstring, calls=list(set(calls))[:10],
+        )
+
+    def _to_markdown(self, modules: Dict[str, Any]) -> str:
+        lines = ["# Code Map", ""]
+        for file_path, info in modules.items():
+            lines.append(f"## {file_path}")
+            lines.append(f"- Classes: {info.get('total_classes', 0)} | Functions: {info.get('total_functions', 0)}")
+            if info.get('imports'):
+                lines.append(f"- Imports: {', '.join(info['imports'][:10])}")
+            for node in info.get('nodes', []):
+                icon = "📦" if node['type'] == 'class' else "⚡"
+                lines.append(f"  - {icon} **{node['name']}** (L{node['lines']})")
+                if node.get('docstring'):
+                    lines.append(f"    > {node['docstring']}")
+                for child in node.get('children', []):
+                    lines.append(f"    - ⚡ `{child['name']}` (L{child['lines']})")
+            lines.append("")
+        return "\n".join(lines)
+
+    def get_dependency_graph(self, target_dir: str = None) -> Dict[str, List[str]]:
+        scan_dir = self.project_root / (target_dir or "")
+        graph = {}
+        for py_file in sorted(scan_dir.rglob("*.py")):
+            if "__pycache__" in str(py_file):
+                continue
+            try:
+                source = py_file.read_text(encoding='utf-8')
+                tree = ast.parse(source)
+            except (SyntaxError, UnicodeDecodeError):
+                continue
+
+            rel_path = str(py_file.relative_to(self.project_root))
+            deps = set()
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module:
+                    deps.add(node.module)
+                elif isinstance(node, ast.Import):
+                    for alias in node.names:
+                        deps.add(alias.name)
+            graph[rel_path] = sorted(deps)
+        return graph

@@ -155,9 +155,9 @@
 - [x] P2-3: 流式输出（LLMBackend.generate_stream + OpenAI/Anthropic 真流式 + CLI --stream）
 - [x] P2-7: Docker 支持（Dockerfile + .dockerignore）
 - [x] P2-8: 配置文件支持（~/.devsquad.yaml + 环境变量覆盖 + 16个可配置参数）
-- [ ] P2-4: 代码地图生成器（低优先级）
-- [ ] P2-5: 双层上下文管理器（低优先级）
-- [ ] P2-6: 技能注册中心（低优先级）
+- [x] P2-4: 代码地图生成器（CodeMapGenerator, AST解析+依赖图+Markdown输出）
+- [x] P2-5: 双层上下文管理器（DualLayerContextManager, 项目级+任务级+TTL+Prompt构建）
+- [x] P2-6: 技能注册中心（SkillRegistry, 注册/发现/持久化/自动提案）
 
 ---
 

@@ -72,6 +72,25 @@ class InputValidator:
         r"subprocess",
         r"os\.system",
     ]
+
+    PROMPT_INJECTION_PATTERNS = [
+        r"ignore\s+(all\s+)?previous\s+(instructions?|prompts?|rules?)",
+        r"forget\s+(all\s+)?previous\s+(instructions?|context)",
+        r"disregard\s+(all\s+)?(previous|above|prior)",
+        r"you\s+are\s+now\s+(?:a\s+)?(?:different|new|admin|root|system)\s+(?:role|user|agent|persona)",
+        r"new\s+instructions?\s*:",
+        r"override\s+(all\s+)?(?:previous|existing|current)\s+(?:instructions?|rules?|settings?)",
+        r"system\s*prompt\s*:",
+        r"pretend\s+(you\s+are|to\s+be)\s+",
+        r"act\s+as\s+if\s+you\s+(are|were)\s+",
+        r"jailbreak",
+        r"DAN\s+(mode|prompt)",
+        r"developer\s+mode",
+        r"sudo\s+mode",
+        r"reveal\s+(your|the|system)\s+(instructions?|prompt|rules?)",
+        r"show\s+me\s+(your|the|system)\s+(instructions?|prompt|rules?)",
+        r"what\s+(are|is)\s+(your|the)\s+(system|initial|original)\s+(instructions?|prompt)",
+    ]
     
     def __init__(
         self,
@@ -99,6 +118,10 @@ class InputValidator:
         self._suspicious_regex = [
             re.compile(pattern, re.IGNORECASE)
             for pattern in self.SUSPICIOUS_PATTERNS
+        ]
+        self._injection_regex = [
+            re.compile(pattern, re.IGNORECASE)
+            for pattern in self.PROMPT_INJECTION_PATTERNS
         ]
     
     def validate_task(self, task: str) -> ValidationResult:
@@ -156,8 +179,22 @@ class InputValidator:
                     valid=False,
                     reason=f"Forbidden pattern detected: {match.group(0)[:50]}..."
                 )
-        
-        # 6. 可疑模式检查（严格模式）
+
+        # 6. Prompt 注入检测
+        injection_detected = []
+        for regex in self._injection_regex:
+            match = regex.search(task)
+            if match:
+                injection_detected.append(match.group(0))
+
+        if injection_detected:
+            if self.strict_mode:
+                return ValidationResult(
+                    valid=False,
+                    reason=f"Prompt injection detected (strict mode): {injection_detected[0][:50]}"
+                )
+
+        # 7. 可疑模式检查（严格模式）
         if self.strict_mode:
             for regex in self._suspicious_regex:
                 match = regex.search(task)
@@ -166,8 +203,8 @@ class InputValidator:
                         valid=False,
                         reason=f"Suspicious pattern detected (strict mode): {match.group(0)}"
                     )
-        
-        # 7. 清理输入
+
+        # 8. 清理输入
         sanitized = self._sanitize_input(task)
         
         return ValidationResult(
@@ -255,10 +292,10 @@ class InputValidator:
     def check_suspicious_patterns(self, task: str) -> List[str]:
         """
         检查可疑模式（不阻止，仅警告）
-        
+
         Args:
             task: 任务描述
-            
+
         Returns:
             List[str]: 检测到的可疑模式列表
         """
@@ -268,6 +305,23 @@ class InputValidator:
             if match:
                 warnings.append(match.group(0))
         return warnings
+
+    def check_prompt_injection(self, task: str) -> List[str]:
+        """
+        检查 Prompt 注入模式（不阻止，仅警告）
+
+        Args:
+            task: 任务描述
+
+        Returns:
+            List[str]: 检测到的 Prompt 注入模式列表
+        """
+        detected = []
+        for regex in self._injection_regex:
+            match = regex.search(task)
+            if match:
+                detected.append(match.group(0))
+        return detected
 
 
 # 便捷函数

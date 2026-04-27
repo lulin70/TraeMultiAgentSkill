@@ -1,324 +1,220 @@
-# DevSquad — 多智能体软件开发团队
+# DevSquad — 多角色 AI 任务编排器
 
 <p align="center">
-  <strong>按需组建 AI 驱动的专业开发团队。</strong>
+  <strong>一个任务 → 多角色 AI 协作 → 一个结论</strong>
 </p>
 
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-825%2B%20passing-brightgreen" />
-  <img alt="Version" src="https://img.shields.io/badge/V3.3.0-2026--04--24-orange" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-99%20passing-brightgreen" />
+  <img alt="Version" src="https://img.shields.io/badge/V3.3.0-2026--04--27-orange" />
+  <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
 
 ---
 
 ## DevSquad 是什么？
 
-DevSquad 将**单个 AI 编程助手转化为多角色专业开发团队**。不再是单个 AI 处理你的全部任务，而是自动调度到最合适的专家角色组合——架构师、产品经理、编码员、测试工程师、安全审查员等——然后通过共享工作区编排它们的并行协作，通过共识投票解决冲突，最终交付统一的结构化报告。
-
-**把它想象成按需组建的虚拟开发团队，由像真实工程师一样协作的 AI 智能体驱动。**
+DevSquad 将**单个 AI 任务转化为多角色 AI 协作**。自动将你的任务分派到最合适的专家角色组合——架构师、产品经理、编码员、测试工程师、安全审查员、运维工程师——通过共享工作区编排并行协作，通过加权共识投票解决冲突，最终交付统一的结构化报告。
 
 ```
 你: "设计一个微服务电商后端"
          │
          ▼
 ┌─────────────────┐
-│  意图分析 ──→ 自动匹配: 架构师 + 运维 + 安全
+│  输入验证  ──→ 安全检查 (XSS, SQL注入, Prompt注入)
+└────────┬────────┘
+         ▼
+┌─────────────────┐
+│  角色匹配  ──→ 自动匹配: 架构师 + 运维 + 安全
 └────────┬────────┘
          ▼
 ┌──────────┬──────────┬──────────┐
-│  架构师   │   运维    │  安全专家 │
-│ (系统设计) │(基础设施) │(威胁建模) │
+│  架构师   │  运维     │  安全     │   ← ThreadPoolExecutor 并行执行
+│ (设计)    │ (基础设施)│ (威胁)    │
 └────┬──────┴────┬─────┴────┬────┘
      └────────────┼───────────┘
                   ▼
       ┌──────────────────┐
-      │    共享工作板      │ ← 实时同步的黑板
-      │  (Scratchpad)     │
+      │    共享工作区      │ ← 实时同步的协作黑板
       └────────┬─────────┘
                ▼
       ┌──────────────────┐
-      │   共识引擎        │ ← 加权投票 + 否决权
+      │   共识引擎         │ ← 加权投票 + 否决权 + 升级
       └────────┬─────────┘
                ▼
       ┌──────────────────┐
-      │  结构化报告       │ ← 发现 + 行动项 (高/中/低)
+      │   结构化报告       │ ← 发现 + 行动项 (高/中/低)
       └──────────────────┘
 ```
 
 ## 快速开始
 
-### 前置要求
-
-- **Python 3.9+**（纯 Python，无编译依赖）
-- **操作系统**: macOS / Linux / **Windows 10+**
-- 无需外部依赖（所有集成均使用优雅降级）
-
-详细安装说明（含 Windows）请参见 [**INSTALL.md**](INSTALL.md)
-
-### 三种使用方式
-
-**方式一：CLI 命令行（推荐）**
+### 安装
 
 ```bash
 git clone https://github.com/lulin70/DevSquad.git
 cd DevSquad
 
+# 方式 A: 直接运行（无需安装）
 python3 scripts/cli.py dispatch -t "设计用户认证系统"
-python3 scripts/cli.py status
-python3 scripts/cli.py roles
+
+# 方式 B: pip 安装
+pip install -e .
+devsquad dispatch -t "设计用户认证系统"
 ```
 
-**方式二：Python API**
+### 3 种使用方式
 
-```python
-import sys
-sys.path.insert(0, '/path/to/DevSquad')
-from scripts.collaboration.dispatcher import MultiAgentDispatcher
-
-disp = MultiAgentDispatcher()
-result = disp.dispatch("设计 RESTful 用户管理接口")
-print(result.to_markdown())
-disp.shutdown()
-```
-
-**方式三：快速调度（3 种输出格式）**
-
-```python
-from scripts.collaboration.dispatcher import MultiAgentDispatcher
-
-disp = MultiAgentDispatcher()
-
-# 结构化报告（默认表格格式）
-result = disp.quick_dispatch(task, output_format="structured")
-
-# 紧凑模式（每角色一行）
-result = disp.quick_dispatch(task, output_format="compact")
-
-# 详细模式（完整发现 + 行动项）
-result = disp.quick_dispatch(task, output_format="detailed",
-                              include_action_items=True)
-
-disp.shutdown()
-```
-
-## 7 个核心角色
-
-| 角色 | CLI ID | 适用场景 |
-|------|--------|---------|
-| 架构师 | `arch` | 系统设计、技术选型、性能/安全/数据架构 |
-| 产品经理 | `pm` | 需求分析、用户故事、验收标准 |
-| 安全专家 | `sec` | 威胁建模、漏洞审计、合规评估 |
-| 测试专家 | `test` | 测试策略、边界情况、质量保障 |
-| 开发者 | `coder` | 功能实现、代码审查、性能优化、重构 |
-| DevOps | `infra` | CI/CD 流水线、容器化、监控、基础设施 |
-| UI 设计师 | `ui` | UX 流程、交互设计、无障碍性 |
-
-**自动匹配**: 未指定角色时，调度器根据任务意图自动匹配。
-
-## 16 个核心模块
-
-| 模块 | 用途 |
-|------|------|
-| **MultiAgentDispatcher** | 统一入口——一次调用完成所有操作 |
-| **Coordinator** | 全局编排：分解 → 分配 → 收集 → 决策 |
-| **Scratchpad** | 共享黑板，Worker 间实时通信 |
-| **Worker** | 角色执行器——每个角色独立实例 |
-| **ConsensusEngine** | 加权投票 + 否决权 + 人工升级 |
-| **BatchScheduler** | 并行/串行混合调度，自动安全检测 |
-| **ContextCompressor** | 4 级压缩防止上下文溢出 |
-| **PermissionGuard** | 4 级安全门禁（PLAN → DEFAULT → AUTO → BYPASS） |
-| **Skillifier** | 从成功模式中学习，自动生成新技能 |
-| **WarmupManager** | 3 层启动预加载（冷启动 < 300ms） |
-| **MemoryBridge** | 跨会话记忆（7 种类型、TF-IDF、遗忘曲线） |
-| **MCEAdapter** | 记忆分类引擎集成（v0.4，支持多租户） |
-| **WorkBuddyClawSource** | 外部知识桥接（倒排索引搜索、AI 新闻流） |
-| **PromptAssembler** | 动态提示词构建（3 变体 × 5 风格） |
-| **PromptVariantGenerator** | A/B 测试闭环提示词优化 |
-| **TestQualityGuard** | 自动化测试质量审计 |
-
-## 跨平台兼容性
-
-DevSquad 原生支持多种 AI 编程环境：
-
-| 平台 | 集成方式 | 状态 |
-|------|---------|------|
-| **Trae IDE** | `skill-manifest.yaml` 原生 Skill | ✅ 主要平台 |
-| **Claude Code** | `CLAUDE.md` + `.claude/skills/` 自定义 Skill | ✅ 支持 |
-| **OpenClaw** | MCP Server (`scripts/mcp_server.py`，6 个工具) | ✅ 支持 |
-| **终端 / 任意 IDE** | CLI (`scripts/cli.py`) 或 Python 导入 | ✅ 通用 |
-
-### MCP Server（适用于 OpenClaw / Cursor / 任何 MCP 客户端）
+**1. CLI（推荐）**
 
 ```bash
-pip install mcp          # 可选
+# Mock 模式（默认）— 无需 API Key
+python3 scripts/cli.py dispatch -t "设计用户认证系统"
+
+# 真实 AI 输出 — 先设置环境变量
+export OPENAI_API_KEY="sk-..."
+python3 scripts/cli.py dispatch -t "设计认证系统" --backend openai
+
+# 指定角色（短 ID: arch/pm/test/coder/ui/infra/sec）
+python3 scripts/cli.py dispatch -t "设计认证系统" -r arch sec --backend openai
+
+# 实时流式输出
+python3 scripts/cli.py dispatch -t "设计认证系统" -r arch --backend openai --stream
+
+# 其他命令
+python3 scripts/cli.py status          # 系统状态
+python3 scripts/cli.py roles           # 列出可用角色
+python3 scripts/cli.py --version       # 显示版本 (3.3.0)
+```
+
+**2. Python API**
+
+```python
+from scripts.collaboration.dispatcher import MultiAgentDispatcher
+
+# Mock 模式（默认）
+disp = MultiAgentDispatcher()
+result = disp.dispatch("设计 REST API 用户管理系统")
+print(result.to_markdown())
+disp.shutdown()
+
+# 使用 LLM 后端
+from scripts.collaboration.llm_backend import create_backend
+backend = create_backend("openai", api_key="sk-...", base_url="https://api.openai.com/v1")
+disp = MultiAgentDispatcher(llm_backend=backend)
+result = disp.dispatch("设计认证系统", roles=["architect", "security"])
+print(result.summary)
+disp.shutdown()
+```
+
+**3. MCP 服务器（用于 Cursor / 任何 MCP 客户端）**
+
+```bash
+pip install mcp
 python3 scripts/mcp_server.py              # stdio 模式
 python3 scripts/mcp_server.py --port 8080  # SSE 模式
 ```
 
-暴露 6 个工具：`multiagent_dispatch`、`multiagent_quick`、`multiagent_roles`、
-`multiagent_status`、`multiagent_analyze`、`multiagent_shutdown`。
+## 7 个核心角色
 
-## 外部集成
+| 角色 | CLI ID | 别名 | 权重 | 最适合 |
+|------|--------|------|------|--------|
+| 架构师 | `arch` | `architect` | 1.5 | 系统设计、技术选型、性能/安全架构 |
+| 产品经理 | `pm` | `product-manager` | 1.2 | 需求分析、用户故事、验收标准 |
+| 安全专家 | `sec` | `security` | 1.1 | 威胁建模、漏洞审计、合规检查 |
+| 测试专家 | `test` | `tester`, `qa` | 1.0 | 测试策略、质量保证、边界用例 |
+| 编码员 | `coder` | `solo-coder`, `dev` | 1.0 | 功能实现、代码审查、性能优化 |
+| 运维工程师 | `infra` | `devops` | 1.0 | CI/CD、容器化、监控、基础设施 |
+| UI 设计师 | `ui` | `ui-designer` | 0.9 | UX 流程、交互设计、无障碍 |
 
-| 组件 | 状态 | 降级方案 |
-|------|------|---------|
-| **MCE v0.4**（记忆分类引擎） | 可选的多租户/权限支持 | 不可用时优雅降级 |
-| **WorkBuddy Claw** | 外部知识库只读桥接 | 路径不存在时跳过 |
+**自动匹配**：如果不指定角色，调度器会根据任务关键词自动匹配。
 
-所有集成都可选——DevSquad 可完全独立运行。
+## 核心特性
+
+### 安全
+- **输入验证器**：XSS、SQL 注入、命令注入、HTML 注入检测
+- **Prompt 注入防护**：16 种注入模式（忽略先前指令、越狱、DAN 模式、系统提示提取等）
+- **API Key 安全**：仅使用环境变量，绝不通过命令行参数或日志泄露
+- **权限守卫**：4 级安全门（PLAN → DEFAULT → AUTO → BYPASS）
+
+### 性能
+- **ThreadPoolExecutor**：多角色分派的真实并行执行
+- **LLM 缓存**：基于 TTL 的 LRU 缓存 + 磁盘持久化（60-80% 成本降低）
+- **LLM 重试**：指数退避 + 熔断器 + 多后端降级
+- **流式输出**：通过 `--stream` 实时逐块输出 LLM 响应
+
+### 可靠性
+- **检查点管理器**：SHA256 完整性校验、交接文档、自动清理
+- **工作流引擎**：任务→工作流自动拆分、步骤执行、断点恢复
+- **任务完成检查器**：DispatchResult/ScheduleResult 完成度跟踪
+- **共识引擎**：加权投票 + 否决权 + 人工升级
+
+### 开发者体验
+- **配置文件**：`~/.devsquad.yaml` + 环境变量覆盖
+- **Docker 支持**：`docker build -t devsquad .`
+- **GitHub Actions CI**：Python 3.9-3.12 矩阵测试
+- **pip 可安装**：`pip install -e .` + 可选依赖
+
+## 配置
+
+创建 `~/.devsquad.yaml`：
+
+```yaml
+devsquad:
+  backend: openai
+  base_url: https://api.openai.com/v1
+  model: gpt-4
+  timeout: 120
+  output_format: structured
+  strict_validation: false
+  checkpoint_enabled: true
+  cache_enabled: true
+  log_level: WARNING
+```
+
+或使用环境变量（优先级更高）：
+
+```bash
+export DEVSQUAD_BACKEND=openai
+export DEVSQUAD_BASE_URL=https://api.openai.com/v1
+export DEVSQUAD_MODEL=gpt-4
+export OPENAI_API_KEY=sk-...
+```
 
 ## 运行测试
 
 ```bash
-cd /path/to/DevSquad
+# 核心测试（99 个）
+python3 -m pytest scripts/collaboration/core_test.py \
+  scripts/collaboration/role_mapping_test.py \
+  scripts/collaboration/upstream_test.py -v
 
-# 核心协作测试
-python3 -m pytest scripts/collaboration/ -v
-# 预期: ~41 个测试用例，全部通过
-
-# 快速状态检查
-python3 scripts/cli.py status
-# 预期: {"name": "DevSquad", "status": "ready", ...}
-
-# 干跑验证
-python3 scripts/cli.py dispatch -t "测试任务" --dry-run
+# 快速冒烟测试
+python3 scripts/cli.py --version    # 3.3.0
+python3 scripts/cli.py status       # 系统就绪
+python3 scripts/cli.py roles        # 列出 7 个角色
 ```
 
-## 使用示例
+## 文档
 
-### 场景一：架构设计会话
-
-```
-用户: "设计一个微服务电商后端"
-→ DevSquad 自动匹配: 架构师 + 运维 + 安全
-→ 输出: 技术栈建议 + 服务边界划分 + 安全模型
-```
-
-```python
-from scripts.collaboration.dispatcher import MultiAgentDispatcher
-
-disp = MultiAgentDispatcher()
-result = disp.dispatch("设计一个微服务电商后端")
-print(result.to_markdown())
-# → 结构化报告，含发现、冲突和高/中/低优先级行动项
-disp.shutdown()
-```
-
-### 场景二：安全聚焦代码审查
-
-```python
-# 指定特定角色进行聚焦审查
-result = disp.quick_dispatch(
-    "审查 auth.py 的安全漏洞",
-    output_format="detailed",
-    include_action_items=True,
-)
-# → 安全发现 + 测试缺口 + 改进建议
-```
-
-### 场景三：全栈分析
-
-```python
-# 自动匹配模式 —— 让 DevSquad 选择合适的团队
-result = disp.dispatch("评估项目的生产就绪状态")
-# → 多角色评估 + 共识决策结果
-```
-
-### 场景四：紧凑输出（终端/管道）
-
-```bash
-python3 scripts/cli.py quick -t "优化数据库查询性能" -f compact
-# → 每角色一行摘要，机器友好格式
-```
-
-### 场景五：JSON 输出（集成对接）
-
-```bash
-python3 scripts/cli.py dispatch -t "分析 API 接口面" -f json
-# → 可被下游工具、CI/CD 流水线或仪表盘解析
-```
-
-### 场景六：高级编程用法
-
-```python
-from scripts.collaboration import (
-    Coordinator, Scratchpad, Worker, ConsensusEngine,
-    MemoryBridge, MemoryType,
-)
-
-# 创建协作系统
-scratchpad = Scratchpad()
-coordinator = Coordinator(scratchpad=scratchpad)
-
-# 规划多角色任务
-plan = coordinator.plan_task(
-    "设计用户认证系统",
-    [{"role_id": "architect"}, {"role_id": "product-manager"}]
-)
-print(f"任务数: {plan.total_tasks}")
-
-# 记忆桥接查询
-bridge = MemoryBridge()
-result = bridge.recall(MemoryQuery(query_text="微服务架构"))
-print(f"召回记忆: {result.total_found} 条")
-```
-
-## 项目结构
-
-```
-DevSquad/
-├── scripts/
-│   ├── cli.py                    # 主 CLI 入口
-│   ├── mcp_server.py             # MCP Server (OpenClaw/Cursor)
-│   ├── trae_agent.py             # 传统包装器 (/dss 命令)
-│   ├── trae_agent_dispatch_v2.py # 核心调度器（传统）
-│   └── collaboration/            # ★ 16 个核心模块
-│       ├── dispatcher.py         # MultiAgentDispatcher
-│       ├── coordinator.py        # 全局编排器
-│       ├── scratchpad.py         # 共享工作板
-│       ├── worker.py             # 角色执行器
-│       ├── consensus.py          # 加权投票 + 否决
-│       ├── memory_bridge.py      # 跨会话记忆
-│       ├── mce_adapter.py        # MCE v0.4 适配器
-│       └── *_test.py             # 测试套件 (~41 用例)
-├── SKILL.md                      # 英文 Skill 手册
-├── SKILL-CN.md                   # 中文 Skill 手册
-├── SKILL-JP.md                   # 日文 Skill 手册
-├── CLAUDE.md                     # Claude Code 项目指令
-├── INSTALL.md                    # 安装指南（Unix + Windows）
-├── CHANGELOG.md                  # 完整版本历史
-└── docs/                         # 架构规范、计划文档
-```
-
-## 核心理念
-
-> **"一个 AI 是工具，十个 AI 协作者是团队。"**
-
-软件开发本质上是多学科的。没有任何单一视角能媲美一支协调良好、各具专长的团队的质量。DevSquad 让这样的团队按需可用，在数秒内为任何软件任务组建。
+| 文档 | 说明 |
+|------|------|
+| [INSTALL.md](INSTALL.md) | 安装指南 |
+| [EXAMPLES.md](EXAMPLES.md) | 真实使用示例 |
+| [SKILL.md](SKILL.md) | 技能手册 |
+| [README.md](README.md) | English README |
+| [README-JP.md](README-JP.md) | 日本語説明 |
 
 ## 版本历史
 
-| 日期 | 版本 | 要点 |
+| 日期 | 版本 | 亮点 |
 |------|------|------|
-| 2026-04-17 | **V3.3** | 品牌重塑 → DevSquad、WorkBuddy Claw 集成、跨平台（CLI/MCP/ClaudeCode）、MAS→DSS |
-| 2026-04-17 | V3.2 | E2E Demo、MCE 适配器、调度器 UX 增强、交付工作流铁律 |
-| 2026-04-16 | V3.1 | 提示词优化系统（A/B 变体测试） |
-| 2026-04-16 | V3.0 | 完全重构 —— Coordinator/Worker/Scratchpad 架构 |
-| 2026年3月 | V2.x | 双层上下文、Vibe Coding、MCE 集成、代码地图可视化 |
+| 2026-04-27 | **V3.3.0** | 真实 LLM 后端、ThreadPoolExecutor 并行、输入验证+Prompt注入防护、检查点管理、工作流引擎、流式输出、Docker、CI、配置文件、99 单元测试 |
+| 2026-04-17 | V3.2 | E2E Demo、MCE 适配器 |
+| 2026-04-16 | V3.0 | 完整重设计 — Coordinator/Worker/Scratchpad 架构 |
 
 ## 许可证
 
 MIT License — 详见 [LICENSE](LICENSE)
-
-## 链接
-
-| 链接 | URL |
-|------|-----|
-| **GitHub（本仓库）** | https://github.com/lulin70/DevSquad |
-| **原始 / 上游仓库** | https://github.com/weiransoft/TraeMultiAgentSkill |
-| **安装指南** | [INSTALL.md](INSTALL.md) |
-| **Skill 手册** | [SKILL.md](SKILL.md) / [SKILL-CN.md](SKILL-CN.md) / [SKILL-JP.md](SKILL-JP.md) |
-| **英文 Readme** | [README.md](README.md) |
-| **日文 Readme** | [README-JP.md](README-JP.md) |

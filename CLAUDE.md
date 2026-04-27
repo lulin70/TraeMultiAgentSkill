@@ -2,19 +2,19 @@
 
 ## Project Overview
 
-**DevSquad** is a **V3.3 Multi-Agent Orchestration Engine** for software development. It transforms a single AI assistant into a specialized development squad with 7 core roles. Based on the Coordinator/Worker/Scratchpad pattern for parallel agent collaboration.
+**DevSquad** is a **V3.3.0 Multi-Role AI Task Orchestrator**. It transforms a single AI task into multi-role AI collaboration with 7 core roles. Based on the Coordinator/Worker/Scratchpad pattern with ThreadPoolExecutor parallel execution.
 
-**16 Core Modules**: Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor (4-level), PermissionGuard (4-level), Skillifier, WarmupManager (3-layer), MemoryBridge (MCE+Claw), TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource.
+**27 Core Modules**: MultiAgentDispatcher, Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor, PermissionGuard, Skillifier, WarmupManager, MemoryBridge, TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource, RoleMatcher, ReportFormatter, InputValidator, AISemanticMatcher, CheckpointManager, WorkflowEngine, TaskCompletionChecker, CodeMapGenerator, DualLayerContext, SkillRegistry, LLMBackend, ConfigManager.
 
-**Test Coverage**: ~825+ tests, all passing.
-**Cross-Platform**: Trae IDE / ClaudeCode / OpenClaw / Any MCP-compatible client.
+**Test Coverage**: 99 unit tests, all passing.
+**Cross-Platform**: Trae IDE / Claude Code / Cursor / Any MCP client / CLI / Docker.
 
 ## Architecture
 
 ```
-User Task → [Intent Analysis] → [Role Matching] → [Coordinator Orchestration]
-           → [Parallel Worker Execution] → [Scratchpad Real-time Sharing]
-           → [Consensus Decision] → [MCE Classification] → [Result Return]
+User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
+           → [ThreadPoolExecutor Parallel Workers] → [Scratchpad Real-time Sharing]
+           → [ConsensusEngine] → [ReportFormatter] → [Structured Report]
 ```
 
 ## Key Entry Points
@@ -24,20 +24,29 @@ User Task → [Intent Analysis] → [Role Matching] → [Coordinator Orchestrati
 ```python
 from scripts.collaboration.dispatcher import MultiAgentDispatcher
 
+# Mock mode (default)
 disp = MultiAgentDispatcher()
 result = disp.dispatch("Design user authentication system")
 print(result.to_markdown())
+disp.shutdown()
+
+# With LLM backend
+from scripts.collaboration.llm_backend import create_backend
+backend = create_backend("openai", api_key="sk-...", base_url="https://api.openai.com/v1")
+disp = MultiAgentDispatcher(llm_backend=backend)
+result = disp.dispatch("Design auth system", roles=["architect", "security"])
 disp.shutdown()
 ```
 
 ### CLI Entry Point
 
 ```bash
-python -m scripts.demo.e2e_full_demo --task "your task here" --roles architect coder tester
-python -m scripts.demo.e2e_full_demo --json   # JSON output format
+python3 scripts/cli.py dispatch -t "Design auth system" -r arch sec
+python3 scripts/cli.py dispatch -t "Design auth system" --backend openai --stream
+python3 scripts/cli.py status
+python3 scripts/cli.py roles
+python3 scripts/cli.py --version  # 3.3.0
 ```
-
-### Quick Dispatch (3 formats)
 
 ```python
 result = disp.quick_dispatch(task, output_format="structured")  # structured / compact / detailed
