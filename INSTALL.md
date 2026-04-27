@@ -401,11 +401,8 @@ setx DSS_SKILL_PATH "C:\DevSquad"
 Then use from any directory:
 
 ```powershell
-python $env:DSS_SKILL_PATH\scripts\trae_agent.py --task "Analyze requirements" --agent architect
+python scripts\cli.py dispatch -t "Analyze requirements" -r arch
 ```
-
-> **Note**: `trae_agent.py` uses legacy role names. For the modern 10-role system,
-> use `scripts\cli.py` (Option A above) instead.
 
 #### Option C: Python Import
 

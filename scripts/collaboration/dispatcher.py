@@ -82,6 +82,75 @@ from .report_formatter import ReportFormatter
 ROLE_TEMPLATES = {rid: {"name": rdef.name, "prompt": rdef.prompt, "keywords": rdef.keywords} for rid, rdef in ROLE_REGISTRY.items()}
 PLANNED_ROLES = {rid: {"name": rdef.name, "status": rdef.status, "description": rdef.description} for rid, rdef in get_planned_roles().items()}
 
+I18N = {
+    "zh": {
+        "title": "# 🤖 Multi-Agent 协作结果",
+        "task": "**任务**",
+        "status_ok": "✅ 成功",
+        "status_fail": "❌ 失败",
+        "duration": "**耗时**",
+        "roles": "**参与角色**",
+        "summary": "## 📋 执行摘要",
+        "output": "## 👥 各角色产出",
+        "scratchpad": "## 📝 Scratchpad 共享区",
+        "consensus": "## 🗳️ 共识决策",
+        "compression": "## 📦 上下文压缩",
+        "memory": "## 🧠 记忆系统",
+        "permission": "## 🔒 权限检查",
+        "skill": "## ⚡ Skill 学习",
+        "quality": "## 🛡️ 测试质量审计",
+        "errors": "## ⚠️ 错误信息",
+        "mock_banner": "> ⚠️ **MOCK 模式** — 这是模拟输出，未调用真实 LLM。",
+        "mock_hint": "> 使用 `--backend openai`（或 `anthropic`）并提供有效 API Key 获取真实 AI 分析。",
+        "no_output": "*(无输出)*",
+        "no_summary": "(无摘要)",
+    },
+    "en": {
+        "title": "# 🤖 Multi-Agent Collaboration Result",
+        "task": "**Task**",
+        "status_ok": "✅ Success",
+        "status_fail": "❌ Failed",
+        "duration": "**Duration**",
+        "roles": "**Roles**",
+        "summary": "## 📋 Executive Summary",
+        "output": "## 👥 Role Outputs",
+        "scratchpad": "## 📝 Scratchpad",
+        "consensus": "## 🗳️ Consensus Decisions",
+        "compression": "## 📦 Context Compression",
+        "memory": "## 🧠 Memory System",
+        "permission": "## 🔒 Permission Checks",
+        "skill": "## ⚡ Skill Learning",
+        "quality": "## 🛡️ Test Quality Audit",
+        "errors": "## ⚠️ Errors",
+        "mock_banner": "> ⚠️ **MOCK MODE** — This is simulated output. No real LLM was called.",
+        "mock_hint": "> Use `--backend openai` (or `anthropic`) with a valid API key for real AI analysis.",
+        "no_output": "*(no output)*",
+        "no_summary": "(no summary)",
+    },
+    "ja": {
+        "title": "# 🤖 マルチエージェントコラボレーション結果",
+        "task": "**タスク**",
+        "status_ok": "✅ 成功",
+        "status_fail": "❌ 失敗",
+        "duration": "**所要時間**",
+        "roles": "**参加ロール**",
+        "summary": "## 📋 実行サマリー",
+        "output": "## 👥 ロール出力",
+        "scratchpad": "## 📝 スクラッチパッド",
+        "consensus": "## 🗳️ コンセンサス決定",
+        "compression": "## 📦 コンテキスト圧縮",
+        "memory": "## 🧠 メモリシステム",
+        "permission": "## 🔒 権限チェック",
+        "skill": "## ⚡ スキル学習",
+        "quality": "## 🛡️ テスト品質監査",
+        "errors": "## ⚠️ エラー",
+        "mock_banner": "> ⚠️ **モックモード** — これはシミュレーション出力です。実際のLLMは呼び出されていません。",
+        "mock_hint": "> 実際のAI分析には `--backend openai`（または `anthropic`）と有効なAPIキーを使用してください。",
+        "no_output": "*(出力なし)*",
+        "no_summary": "(サマリーなし)",
+    },
+}
+
 
 @dataclass
 class DispatchResult:
@@ -101,6 +170,7 @@ class DispatchResult:
     worker_results: List[Dict[str, Any]] = field(default_factory=list)
     errors: List[str] = field(default_factory=list)
     quality_report: Optional[str] = None
+    lang: str = "zh"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -122,20 +192,28 @@ class DispatchResult:
         }
 
     def to_markdown(self) -> str:
-        lines = [
-            f"# 🤖 Multi-Agent 协作结果",
+        t = I18N.get(self.lang, I18N["zh"])
+        is_mock = any(
+            '[MOCK MODE]' in (wr.get('output', '') or '')
+            for wr in (self.worker_results or [])
+        )
+        lines = []
+        if is_mock:
+            lines.extend([t["mock_banner"], t["mock_hint"], ""])
+        lines.extend([
+            t["title"],
             "",
-            f"**任务**: {self.task_description}",
-            f"**状态**: {'✅ 成功' if self.success else '❌ 失败'}",
-            f"**耗时**: {self.duration_seconds:.2f}s",
-            f"**参与角色**: {', '.join(self.matched_roles)}",
+            f"{t['task']}: {self.task_description}",
+            f"**{'Status' if self.lang != 'zh' else '状态'}**: {t['status_ok'] if self.success else t['status_fail']}",
+            f"{t['duration']}: {self.duration_seconds:.2f}s",
+            f"{t['roles']}: {', '.join(self.matched_roles)}",
             "",
-            "## 📋 执行摘要",
-            self.summary or "(无摘要)",
-        ]
+            t["summary"],
+            self.summary or t["no_summary"],
+        ])
         if self.worker_results:
             lines.append("")
-            lines.append("## 👥 各角色产出")
+            lines.append(t["output"])
             role_icons = {
                 "architect": "🏗️", "product-manager": "📋", "security": "🔒",
                 "tester": "🧪", "solo-coder": "💻", "devops": "⚙️", "ui-designer": "🎨",
@@ -152,12 +230,12 @@ class DispatchResult:
                 if output:
                     lines.append(output)
                 else:
-                    lines.append("*(no output)*")
+                    lines.append(t["no_output"])
         if self.scratchpad_summary:
-            lines.extend(["", "## 📝 Scratchpad 共享区", self.scratchpad_summary])
+            lines.extend(["", t["scratchpad"], self.scratchpad_summary])
         if self.consensus_records:
             lines.append("")
-            lines.append("## 🗳️ 共识决策")
+            lines.append(t["consensus"])
             for cr in self.consensus_records:
                 icon = '✅' if cr.get('outcome') == 'APPROVED' else '⚠️'
                 lines.append(f"- [{icon}] {cr.get('topic', '')}: {cr.get('outcome', '')}")
@@ -165,37 +243,35 @@ class DispatchResult:
             ci = self.compression_info
             lines.extend([
                 "",
-                "## 📦 上下文压缩",
-                f"- 级别: {ci.get('level', 'N/A')}",
-                f"- 原始: {ci.get('original_tokens', 0)} tokens",
-                f"- 压缩后: {ci.get('compressed_tokens', 0)} tokens",
-                f"- 节省: {ci.get('reduction_pct', 0)}%",
+                t["compression"],
+                f"- {t['duration'].replace('**', '')}: {ci.get('level', 'N/A')}",
+                f"- {ci.get('original_tokens', 0)} tokens → {ci.get('compressed_tokens', 0)} tokens ({ci.get('reduction_pct', 0)}%)",
             ])
         if self.memory_stats:
             ms = self.memory_stats
             lines.extend([
                 "",
-                "## 🧠 记忆系统",
-                f"- 总记忆数: {ms.get('total_memories', 0)}",
-                f"- 知识条目: {ms.get('knowledge_count', 0)}",
-                f"- 情节记录: {ms.get('episodic_count', 0)}",
+                t["memory"],
+                f"- Total: {ms.get('total_memories', 0)}",
+                f"- Knowledge: {ms.get('knowledge_count', 0)}",
+                f"- Episodic: {ms.get('episodic_count', 0)}",
             ])
         if self.permission_checks:
             lines.append("")
-            lines.append("## 🔒 权限检查")
+            lines.append(t["permission"])
             for pc in self.permission_checks:
                 icon = '✅' if pc.get('allowed') else '🚫'
                 lines.append(f"- [{icon}] {pc.get('action', '')}: {pc.get('decision', '')}")
         if self.skill_proposals:
             lines.append("")
-            lines.append("## ⚡ Skill 学习")
+            lines.append(t["skill"])
             for sp in self.skill_proposals:
-                lines.append(f"- 📌 {sp.get('title', '新Skill')}: {sp.get('confidence', 0):.0%}")
+                lines.append(f"- 📌 {sp.get('title', 'New Skill')}: {sp.get('confidence', 0):.0%}")
         if self.quality_report:
-            lines.extend(["", "## 🛡️ 测试质量审计"])
+            lines.extend(["", t["quality"]])
             lines.append(self.quality_report)
         if self.errors:
-            lines.extend(["", "## ⚠️ 错误信息"])
+            lines.extend(["", t["errors"]])
             for e in self.errors:
                 lines.append(f"- {e}")
         return "\n".join(lines)
@@ -221,7 +297,9 @@ class MultiAgentDispatcher:
                  memory_dir: Optional[str] = None,
                  permission_level: PermissionLevel = PermissionLevel.DEFAULT,
                  mce_adapter=None,
-                 llm_backend=None):
+                 llm_backend=None,
+                 stream: bool = False,
+                 lang: str = "auto"):
         """
         Args:
             persist_dir: Scratchpad persistence directory
@@ -248,6 +326,8 @@ class MultiAgentDispatcher:
         self.compression_threshold = compression_threshold
         self.permission_level = permission_level
         self.llm_backend = llm_backend
+        self.stream = stream
+        self.lang = lang
 
         os.makedirs(self.persist_dir, exist_ok=True)
         os.makedirs(self.memory_dir, exist_ok=True)
@@ -265,6 +345,7 @@ class MultiAgentDispatcher:
             enable_compression=self.enable_compression,
             compression_threshold=self.compression_threshold,
             llm_backend=self.llm_backend,
+            stream=self.stream,
         )
 
         self.batch_scheduler = BatchScheduler()
@@ -354,6 +435,20 @@ class MultiAgentDispatcher:
         start_time = time.time()
         errors = []
 
+        lang = self.lang
+        if lang == "auto":
+            import locale
+            try:
+                loc = locale.getdefaultlocale()[0] or ""
+                if loc.startswith("ja"):
+                    lang = "ja"
+                elif loc.startswith("zh"):
+                    lang = "zh"
+                else:
+                    lang = "en"
+            except Exception:
+                lang = "en"
+
         validator = InputValidator()
         task_result = validator.validate_task(task_description)
         if not task_result.valid:
@@ -364,6 +459,7 @@ class MultiAgentDispatcher:
                 worker_results=[],
                 summary=f"Input validation failed: {task_result.reason}",
                 errors=[task_result.reason],
+                lang=lang,
             )
         task_description = task_result.sanitized_input or task_description
 
@@ -377,6 +473,7 @@ class MultiAgentDispatcher:
                     worker_results=[],
                     summary=f"Role validation failed: {roles_result.reason}",
                     errors=[roles_result.reason],
+                    lang=lang,
                 )
 
         warnings = validator.check_suspicious_patterns(task_description)
@@ -404,6 +501,7 @@ class MultiAgentDispatcher:
                     matched_roles=role_ids,
                     summary=f"[DRY RUN] 将调度角色: {', '.join(role_ids)}",
                     duration_seconds=time.time() - start_time,
+                    lang=lang,
                 )
 
             step2_time = time.time()
@@ -635,6 +733,7 @@ class MultiAgentDispatcher:
                 duration_seconds=total_duration,
                 worker_results=worker_results,
                 errors=errors,
+                lang=lang,
             )
 
             self._dispatch_history.append(result)
@@ -656,6 +755,7 @@ class MultiAgentDispatcher:
                 summary=f"调度异常: {e}",
                 errors=[str(e)],
                 duration_seconds=time.time() - start_time,
+                lang=lang,
             )
 
     def _build_summary(self, task: str, roles: List[str],

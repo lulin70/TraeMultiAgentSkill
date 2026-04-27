@@ -9,8 +9,7 @@ WORKDIR /app
 COPY pyproject.toml ./
 COPY scripts/ ./scripts/
 
-RUN pip install --no-cache-dir -e ".[dev]" 2>/dev/null || \
-    pip install --no-cache-dir pytest pytest-asyncio pyyaml
+RUN pip install --no-cache-dir -e ".[dev]"
 
 ENV DEVSQUAD_LLM_BACKEND=mock
 ENV DEVSQUAD_LOG_LEVEL=WARNING

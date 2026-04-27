@@ -14,6 +14,10 @@ import json
 import sys
 import os
 
+if sys.version_info < (3, 9):
+    print("Error: DevSquad requires Python 3.9+. Current: " + sys.version, file=sys.stderr)
+    sys.exit(1)
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from scripts.collaboration.dispatcher import MultiAgentDispatcher
@@ -92,6 +96,8 @@ def cmd_dispatch(args):
         "enable_permission": not args.skip_permission,
         "enable_memory": not args.no_memory,
         "enable_skillify": not args.no_skillify,
+        "stream": getattr(args, 'stream', False),
+        "lang": getattr(args, 'lang', 'auto'),
     }
     if args.permission_level:
         kwargs["permission_level"] = PermissionLevel(args.permission_level.upper())
@@ -218,6 +224,7 @@ Environment Variables (API keys are read from env vars only, never command line)
     p_dispatch.add_argument("--no-warmup", action="store_true", help="Disable startup warmup")
     p_dispatch.add_argument("--no-compression", action="store_true", help="Disable context compression")
     p_dispatch.add_argument("--stream", action="store_true", help="Stream LLM output in real-time (requires --backend)")
+    p_dispatch.add_argument("--lang", choices=["auto", "en", "zh", "ja"], default="auto", help="Output language (default: auto-detect)")
     p_dispatch.add_argument("--skip-permission", action="store_true", help="Skip permission checks")
     p_dispatch.add_argument("--no-memory", action="store_true", help="Disable memory bridge")
     p_dispatch.add_argument("--no-skillify", action="store_true", help="Disable skill learning")

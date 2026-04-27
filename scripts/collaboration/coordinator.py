@@ -63,7 +63,8 @@ class Coordinator:
                  persist_dir: Optional[str] = None,
                  enable_compression: bool = True,
                  compression_threshold: int = 100000,
-                 llm_backend=None):
+                 llm_backend=None,
+                 stream: bool = False):
         """
         初始化协调者
 
@@ -83,6 +84,7 @@ class Coordinator:
         self.compressor = ContextCompressor(token_threshold=compression_threshold) if enable_compression else None
         self._message_buffer: List[Message] = []
         self.llm_backend = llm_backend
+        self.stream = stream
 
     def plan_task(self, task_description: str,
                   available_roles: List[Dict[str, str]],
@@ -175,6 +177,7 @@ class Coordinator:
                 role_prompt=role_prompt,
                 scratchpad=self.scratchpad,
                 llm_backend=self.llm_backend,
+                stream=getattr(self, 'stream', False),
             )
             self.workers[worker_id] = worker
         return list(self.workers.values())

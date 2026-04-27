@@ -438,7 +438,7 @@ class WorkerFactory:
 
     @staticmethod
     def create(worker_id: str, role_id: str, role_prompt: str,
-               scratchpad: Scratchpad, llm_backend=None) -> Worker:
+               scratchpad: Scratchpad, llm_backend=None, stream: bool = False) -> Worker:
         """
         创建单个 Worker 实例
 
@@ -447,11 +447,13 @@ class WorkerFactory:
             role_id: 角色标识
             role_prompt: 角色提示词
             scratchpad: 共享黑板实例
+            llm_backend: LLM执行后端
+            stream: 是否启用流式输出
 
         Returns:
             Worker: 新创建的 Worker 实例
         """
-        return Worker(worker_id, role_id, role_prompt, scratchpad, llm_backend)
+        return Worker(worker_id, role_id, role_prompt, scratchpad, llm_backend, stream=stream)
 
     @staticmethod
     def create_batch(workers_config: List[Dict[str, str]],

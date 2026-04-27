@@ -67,6 +67,7 @@ class ConfigManager:
     """
 
     ENV_MAP = {
+        "DEVSQUAD_LLM_BACKEND": "backend",
         "DEVSQUAD_BACKEND": "backend",
         "DEVSQUAD_BASE_URL": "base_url",
         "DEVSQUAD_MODEL": "model",
@@ -74,9 +75,12 @@ class ConfigManager:
         "DEVSQUAD_MAX_ROLES": ("max_roles", int),
         "DEVSQUAD_OUTPUT_FORMAT": "output_format",
         "DEVSQUAD_STRICT": ("strict_validation", lambda v: v.lower() in ("true", "1", "yes")),
+        "DEVSQUAD_STRICT_VALIDATION": ("strict_validation", lambda v: v.lower() in ("true", "1", "yes")),
         "DEVSQUAD_LOG_LEVEL": "log_level",
         "DEVSQUAD_CHECKPOINT_DIR": "checkpoint_dir",
         "DEVSQUAD_CACHE_DIR": "cache_dir",
+        "DEVSQUAD_CHECKPOINT_ENABLED": ("checkpoint_enabled", lambda v: v.lower() in ("true", "1", "yes")),
+        "DEVSQUAD_CACHE_ENABLED": ("cache_enabled", lambda v: v.lower() in ("true", "1", "yes")),
     }
 
     def __init__(self, config_path: Optional[str] = None):

@@ -233,7 +233,7 @@ devsquad:
 Or use environment variables (higher priority):
 
 ```bash
-export DEVSQUAD_BACKEND=openai
+export DEVSQUAD_LLM_BACKEND=openai
 export DEVSQUAD_BASE_URL=https://api.openai.com/v1
 export DEVSQUAD_MODEL=gpt-4
 export OPENAI_API_KEY=sk-...
