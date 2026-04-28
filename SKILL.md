@@ -21,7 +21,7 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
            → [ConsensusEngine] → [ReportFormatter] → [Structured Report]
 ```
 
-## Architecture Overview (20 Core Modules)
+## Architecture Overview (27 Core Modules)
 
 | # | Module | File | Responsibility |
 |---|-------|------|---------------|

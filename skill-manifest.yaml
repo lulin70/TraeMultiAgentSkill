@@ -1,12 +1,11 @@
 name: devsquad
 version: 3.3.0
 description: |
-  DevSquad — Multi-Agent Orchestration Engine for Software Development.
-
-  Core: One task → Multi-role AI collaboration → One conclusion.
-  Architecture: Coordinator/Worker/Scratchpad with Consensus voting.
-
-  5 core roles + 5 planned, 16 modules (~825+ tests passing).
+  DevSquad V3.3.0 — Multi-Role AI Task Orchestrator.
+  One task → Multi-role AI collaboration → One conclusion.
+  7 core roles (architect/pm/security/tester/coder/devops/ui), real LLM backend
+  (OpenAI/Anthropic), CLI + MCP + Python API. 99 unit tests, all passing.
+  ThreadPoolExecutor parallel, CheckpointManager, WorkflowEngine, streaming, Docker, CI.
 status: active
 ai_enhanced: true
 ai_capabilities:
@@ -22,14 +21,16 @@ ai_capabilities:
 capabilities:
   - name: multi-agent-dispatcher
     description: |
-      V3.0 统一调度入口 - 一键完成多Agent协作
+      V3.3.0 统一调度入口 - 一键完成多Agent协作
 
       核心能力：
-      - 任务意图分析与角色自动匹配
-      - Coordinator全局编排多Worker并行执行
+      - 任务意图分析与角色自动匹配（中英双语关键词）
+      - InputValidator 安全验证 + Prompt注入检测
+      - ThreadPoolExecutor 并行Worker执行
       - Scratchpad实时共享发现/决策/冲突
       - Consensus共识决策解决分歧
-      - 完整结果报告(Markdown格式)
+      - ReportFormatter 结构化报告（中/英/日三语）
+      - LLM Backend: Mock/OpenAI/Anthropic + 流式输出
     input_schema:
       type: object
       properties:
@@ -40,11 +41,22 @@ capabilities:
           type: array
           items:
             type: string
-          description: 指定参与角色(可选，默认自动匹配)
+          description: 指定参与角色(可选，默认自动匹配，短ID: arch/pm/test/coder/ui/infra/sec)
         mode:
           type: string
           enum: [auto, parallel, sequential, consensus]
           description: 调度模式
+        backend:
+          type: string
+          enum: [mock, openai, anthropic]
+          description: LLM后端(默认mock)
+        lang:
+          type: string
+          enum: [auto, zh, en, ja]
+          description: 输出语言
+        stream:
+          type: boolean
+          description: 流式输出(需backend)
         dry_run:
           type: boolean
           description: 仅模拟不执行
@@ -178,12 +190,17 @@ metadata:
 
   version_history:
     - version: 3.3.0
-      date: "2026-04-18"
+      date: "2026-04-27"
       changes:
-        - Brand unification: TraeMultiAgentSkill → DevSquad
-        - Role system: 5 core + 5 planned roles with alias mapping
-        - Cross-platform: Trae/ClaudeCode/OpenClaw(MCP)/CLI
-        - 16 modules, ~825+ tests passing
+        - Real LLM backends (OpenAI/Anthropic/Mock) + streaming
+        - ThreadPoolExecutor parallel execution
+        - InputValidator + 16-pattern prompt injection detection
+        - 7 core roles with bilingual keyword matching (CN+EN)
+        - CheckpointManager, WorkflowEngine, TaskCompletionChecker
+        - CodeMapGenerator, DualLayerContext, SkillRegistry, ConfigManager
+        - Docker + GitHub Actions CI + pip installable
+        - i18n support (zh/en/ja)
+        - 27 modules, 99 unit tests all passing
 
     - version: 3.0.0
       date: "2026-04-16"
@@ -235,4 +252,4 @@ metadata:
         - 初始版本
 
 created_at: "2026-03-16T00:00:00"
-updated_at: "2026-04-16T00:00:00"
+updated_at: "2026-04-27"

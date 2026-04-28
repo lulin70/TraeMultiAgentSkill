@@ -82,8 +82,8 @@ def create_mcp_server() -> "FastMCP":
 
         Args:
             task: The task description to collaborate on.
-            roles: Optional list of roles (architect/pm/coder/tester/ui/devops/security/data/reviewer/optimizer).
-                   If omitted, auto-matches based on task intent.
+            roles: Optional list of roles (arch/pm/sec/test/coder/infra/ui).
+                   If omitted, auto-matches based on task intent (supports CN+EN keywords).
             mode: Execution mode — 'auto'(default), 'parallel', 'sequential', or 'consensus'.
             output_format: Output format — 'markdown'(default), 'json', or 'compact'.
             dry_run: If True, only analyze without execution.
@@ -182,10 +182,12 @@ def create_mcp_server() -> "FastMCP":
                 "name": "DevSquad",
                 "version": "3.3.0",
                 "status": "ready",
-                "modules": 16,
-                "tests": "~825+",
-                "roles": 10,
+                "modules": 27,
+                "tests": 99,
+                "roles": 7,
                 "modes": ["auto", "parallel", "sequential", "consensus"],
+                "backends": ["mock", "openai", "anthropic"],
+                "languages": ["zh", "en", "ja"],
                 "features": {
                     "memory_bridge": True,
                     "mce_adapter": True,
@@ -193,6 +195,11 @@ def create_mcp_server() -> "FastMCP":
                     "context_compression": True,
                     "permission_guard": True,
                     "skill_learning": True,
+                    "streaming": True,
+                    "checkpoint": True,
+                    "workflow_engine": True,
+                    "prompt_injection_detection": True,
+                    "i18n": True,
                 },
             }, ensure_ascii=False, indent=2)
         except Exception as e:

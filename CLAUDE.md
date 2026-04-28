@@ -104,7 +104,8 @@ DevSquad/
 ## Code Conventions
 
 - **Language**: All code comments and docstrings in **English**
-- **Business data** (ROLE_TEMPLATES prompts, report format strings): Chinese (CN locale)
+- **Output i18n**: `--lang zh/en/ja/auto` — reports in Chinese (default), English, or Japanese
+- **Business data** (ROLE_TEMPLATES prompts): Chinese (CN locale), with bilingual keyword matching
 - **Documentation**: EN (README.md/SKILL.md) + CN (README-CN.md/SKILL-CN.md) + JP variants
 - **Testing**: pytest-based, 99 unit tests
 - **Style**: PEP 8, dataclasses for models, type hints throughout
