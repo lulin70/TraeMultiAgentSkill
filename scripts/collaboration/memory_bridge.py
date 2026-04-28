@@ -670,11 +670,17 @@ class JsonMemoryStore(MemoryStore):
         }
 
     def _get_file_path(self, mtype: MemoryType, item_id: str) -> Path:
+        if '..' in item_id or '/' in item_id or '\\' in item_id:
+            raise ValueError(f"Invalid item_id (path traversal): {item_id}")
         dir_path = self._type_dirs.get(mtype, self.base_dir / "other")
         if mtype == MemoryType.KNOWLEDGE:
             domain = "general"
-            return dir_path / domain / f"{item_id}.json"
-        return dir_path / f"{item_id}.json"
+            path = dir_path / domain / f"{item_id}.json"
+        else:
+            path = dir_path / f"{item_id}.json"
+        if not path.resolve().is_relative_to(self.base_dir.resolve()):
+            raise ValueError(f"Path traversal detected: {item_id}")
+        return path
 
     def save(self, memory_type: MemoryType, data: Dict) -> str:
         item_id = data.get("id", f"{memory_type.value}_{uuid.uuid4().hex[:12]}_{int(time.time())}")

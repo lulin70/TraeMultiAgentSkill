@@ -8,6 +8,7 @@ Version: 3.3.0
 """
 
 import re
+import unicodedata
 from typing import Dict, List, Optional
 from dataclasses import dataclass
 
@@ -90,13 +91,18 @@ class InputValidator:
         r"reveal\s+(your|the|system)\s+(instructions?|prompt|rules?)",
         r"show\s+me\s+(your|the|system)\s+(instructions?|prompt|rules?)",
         r"what\s+(are|is)\s+(your|the)\s+(system|initial|original)\s+(instructions?|prompt)",
+        r"忽略\s*(之前的|上面的|先前的)?\s*(指令|指示|规则|提示)",
+        r"忘记\s*(之前的|上面的|先前的)?\s*(指令|上下文|内容)",
+        r"假装\s*(你是|你是一个)",
+        r"扮演\s*(管理员|root|系统|超级用户)",
+        r"前の指示を無視",
     ]
     
     def __init__(
         self,
         max_length: int = MAX_TASK_LENGTH,
         min_length: int = MIN_TASK_LENGTH,
-        strict_mode: bool = False
+        strict_mode: bool = True
     ):
         """
         初始化验证器
@@ -161,6 +167,10 @@ class InputValidator:
                 valid=False,
                 reason="Task cannot be empty or whitespace only"
             )
+
+        # 3.5 Unicode 规范化 + 零宽字符移除
+        task_normalized = unicodedata.normalize('NFKC', task)
+        task_normalized = re.sub(r'[\u200b-\u200f\u2028-\u202f\ufeff]', '', task_normalized)
         
         # 4. 字符编码检查
         try:
@@ -171,19 +181,19 @@ class InputValidator:
                 reason=f"Invalid UTF-8 encoding: {e}"
             )
         
-        # 5. 危险模式检查
+        # 5. 危险模式检查（使用规范化文本）
         for regex in self._forbidden_regex:
-            match = regex.search(task)
+            match = regex.search(task_normalized)
             if match:
                 return ValidationResult(
                     valid=False,
-                    reason=f"Forbidden pattern detected: {match.group(0)[:50]}..."
+                    reason="Input contains forbidden content"
                 )
 
-        # 6. Prompt 注入检测
+        # 6. Prompt 注入检测（使用规范化文本）
         injection_detected = []
         for regex in self._injection_regex:
-            match = regex.search(task)
+            match = regex.search(task_normalized)
             if match:
                 injection_detected.append(match.group(0))
 
@@ -191,7 +201,7 @@ class InputValidator:
             if self.strict_mode:
                 return ValidationResult(
                     valid=False,
-                    reason=f"Prompt injection detected (strict mode): {injection_detected[0][:50]}"
+                    reason="Input contains potentially harmful content"
                 )
 
         # 7. 可疑模式检查（严格模式）

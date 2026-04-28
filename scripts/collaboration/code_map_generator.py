@@ -78,8 +78,12 @@ class CodeMapGenerator:
             return json.dumps(modules, indent=2, ensure_ascii=False)
         return modules
 
+    MAX_FILE_SIZE = 1 * 1024 * 1024
+
     def _scan_file(self, file_path: Path) -> Optional[Dict[str, Any]]:
         try:
+            if file_path.stat().st_size > self.MAX_FILE_SIZE:
+                return None
             source = file_path.read_text(encoding='utf-8')
             tree = ast.parse(source)
         except (SyntaxError, UnicodeDecodeError):

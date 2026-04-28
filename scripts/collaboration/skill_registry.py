@@ -57,6 +57,8 @@ class SkillRegistry:
         self._load()
 
     def register(self, skill: SkillEntry, handler: Optional[Callable] = None) -> str:
+        if '..' in skill.skill_id or '/' in skill.skill_id or '\\' in skill.skill_id:
+            raise ValueError(f"Invalid skill_id: {skill.skill_id}")
         self.skills[skill.skill_id] = skill
         if handler:
             self.handlers[skill.skill_id] = handler

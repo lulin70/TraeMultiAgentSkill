@@ -108,13 +108,8 @@ class TraeBackend(LLMBackend):
 
 
 class OpenAIBackend(LLMBackend):
-    """
-    Backend for OpenAI-compatible APIs (OpenAI, Azure, local models).
-
-    Requires the 'openai' package: pip install openai
-    """
-
     DEFAULT_TIMEOUT = 120
+    MAX_RETRIES = 3
 
     def __init__(
         self,
@@ -125,35 +120,50 @@ class OpenAIBackend(LLMBackend):
         max_tokens: int = 4096,
         timeout: Optional[int] = None,
     ):
-        self.api_key = api_key
+        self._api_key = api_key
         self.model = model
         self.base_url = base_url
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.timeout = timeout or self.DEFAULT_TIMEOUT
         self._client = None
+        self._client_lock = __import__('threading').Lock()
+
+    def __repr__(self):
+        return f"OpenAIBackend(model={self.model}, base_url={self.base_url})"
 
     def _get_client(self):
         if self._client is None:
-            try:
-                from openai import OpenAI
-                kwargs = {"api_key": self.api_key, "timeout": self.timeout}
-                if self.base_url:
-                    kwargs["base_url"] = self.base_url
-                self._client = OpenAI(**kwargs)
-            except ImportError:
-                raise ImportError("openai package required: pip install openai")
+            with self._client_lock:
+                if self._client is None:
+                    try:
+                        from openai import OpenAI
+                        kwargs = {"api_key": self._api_key, "timeout": self.timeout}
+                        if self.base_url:
+                            kwargs["base_url"] = self.base_url
+                        self._client = OpenAI(**kwargs)
+                    except ImportError:
+                        raise ImportError("openai package required: pip install openai")
         return self._client
 
     def generate(self, prompt: str, **kwargs) -> str:
+        import time
         client = self._get_client()
-        response = client.chat.completions.create(
-            model=kwargs.get("model", self.model),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=kwargs.get("temperature", self.temperature),
-            max_tokens=kwargs.get("max_tokens", self.max_tokens),
-        )
-        return response.choices[0].message.content or ""
+        last_error = None
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                response = client.chat.completions.create(
+                    model=kwargs.get("model", self.model),
+                    messages=[{"role": "user", "content": prompt}],
+                    temperature=kwargs.get("temperature", self.temperature),
+                    max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                )
+                return response.choices[0].message.content or ""
+            except Exception as e:
+                last_error = e
+                if attempt < self.MAX_RETRIES - 1:
+                    time.sleep(2 ** attempt)
+        raise last_error
 
     def generate_stream(self, prompt: str, **kwargs) -> Generator[str, None, None]:
         client = self._get_client()
@@ -178,13 +188,8 @@ class OpenAIBackend(LLMBackend):
 
 
 class AnthropicBackend(LLMBackend):
-    """
-    Backend for Anthropic Claude API.
-
-    Requires the 'anthropic' package: pip install anthropic
-    """
-
     DEFAULT_TIMEOUT = 120
+    MAX_RETRIES = 3
 
     def __init__(
         self,
@@ -193,29 +198,44 @@ class AnthropicBackend(LLMBackend):
         max_tokens: int = 4096,
         timeout: Optional[int] = None,
     ):
-        self.api_key = api_key
+        self._api_key = api_key
         self.model = model
         self.max_tokens = max_tokens
         self.timeout = timeout or self.DEFAULT_TIMEOUT
         self._client = None
+        self._client_lock = __import__('threading').Lock()
+
+    def __repr__(self):
+        return f"AnthropicBackend(model={self.model})"
 
     def _get_client(self):
         if self._client is None:
-            try:
-                from anthropic import Anthropic
-                self._client = Anthropic(api_key=self.api_key, timeout=self.timeout)
-            except ImportError:
-                raise ImportError("anthropic package required: pip install anthropic")
+            with self._client_lock:
+                if self._client is None:
+                    try:
+                        from anthropic import Anthropic
+                        self._client = Anthropic(api_key=self._api_key, timeout=self.timeout)
+                    except ImportError:
+                        raise ImportError("anthropic package required: pip install anthropic")
         return self._client
 
     def generate(self, prompt: str, **kwargs) -> str:
+        import time
         client = self._get_client()
-        response = client.messages.create(
-            model=kwargs.get("model", self.model),
-            max_tokens=kwargs.get("max_tokens", self.max_tokens),
-            messages=[{"role": "user", "content": prompt}],
-        )
-        return response.content[0].text if response.content else ""
+        last_error = None
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                response = client.messages.create(
+                    model=kwargs.get("model", self.model),
+                    max_tokens=kwargs.get("max_tokens", self.max_tokens),
+                    messages=[{"role": "user", "content": prompt}],
+                )
+                return response.content[0].text if response.content else ""
+            except Exception as e:
+                last_error = e
+                if attempt < self.MAX_RETRIES - 1:
+                    time.sleep(2 ** attempt)
+        raise last_error
 
     def generate_stream(self, prompt: str, **kwargs) -> Generator[str, None, None]:
         client = self._get_client()

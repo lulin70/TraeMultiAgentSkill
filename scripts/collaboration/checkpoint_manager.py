@@ -149,11 +149,23 @@ class CheckpointManager:
         json_str = json.dumps(data_for_hash, sort_keys=True, ensure_ascii=False)
         return hashlib.sha256(json_str.encode('utf-8')).hexdigest()
 
+    def _validate_id(self, id_str: str) -> None:
+        if '..' in id_str or '/' in id_str or '\\' in id_str:
+            raise ValueError(f"Invalid ID (path traversal detected): {id_str}")
+
     def _get_checkpoint_path(self, checkpoint_id: str) -> Path:
-        return self.checkpoints_dir / f"{checkpoint_id}.json"
+        self._validate_id(checkpoint_id)
+        path = self.checkpoints_dir / f"{checkpoint_id}.json"
+        if not path.resolve().is_relative_to(self.checkpoints_dir.resolve()):
+            raise ValueError(f"Path traversal detected: {checkpoint_id}")
+        return path
 
     def _get_handoff_path(self, handoff_id: str) -> Path:
-        return self.handoffs_dir / f"{handoff_id}.json"
+        self._validate_id(handoff_id)
+        path = self.handoffs_dir / f"{handoff_id}.json"
+        if not path.resolve().is_relative_to(self.handoffs_dir.resolve()):
+            raise ValueError(f"Path traversal detected: {handoff_id}")
+        return path
 
     def save_checkpoint(self, checkpoint: Checkpoint) -> bool:
         try:

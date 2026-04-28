@@ -51,7 +51,7 @@ from .models import (
     ROLE_REGISTRY, ROLE_ALIASES, resolve_role_id, get_core_roles, get_planned_roles,
     get_all_role_ids, get_cli_role_list, RoleDefinition,
 )
-from .scratchpad import Scratchpad
+from .scratchpad import Scratchpad, ScratchpadEntry
 from .worker import Worker, WorkerFactory
 from .consensus import ConsensusEngine
 from .coordinator import Coordinator
@@ -400,6 +400,7 @@ class MultiAgentDispatcher:
             self.quality_guard = None
 
         self._dispatch_history: List[DispatchResult] = []
+        self._max_history = 100
 
     def analyze_task(self, task_description: str) -> List[Dict[str, str]]:
         """
@@ -737,6 +738,8 @@ class MultiAgentDispatcher:
             )
 
             self._dispatch_history.append(result)
+            if len(self._dispatch_history) > self._max_history:
+                self._dispatch_history = self._dispatch_history[-self._max_history:]
 
             if self.enable_quality_guard and self.quality_guard:
                 try:

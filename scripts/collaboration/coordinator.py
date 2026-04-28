@@ -235,6 +235,7 @@ class Coordinator:
         )
 
         self._record_execution(result)
+        self._message_buffer.clear()
         track_usage("coordinator.execute_plan", success=result.success, metadata={
             "total_tasks": result.total_tasks,
             "completed": result.completed_tasks,
@@ -354,7 +355,7 @@ class Coordinator:
             return results
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             futures = {}
-            for task in batch.tasks[:batch.max_concurrency]:
+            for task in batch.tasks:
                 worker = self._get_worker_for_task(task)
                 if worker:
                     future = executor.submit(worker.execute, task)
