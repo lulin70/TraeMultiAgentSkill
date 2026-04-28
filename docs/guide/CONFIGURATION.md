@@ -115,18 +115,21 @@ python3 scripts/cli.py dispatch -t "task" --stream
 ```python
 from scripts.collaboration.config_loader import ConfigManager
 
-# Load config (env > file > defaults)
+# Create manager (auto-loads: env > file > defaults)
 config_mgr = ConfigManager()
-config = config_mgr.load()
 
 # Access config values
-print(f"Backend: {config.backend}")
-print(f"Model: {config.model}")
-print(f"Timeout: {config.timeout}")
-print(f"Strict validation: {config.strict_validation}")
+print(f"Backend: {config_mgr.get('backend')}")
+print(f"Model: {config_mgr.get('model')}")
+print(f"Timeout: {config_mgr.get('timeout')}")
+print(f"Strict validation: {config_mgr.get('strict_validation')}")
 
-# Save current config to file
-config_mgr.save(config)
+# Set config values
+config_mgr.set('backend', 'openai')
+config_mgr.set('log_level', 'DEBUG')
+
+# Save current config to file (~/.devsquad.yaml)
+config_mgr.save()
 ```
 
 ## Docker Configuration
@@ -176,7 +179,7 @@ docker run --env-file .env devsquad dispatch -t "task"
 ls -la ~/.devsquad.yaml
 
 # Verify config is being read
-python3 -c "from scripts.collaboration.config_loader import ConfigManager; c=ConfigManager(); print(c.load())"
+python3 -c "from scripts.collaboration.config_loader import ConfigManager; c=ConfigManager(); print(c.to_dict())"
 ```
 
 ### Environment variable not taking effect

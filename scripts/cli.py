@@ -22,10 +22,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from scripts.collaboration.dispatcher import MultiAgentDispatcher
 from scripts.collaboration.permission_guard import PermissionLevel
-from scripts.collaboration.models import ROLE_REGISTRY, get_cli_role_list
+from scripts.collaboration.models import ROLE_REGISTRY, get_cli_role_list, resolve_role_id
 from scripts.collaboration.input_validator import InputValidator
 
 ROLES = get_cli_role_list()
+ALL_ROLE_IDS = list(ROLE_REGISTRY.keys()) + ROLES
+ALL_ROLE_IDS = sorted(set(ALL_ROLE_IDS))
 MODES = ["auto", "parallel", "sequential", "consensus"]
 FORMATS = ["markdown", "json", "compact", "structured", "detailed"]
 BACKENDS = ["mock", "trae", "openai", "anthropic"]
@@ -78,6 +80,7 @@ def cmd_dispatch(args):
     
     # 验证角色列表（如果提供）
     if args.roles:
+        args.roles = [resolve_role_id(r) for r in args.roles]
         roles_result = validator.validate_roles(args.roles)
         if not roles_result.valid:
             print(f"Error: Invalid roles - {roles_result.reason}", file=sys.stderr)
@@ -209,7 +212,7 @@ Environment Variables (API keys are read from env vars only, never command line)
 
     p_dispatch = subparsers.add_parser("dispatch", aliases=["run", "d"], help="Execute a multi-agent task")
     p_dispatch.add_argument("--task", "-t", required=True, help="Task description")
-    p_dispatch.add_argument("--roles", "-r", nargs="+", choices=ROLES, help="Roles to involve (default: auto-match)")
+    p_dispatch.add_argument("--roles", "-r", nargs="+", choices=ALL_ROLE_IDS, help="Roles to involve (default: auto-match)")
     p_dispatch.add_argument("--mode", "-m", choices=MODES, default="auto", help="Execution mode (default: auto)")
     p_dispatch.add_argument("--format", "-f", choices=FORMATS, default="markdown", help="Output format")
     p_dispatch.add_argument("--backend", "-b", choices=BACKENDS, default=os.environ.get("DEVSQUAD_LLM_BACKEND", "mock"),
