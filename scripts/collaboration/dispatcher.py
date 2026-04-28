@@ -445,9 +445,9 @@ class MultiAgentDispatcher:
                 elif loc.startswith("zh"):
                     lang = "zh"
                 else:
-                    lang = "en"
+                    lang = "zh"
             except Exception:
-                lang = "en"
+                lang = "zh"
 
         validator = InputValidator()
         task_result = validator.validate_task(task_description)
