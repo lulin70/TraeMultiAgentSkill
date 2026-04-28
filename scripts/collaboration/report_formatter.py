@@ -6,25 +6,63 @@ from .models import ROLE_REGISTRY
 
 ROLE_TEMPLATES = {rid: {"name": rdef.name, "prompt": rdef.prompt, "keywords": rdef.keywords} for rid, rdef in ROLE_REGISTRY.items()}
 
+_I18N_SUMMARY = {
+    "zh": {
+        "task_done": "任务「{task}」已完成多Agent协作。",
+        "roles": "参与角色: {roles} ({count}个)",
+        "workers_ok": "执行结果: {done}/{total} 个Worker成功",
+        "duration": "协作耗时: {dur:.2f}s",
+        "sp_findings": "Scratchpad关键发现: {sp}",
+    },
+    "en": {
+        "task_done": "Task \"{task}\" completed with multi-agent collaboration.",
+        "roles": "Roles: {roles} ({count})",
+        "workers_ok": "Workers: {done}/{total} succeeded",
+        "duration": "Duration: {dur:.2f}s",
+        "sp_findings": "Scratchpad findings: {sp}",
+    },
+    "ja": {
+        "task_done": "タスク「{task}」がマルチエージェントコラボレーションで完了しました。",
+        "roles": "参加ロール: {roles} ({count})",
+        "workers_ok": "実行結果: {done}/{total} Worker成功",
+        "duration": "所要時間: {dur:.2f}s",
+        "sp_findings": "スクラッチパッド発見: {sp}",
+    },
+}
+
+_ROLE_I18N = {
+    "zh": {"architect": "架构师", "product-manager": "产品经理", "security": "安全专家",
+           "tester": "测试专家", "solo-coder": "开发者", "devops": "运维工程师", "ui-designer": "UI设计师"},
+    "en": {"architect": "Architect", "product-manager": "Product Manager", "security": "Security Expert",
+           "tester": "Tester", "solo-coder": "Coder", "devops": "DevOps", "ui-designer": "UI Designer"},
+    "ja": {"architect": "アーキテクト", "product-manager": "プロダクトマネージャー", "security": "セキュリティ専門家",
+           "tester": "テスター", "solo-coder": "コーダー", "devops": "DevOps", "ui-designer": "UIデザイナー"},
+}
+
 
 class ReportFormatter:
     """Report formatting engine for DispatchResult."""
 
+    def __init__(self, lang: str = "zh"):
+        self.lang = lang
+        self._t = _I18N_SUMMARY.get(lang, _I18N_SUMMARY["zh"])
+        self._role_names = _ROLE_I18N.get(lang, _ROLE_I18N["zh"])
+
     def build_summary(self, task: str, roles: List[str],
                       exec_result, sp_summary: str) -> str:
-        """Build execution summary text."""
-        role_names = [ROLE_TEMPLATES.get(r, {}).get("name", r) for r in roles]
+        t = self._t
+        role_names = [self._role_names.get(r, ROLE_TEMPLATES.get(r, {}).get("name", r)) for r in roles]
         parts = [
-            f"任务「{task[:80]}」已完成多Agent协作。",
-            f"参与角色: {', '.join(role_names)} ({len(roles)}个)",
+            t["task_done"].format(task=task[:80]),
+            t["roles"].format(roles=", ".join(role_names), count=len(roles)),
         ]
         if exec_result.results:
             done = sum(1 for r in exec_result.results if r.success)
-            parts.append(f"执行结果: {done}/{len(exec_result.results)} 个Worker成功")
+            parts.append(t["workers_ok"].format(done=done, total=len(exec_result.results)))
         if exec_result.duration_seconds:
-            parts.append(f"协作耗时: {exec_result.duration_seconds:.2f}s")
+            parts.append(t["duration"].format(dur=exec_result.duration_seconds))
         if sp_summary:
-            parts.append(f"Scratchpad关键发现: {sp_summary[:200]}")
+            parts.append(t["sp_findings"].format(sp=sp_summary[:200]))
         return "\n".join(parts)
 
     def format_structured_report(self, result,

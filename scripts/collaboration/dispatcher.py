@@ -88,6 +88,7 @@ I18N = {
         "task": "**任务**",
         "status_ok": "✅ 成功",
         "status_fail": "❌ 失败",
+        "status_label": "状态",
         "duration": "**耗时**",
         "roles": "**参与角色**",
         "summary": "## 📋 执行摘要",
@@ -110,6 +111,7 @@ I18N = {
         "task": "**Task**",
         "status_ok": "✅ Success",
         "status_fail": "❌ Failed",
+        "status_label": "Status",
         "duration": "**Duration**",
         "roles": "**Roles**",
         "summary": "## 📋 Executive Summary",
@@ -132,6 +134,7 @@ I18N = {
         "task": "**タスク**",
         "status_ok": "✅ 成功",
         "status_fail": "❌ 失敗",
+        "status_label": "ステータス",
         "duration": "**所要時間**",
         "roles": "**参加ロール**",
         "summary": "## 📋 実行サマリー",
@@ -204,7 +207,7 @@ class DispatchResult:
             t["title"],
             "",
             f"{t['task']}: {self.task_description}",
-            f"**{'Status' if self.lang != 'zh' else '状态'}**: {t['status_ok'] if self.success else t['status_fail']}",
+            f"**{t['status_label']}**: {t['status_ok'] if self.success else t['status_fail']}",
             f"{t['duration']}: {self.duration_seconds:.2f}s",
             f"{t['roles']}: {', '.join(self.matched_roles)}",
             "",
@@ -353,7 +356,7 @@ class MultiAgentDispatcher:
         self.consensus_engine = ConsensusEngine()
 
         self.role_matcher = RoleMatcher()
-        self.report_formatter = ReportFormatter()
+        self.report_formatter = ReportFormatter(lang=self.lang)
 
         if self.enable_compression:
             self.compressor = ContextCompressor(
