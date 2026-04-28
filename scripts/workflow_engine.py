@@ -3,6 +3,8 @@
 """
 工作流编排引擎
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.workflow_engine
+
 提供灵活的工作流定义、执行和监控功能
 """
 

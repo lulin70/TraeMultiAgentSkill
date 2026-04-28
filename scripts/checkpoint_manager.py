@@ -3,6 +3,8 @@
 """
 CheckpointManager - 任务状态检查点管理器
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.checkpoint_manager
+
 基于 Anthropic 文章《Effective Harnesses for Long-Running Agents》的核心思想：
 - 像人类工程师一样定期保存进度
 - 支持从断点恢复，避免"断片"问题

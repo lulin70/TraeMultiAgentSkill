@@ -3,6 +3,8 @@
 """
 AI 语义匹配器
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.ai_semantic_matcher
+
 基于大模型 AI 助手的语义理解能力，实现智能角色匹配。
 
 核心功能：

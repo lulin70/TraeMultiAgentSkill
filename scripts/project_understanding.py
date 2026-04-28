@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 Project Understanding Tool
+
+⚠️ 已弃用：此脚本为 V2 遗留，V3 请使用 python3 scripts/cli.py dispatch -t "Understand project"
+
 用于快速读取项目文档和代码，生成基于角色的项目理解文档
 """
 

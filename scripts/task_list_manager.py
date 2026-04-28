@@ -3,6 +3,8 @@
 """
 TaskListManager - 任务清单管理器
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 的任务管理已集成到 scripts.collaboration.workflow_engine
+
 基于 Anthropic 文章《Effective Harnesses for Long-Running Agents》的核心思想：
 - 像人类工程师一样维护任务清单（TODO.md）
 - 支持任务拆解和优先级排序

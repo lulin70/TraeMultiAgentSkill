@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """
 Code Map Generator Tool
+
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.code_map_generator
+
 用于生成项目的代码结构映射，帮助架构师和开发者了解项目的整体结构
 """
 

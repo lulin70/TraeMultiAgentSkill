@@ -3,6 +3,8 @@
 """
 任务完成检查工具
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.task_completion_checker
+
 用于检查任务文件中的任务是否全部完成
 支持自动检查、进度跟踪和续传机制
 """

@@ -3,6 +3,8 @@
 """
 智能角色匹配器（AI 增强版）
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.role_matcher
+
 基于任务需求和角色能力，智能匹配最适合的角色
 
 v2.1 新增：

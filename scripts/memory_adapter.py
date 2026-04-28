@@ -3,6 +3,8 @@
 """
 记忆适配器 - 连接 Memory Classification Engine 与 DevSquad
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.memory_bridge
+
 将 Memory Classification Engine 的 7 种记忆类型和 4 层存储架构
 集成到 DevSquad 的双层上下文管理系统中。
 

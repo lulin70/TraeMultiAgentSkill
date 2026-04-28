@@ -3,6 +3,8 @@
 """
 AI 助手配置和初始化模块
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.llm_backend
+
 提供 AI 助手的统一配置、初始化和生命周期管理。
 
 功能：

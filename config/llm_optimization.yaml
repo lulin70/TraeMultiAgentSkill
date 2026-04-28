@@ -1,6 +1,6 @@
 cache:
   enabled: true
-  cache_dir: data/llm_cache
+  cache_dir: ./data/llm_cache
   ttl_seconds: 86400
   max_memory_entries: 1000
   disk_cache_enabled: true
@@ -22,12 +22,12 @@ performance:
   bottleneck_threshold_ms: 1000.0
   export_interval_seconds: 300
 backends:
-  primary: openai
+  primary: mock
   fallback_order:
+  - openai
   - anthropic
-  - cohere
-  timeout_seconds: 30
+  timeout_seconds: 120
 logging:
-  level: INFO
+  level: WARNING
   format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
   file: null

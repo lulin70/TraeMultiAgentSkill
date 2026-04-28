@@ -3,6 +3,8 @@
 """
 AI 助手工具类
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.llm_backend
+
 提供通用的大模型 AI 助手能力，包括：
 - 文本生成和补全
 - 语义理解和分析

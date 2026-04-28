@@ -3,6 +3,8 @@
 """
 技能注册中心
 
+⚠️ 已弃用：此模块为 V2 遗留，V3 请使用 scripts.collaboration.skill_registry
+
 提供技能的注册、发现、管理和版本控制功能
 """
 
