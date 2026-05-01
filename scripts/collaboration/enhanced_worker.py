@@ -31,6 +31,7 @@ import re
 import time
 import logging
 from typing import Optional, Dict, Any, List
+from dataclasses import dataclass, field
 
 from .worker import Worker
 from .models import TaskDefinition, WorkerResult, ROLE_REGISTRY
@@ -38,6 +39,18 @@ from .models import TaskDefinition, WorkerResult, ROLE_REGISTRY
 logger = logging.getLogger(__name__)
 
 _SAFE_FILENAME_RE = re.compile(r'[^\w\-.]')
+
+
+@dataclass
+class AgentBriefingOutput:
+    """Compressed state passed between Agents (latent-briefing pattern)."""
+    task_summary: str = ""
+    key_decisions: List[str] = field(default_factory=list)
+    pending_items: List[str] = field(default_factory=list)
+    rules_applied: List[str] = field(default_factory=list)
+    result_summary: str = ""
+    confidence: float = 0.0
+    assumptions: List[str] = field(default_factory=list)
 
 
 class EnhancedWorker(Worker):
@@ -92,6 +105,16 @@ class EnhancedWorker(Worker):
 
         self._briefing = None
         self._briefing_loaded = False
+        self._last_result: Optional[WorkerResult] = None
+        self._confidence_scorer = None
+        self._injected_rules: List[Dict[str, Any]] = []
+        self._rules_applied: List[str] = []
+
+        try:
+            from .confidence_score import ConfidenceScorer
+            self._confidence_scorer = ConfidenceScorer()
+        except Exception:
+            pass
 
     @property
     def briefing(self):
@@ -173,15 +196,38 @@ class EnhancedWorker(Worker):
         """
         if self.retry_provider and self.retry_provider.is_available():
             try:
-                return self.retry_provider.retry_with_fallback(
+                result = self.retry_provider.retry_with_fallback(
                     func=lambda: self._do_work_with_briefing(task),
                     max_attempts=3,
                     fallback=lambda: self._do_work(task),
                 )
             except Exception:
-                return self._do_work(task)
+                result = self._do_work(task)
         else:
-            return self._do_work_with_briefing(task)
+            result = self._do_work_with_briefing(task)
+
+        self._last_result = result
+
+        if self._confidence_scorer and result.success and result.output:
+            try:
+                output_text = result.output if isinstance(result.output, str) else str(result.output)
+                score = self._confidence_scorer.score_response(output_text)
+                if isinstance(result.output, dict):
+                    result.output["confidence"] = score.overall_score
+                    result.output["confidence_factors"] = {
+                        "completeness": score.completeness_score,
+                        "certainty": score.certainty_score,
+                        "specificity": score.specificity_score,
+                    }
+                    if score.overall_score < 0.7:
+                        result.output["low_confidence_warning"] = (
+                            f"Low confidence ({score.overall_score:.2f}). "
+                            "Assumptions may need verification by subsequent agents."
+                        )
+            except Exception as e:
+                logger.warning("Confidence scoring failed: %s", e)
+
+        return result
 
     def get_briefing_summary(self) -> Dict[str, Any]:
         """
@@ -227,6 +273,81 @@ class EnhancedWorker(Worker):
             logger.warning("Failed to export briefing for %s: %s", self.role_id, e)
             return None
 
+    def compress_to_briefing(self) -> AgentBriefingOutput:
+        """
+        Compress current execution result into a briefing for the next Agent.
+
+        Implements the latent-briefing pattern: instead of passing full message
+        history between Agents, pass a compressed state with key decisions,
+        pending items, and applied rules.
+
+        Returns:
+            AgentBriefingOutput: Compressed state for inter-Agent handoff
+        """
+        if not self._last_result:
+            return AgentBriefingOutput()
+
+        output_text = ""
+        if isinstance(self._last_result.output, dict):
+            output_text = self._last_result.output.get("finding_summary", "")
+        elif isinstance(self._last_result.output, str):
+            output_text = self._last_result.output[:500]
+
+        confidence = 0.0
+        if self._confidence_scorer and output_text:
+            try:
+                score = self._confidence_scorer.score_response(output_text)
+                confidence = score.overall_score
+            except Exception:
+                confidence = 0.5
+
+        return AgentBriefingOutput(
+            task_summary=self._last_result.task_id if hasattr(self._last_result, 'task_id') else "",
+            key_decisions=self._extract_decisions(output_text),
+            pending_items=self._extract_pending(output_text),
+            rules_applied=list(self._rules_applied),
+            result_summary=output_text[:200] if output_text else "",
+            confidence=confidence,
+            assumptions=[],
+        )
+
+    def receive_briefing(self, briefing: AgentBriefingOutput):
+        """
+        Receive compressed state from a preceding Agent.
+
+        Args:
+            briefing: Compressed state from the previous Agent
+        """
+        self._received_briefing = briefing
+
+    def _extract_decisions(self, text: str) -> List[str]:
+        """Extract key decisions from output text."""
+        decisions = []
+        markers = ["decision:", "decided:", "chosen:", "selected:", "conclusion:"]
+        for line in text.split('\n'):
+            lower = line.strip().lower()
+            for marker in markers:
+                if marker in lower:
+                    decisions.append(line.strip()[:100])
+                    break
+            if len(decisions) >= 5:
+                break
+        return decisions
+
+    def _extract_pending(self, text: str) -> List[str]:
+        """Extract pending items from output text."""
+        pending = []
+        markers = ["todo:", "pending:", "next:", "follow-up:", "remaining:"]
+        for line in text.split('\n'):
+            lower = line.strip().lower()
+            for marker in markers:
+                if marker in lower:
+                    pending.append(line.strip()[:100])
+                    break
+            if len(pending) >= 5:
+                break
+        return pending
+
     def get_provider_status(self) -> Dict[str, Any]:
         """
         Get status of all injected providers.
@@ -255,4 +376,4 @@ class EnhancedWorker(Worker):
         }
 
 
-__all__ = ["EnhancedWorker"]
+__all__ = ["EnhancedWorker", "AgentBriefingOutput"]
