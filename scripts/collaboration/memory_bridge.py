@@ -255,7 +255,7 @@ class WorkBuddyClawSource:
       - All exceptions caught internally, never affects main flow
     """
 
-    CLAW_BASE_PATH = "/Users/lin/WorkBuddy/Claw"
+    CLAW_BASE_PATH = os.environ.get("WORKBUDDY_CLAW_PATH", "/Users/lin/WorkBuddy/Claw")
     MEMORY_DIR = ".memory"
     WORKBUDDY_MEMORY_DIR = ".workbuddy/memory"
 
@@ -1305,9 +1305,9 @@ class MemoryBridge:
                     confidence=mce_confidence,
                     tags=tags,
                     created_at=datetime.now().isoformat(),
-            )
-            captured_id = self.writer.write_episodic(episodic)
-            self._stats.total_captures += 1
+                )
+                captured_id = self.writer.write_episodic(episodic)
+                self._stats.total_captures += 1
         return captured_id
 
     def record_feedback(self, feedback: UserFeedback) -> str:
@@ -1423,7 +1423,16 @@ class MemoryBridge:
                 stats.newest_memory = max(dates)
                 stats.oldest_memory = min(dates)
         stats.claw_enabled = self._claw_enabled
-        stats.claw_item_count = len(self._claw_source.load_all_memories()) if self._claw_source else 0
+        if self._claw_source and self._claw_enabled:
+            try:
+                core_count = sum(1 for f in self._claw_source.CORE_FILE_MAPPING
+                                 if (self._claw_source._memory_dir / f).exists())
+                daily_count = min(30, sum(1 for _ in self._claw_source._wb_memory_dir.glob("2026-*.md"))) if self._claw_source._wb_memory_dir.exists() else 0
+                stats.claw_item_count = core_count + daily_count
+            except Exception:
+                stats.claw_item_count = 0
+        else:
+            stats.claw_item_count = 0
         return stats
 
     def get_recent_history(self, n: int = 10) -> List[EpisodicMemory]:

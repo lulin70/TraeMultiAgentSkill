@@ -2,14 +2,14 @@
 name: devsquad
 slug: devsquad
 description: |
-  V3.3.0 DevSquad — Multi-Role AI Task Orchestrator.
+  V3.5.0 DevSquad — Multi-Role AI Task Orchestrator.
   One task in, multi-role AI collaboration, one conclusion out.
   7 core roles (architect/pm/security/tester/coder/devops/ui), real LLM backend
-  (OpenAI/Anthropic), CLI + MCP + Python API. 129 unit tests, all passing.
+  (OpenAI/Anthropic), CLI + MCP + Python API. 258 unit tests, all passing.
   ThreadPoolExecutor parallel, CheckpointManager, WorkflowEngine, streaming, Docker, CI.
 ---
 
-# DevSquad V3.3.0 — Multi-Role AI Task Orchestrator
+# DevSquad V3.5.0 — Multi-Role AI Task Orchestrator
 
 ## Core Positioning
 
@@ -21,7 +21,7 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
            → [ConsensusEngine] → [ReportFormatter] → [Structured Report]
 ```
 
-## Architecture Overview (27 Core Modules)
+## Architecture Overview (33 Core Modules)
 
 | # | Module | File | Responsibility |
 |---|-------|------|---------------|
@@ -37,7 +37,7 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
 | 9 | **WarmupManager** | `warmup_manager.py` | 3-layer startup warmup (EAGER/ASYNC/LAZY) + process-level cache |
 | 10 | **MemoryBridge** | `memory_bridge.py` | 7-type memory bridge + inverted index + TF-IDF + forgetting curve + MCE+Claw integration |
 | 11 | **TestQualityGuard** | `test_quality_guard.py` | Test quality audit (API validation / anti-pattern detection / dimension coverage) |
-| 12 | **PromptAssembler** | `prompt_assembler.py` | Dynamic prompt assembly (complexity detection / 3 variants / 5 styles / compression-aware) |
+| 12 | **PromptAssembler** | `prompt_assembler.py` | Dynamic prompt assembly (complexity detection / 3 variants / 5 styles / compression-aware / QC config injection) |
 | 13 | **PromptVariantGenerator** | `prompt_variant_generator.py` | Skillify closed-loop feedback (pattern→variant / A-B test / auto promote-deprecate) |
 | 14 | **MCEAdapter** | `mce_adapter.py` | CarryMem integration adapter (lazy-load / graceful-degrade / thread-safe / type mapping) |
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py` (class) | WorkBuddy Claw read-only bridge (INDEX search / daily logs / AI news feed) |
@@ -53,6 +53,12 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
 | 25 | **SkillRegistry** | `skill_registry.py` | Reusable skill registration + discovery + persistence |
 | 26 | **LLMBackend** | `llm_backend.py` | Mock/OpenAI/Anthropic with streaming support + 120s timeout |
 | 27 | **ConfigManager** | `config_loader.py` | YAML config + env var overrides (16 parameters) |
+| 28 | **Protocols** | `protocols.py` | Protocol interfaces (CacheProvider/RetryProvider/MonitorProvider/MemoryProvider) + exception hierarchy |
+| 29 | **NullProviders** | `null_providers.py` | No-op implementations for all Protocol interfaces (degradation + test mocking) |
+| 30 | **EnhancedWorker** | `enhanced_worker.py` | Worker with protocol-based provider injection (cache/retry/monitor/briefing) |
+| 31 | **PerformanceMonitor** | `performance_monitor.py` | P95/P99 response time, CPU/memory tracking, bottleneck detection, Markdown reports |
+| 32 | **AgentBriefing** | `agent_briefing.py` | Context-aware briefing generation with priority filtering + persistence |
+| 33 | **ConfidenceScorer** | `confidence_score.py` | 5-factor confidence scoring (completeness/certainty/specificity/consistency/model quality) |
 
 ---
 
@@ -305,7 +311,7 @@ Consensus records in `result.consensus_records`.
 status = disp.get_status()
 # Returns:
 # {
-#   "version": "3.3.0",
+#   "version": "3.5.0",
 #   "components": {...},        # Component enabled status
 #   "dispatch_count": N,         # Completed dispatch count
 #   "scratchpad_stats": {...}, # Blackboard stats
@@ -516,7 +522,7 @@ Implement → Test(Regression All) → Code Walkthrough → Annotate → Docs Up
 
 ## Version History
 
-- **v3.3.0** (2026-04-27): Real LLM Backend (OpenAI/Anthropic/Mock) + ThreadPoolExecutor parallel + InputValidator + 16-pattern prompt injection + RoleMatcher/ReportFormatter extracted + AISemanticMatcher bilingual + CheckpointManager SHA256 + WorkflowEngine + TaskCompletionChecker + CodeMapGenerator + DualLayerContext + SkillRegistry + ConfigManager YAML + LLMBackend streaming + Docker + GitHub Actions CI + pip installable + i18n (zh/en/ja) + 27 modules + 129 unit tests
+- **v3.5.0** (2026-04-27): Real LLM Backend (OpenAI/Anthropic/Mock) + ThreadPoolExecutor parallel + InputValidator + 16-pattern prompt injection + RoleMatcher/ReportFormatter extracted + AISemanticMatcher bilingual + CheckpointManager SHA256 + WorkflowEngine + TaskCompletionChecker + CodeMapGenerator + DualLayerContext + SkillRegistry + ConfigManager YAML + LLMBackend streaming + Docker + GitHub Actions CI + pip installable + i18n (zh/en/ja) + 33 modules + 258 unit tests
 - **v3.3** (2026-04-17): WorkBuddy Claw Integration - WorkBuddyClawSource(read-only bridge/INDEX search/daily logs/AI news feed) + Dispatcher AI News auto-inject + Annotation Standards (EN docs/docstring/inline) + Code comment audit (all EN) + MCE v0.4 support (tenant/permission) + Multi-language README (EN/CN/JP) + 33 new tests
 - **v3.2** (2026-04-17): MVP Three Lines - E2E Full Demo(10-step flow/CLI) + Dispatcher UX Enhancement(structured/compact/detailed 3-format report) + MCEAdapter Memory Classification Adapter(lazy-load/graceful-degrade) + Delivery Workflow Iron Rule
 - **v3.1** (2026-04-16): Prompt Optimization System - Dynamic Prompt Assembly(3 variants) + Skillify Closed-loop Feedback(A/B promotion) + Compression-Aware Adaptation

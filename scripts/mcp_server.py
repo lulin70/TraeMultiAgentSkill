@@ -27,8 +27,14 @@ from typing import Any, Dict, List, Optional
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("DevSquad-MCP")
+
+try:
+    from scripts.collaboration.input_validator import InputValidator
+    _validator = InputValidator()
+except ImportError:
+    _validator = None
 
 try:
     from mcp.server.fastmcp import FastMCP
@@ -93,6 +99,11 @@ def create_mcp_server() -> "FastMCP":
             conflicts resolution, and action items.
         """
         disp = server._get_dispatcher()
+        if _validator:
+            vresult = _validator.validate_task(task)
+            if not vresult.valid:
+                return json.dumps({"error": f"Invalid task: {vresult.reason}", "success": False})
+            task = vresult.sanitized_input or task
         try:
             result = disp.dispatch(
                 task=task,
@@ -111,8 +122,8 @@ def create_mcp_server() -> "FastMCP":
                 return result.summary
             return result.to_markdown()
         except Exception as e:
-            logger.error(f"Dispatch error: {e}")
-            return json.dumps({"error": str(e), "success": False})
+            logger.error(f"Dispatch error: {e}", exc_info=True)
+            return json.dumps({"error": "Internal error occurred", "success": False})
 
     @mcp.tool()
     def multiagent_quick(
@@ -134,6 +145,11 @@ def create_mcp_server() -> "FastMCP":
             Formatted collaboration result optimized for quick reading.
         """
         disp = server._get_dispatcher()
+        if _validator:
+            vresult = _validator.validate_task(task)
+            if not vresult.valid:
+                return json.dumps({"error": f"Invalid task: {vresult.reason}", "success": False})
+            task = vresult.sanitized_input or task
         try:
             result = disp.quick_dispatch(
                 task=task,
@@ -143,8 +159,8 @@ def create_mcp_server() -> "FastMCP":
             )
             return result.to_markdown() if hasattr(result, 'to_markdown') else str(result)
         except Exception as e:
-            logger.error(f"Quick dispatch error: {e}")
-            return json.dumps({"error": str(e), "success": False})
+            logger.error(f"Quick dispatch error: {e}", exc_info=True)
+            return json.dumps({"error": "Internal error occurred", "success": False})
 
     @mcp.tool()
     def multiagent_roles(format: str = "text") -> str:
@@ -175,15 +191,15 @@ def create_mcp_server() -> "FastMCP":
         Returns:
             JSON with version, status, available roles/modes, and module info.
         """
-        disp = server._get_dispatcher(enable_warmup=False)
+        disp = server._get_dispatcher()
         try:
-            stats = disp.get_statistics() if hasattr(disp, 'get_statistics') else {}
+            stats = disp.get_status() if hasattr(disp, 'get_status') else {}
             return json.dumps({
                 "name": "DevSquad",
                 "version": "3.3.0",
                 "status": "ready",
                 "modules": 27,
-                "tests": 99,
+                "tests": 129,
                 "roles": 7,
                 "modes": ["auto", "parallel", "sequential", "consensus"],
                 "backends": ["mock", "openai", "anthropic"],
@@ -203,7 +219,7 @@ def create_mcp_server() -> "FastMCP":
                 },
             }, ensure_ascii=False, indent=2)
         except Exception as e:
-            return json.dumps({"name": "DevSquad", "version": "3.3.0", "status": "ready", "error": str(e)})
+            return json.dumps({"name": "DevSquad", "version": "3.3.0", "status": "ready", "error": "Internal error occurred"})
 
     @mcp.tool()
     def multiagent_analyze(task: str) -> str:
@@ -217,6 +233,11 @@ def create_mcp_server() -> "FastMCP":
             Analysis including suggested roles, estimated complexity, and mode recommendation.
         """
         disp = server._get_dispatcher(enable_warmup=False)
+        if _validator:
+            vresult = _validator.validate_task(task)
+            if not vresult.valid:
+                return json.dumps({"error": f"Invalid task: {vresult.reason}"})
+            task = vresult.sanitized_input or task
         try:
             result = disp.dispatch(task, dry_run=True)
             return json.dumps({
@@ -227,7 +248,7 @@ def create_mcp_server() -> "FastMCP":
                 "recommended_mode": "auto",
             }, ensure_ascii=False, indent=2)
         except Exception as e:
-            return json.dumps({"error": str(e)}, ensure_ascii=False, indent=2)
+            return json.dumps({"error": "Internal error occurred"}, ensure_ascii=False, indent=2)
 
     @mcp.tool()
     def multiagent_shutdown() -> str:

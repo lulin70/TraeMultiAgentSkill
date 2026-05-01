@@ -2,14 +2,14 @@
 name: devsquad
 slug: devsquad
 description: |
-  V3.3.0 マルチエージェントコラボレーションプラットフォーム — Coordinator/Worker/Scratchpad
+  V3.5.0 マルチエージェントコラボレーションプラットフォーム — Coordinator/Worker/Scratchpad
   パターンに基づく完全なマルチエージェントコラボレーションシステム。
   7コアロール（アーキテクト/PM/セキュリティ/テスター/コーダー/DevOps/UIデザイナー）、
   リアルLLMバックエンド（OpenAI/Anthropic）、CLI + MCP + Python API対応。
-  129ユニットテスト全合格。中日英3ヶ国語対応。
+  258ユニットテスト全合格。中日英3ヶ国語対応。
 ---
 
-# DevSquad V3.3.0 — マルチエージェントコラボレーションプラットフォーム
+# DevSquad V3.5.0 — マルチエージェントコラボレーションプラットフォーム
 
 ## コアポジショニング
 
@@ -22,7 +22,7 @@ description: |
              → [コンセンサス決定] → [レポート整形] → [構造化レポート]
 ```
 
-## アーキテクチャ概要（27コアモジュール）
+## アーキテクチャ概要（33コアモジュール）
 
 | # | モジュール | ファイル | 責任 |
 |---|-----------|--------|------|
@@ -38,7 +38,7 @@ description: |
 | 9 | **WarmupManager** | `warmup_manager.py` | 3層起動予熱 |
 | 10 | **MemoryBridge** | `memory_bridge.py` | 7タイプ記憶ブリッジ+MCE/Claw外部統合 |
 | 11 | **TestQualityGuard** | `test_quality_guard.py` | テスト品質監査 |
-| 12 | **PromptAssembler** | `prompt_assembler.py` | 動的プロンプトアセンブル |
+| 12 | **PromptAssembler** | `prompt_assembler.py` | 動的プロンプトアセンブル / QC設定注入 |
 | 13 | **PromptVariantGenerator** | `prompt_variant_generator.py` | Skillifyクローズドループ |
 | 14 | **MCEAdapter** | `mce_adapter.py` | CarryMem統合アダプター（遅延ロード/グレースフルデグラデーション/タイプマッピング） |
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py`(class) | Claw読み取り専用ブリッジ |
@@ -54,6 +54,12 @@ description: |
 | 25 | **SkillRegistry** | `skill_registry.py` | スキル登録+発見+永続化 |
 | 26 | **LLMBackend** | `llm_backend.py` | Mock/OpenAI/Anthropic + ストリーミング + 120sタイムアウト |
 | 27 | **ConfigManager** | `config_loader.py` | YAML設定+環境変数オーバーライド（16パラメータ） |
+| 28 | **Protocols** | `protocols.py` | Protocolインターフェース(CacheProvider/RetryProvider/MonitorProvider/MemoryProvider) + 例外階層 |
+| 29 | **NullProviders** | `null_providers.py` | 全Protocolインターフェースの空実装(デグレード+テストモック) |
+| 30 | **EnhancedWorker** | `enhanced_worker.py` | ProtocolベースProvider注入Worker(キャッシュ/リトライ/モニター/ブリーフィング) |
+| 31 | **PerformanceMonitor** | `performance_monitor.py` | P95/P99応答時間/CPU/メモリ追跡/ボトルネック検出/Markdownレポート |
+| 32 | **AgentBriefing** | `agent_briefing.py` | コンテキスト認識ブリーフィング生成 + 優先度フィルタリング + 永続化 |
+| 33 | **ConfidenceScorer** | `confidence_score.py` | 5因子信頼度スコア(完全性/確実性/具体性/一貫性/モデル品質) |
 
 ---
 
@@ -156,7 +162,7 @@ result = quick_collaborate("マイクロサービス設計を手伝って")
 
 ## バージョン履歴
 
-- **v3.3.0** (2026-04-27): リアルLLMバックエンド(OpenAI/Anthropic/Mock) + ThreadPoolExecutor並列実行 + InputValidator+16パターンPrompt注入検出 + RoleMatcher/ReportFormatter抽出 + AISemanticMatcherバイリンガルマッチング + CheckpointManager SHA256整合性 + WorkflowEngineタスク分割+チェックポイント復元 + TaskCompletionChecker完了追跡 + CodeMapGenerator AST分析 + DualLayerContext二層コンテキスト + SkillRegistryスキル登録 + ConfigManager YAML設定 + LLMBackendストリーミング + Docker + GitHub Actions CI + pipインストール対応 + CarryMem統合 + 129ユニットテスト
+- **v3.5.0** (2026-04-27): リアルLLMバックエンド(OpenAI/Anthropic/Mock) + ThreadPoolExecutor並列実行 + InputValidator+16パターンPrompt注入検出 + RoleMatcher/ReportFormatter抽出 + AISemanticMatcherバイリンガルマッチング + CheckpointManager SHA256整合性 + WorkflowEngineタスク分割+チェックポイント復元 + TaskCompletionChecker完了追跡 + CodeMapGenerator AST分析 + DualLayerContext二層コンテキスト + SkillRegistryスキル登録 + ConfigManager YAML設定 + LLMBackendストリーミング + Docker + GitHub Actions CI + pipインストール対応 + CarryMem統合 + 258ユニットテスト
 - **v3.3** (2026-04-24): 7コアロール(security+devopsをコアに昇格) + RoleRegistry SSOT + TaskDefinition.role_prompt修正 + 環境変数のみAPI key入力 + InputValidator入力検証 + 3シナリオ検証完了
 - **v3.3** (2026-04-17): WorkBuddy Claw統合 + MCE v0.4サポート + アノテーションEN化 + 多言語README
 - **v3.2** (2026-04-17): MVP 3並行ライン (E2E Demo + Dispatcher UX + MCE Adapter)

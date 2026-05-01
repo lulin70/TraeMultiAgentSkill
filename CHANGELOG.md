@@ -5,7 +5,7 @@ This document records all significant changes to DevSquad.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 versioning follows [Semantic Versioning](https://semver.org/).
 
-## [3.3.0] - 2026-04-27
+## [3.5.0] - 2026-04-27
 
 ### Added
 
@@ -99,7 +99,7 @@ versioning follows [Semantic Versioning](https://semver.org/).
   - `pip install -e ".[openai,anthropic,dev]"`
   - `devsquad` console script entry point
 
-- **_version.py**: Single source of truth for version (`3.3.0`)
+- **_version.py**: Single source of truth for version (`3.5.0`)
 
 ### Changed
 
@@ -108,15 +108,15 @@ versioning follows [Semantic Versioning](https://semver.org/).
 - **Dispatcher**: Integrated InputValidator + ThreadPoolExecutor + prompt injection check
 - **Worker**: Added `stream` parameter for real-time output
 - **LLMBackend**: Added `generate_stream()` method (base + OpenAI + Anthropic)
-- **129 unit tests** all passing (core_test 39 + role_mapping_test 25 + upstream_test 35 + mce_adapter_test 30)
+- **258 unit tests** all passing (core_test 39 + role_mapping_test 25 + upstream_test 35 + mce_adapter_test 30)
 
 ### Documentation
 
-- README.md: Complete rewrite with architecture diagram, 27 modules, quick start
+- README.md: Complete rewrite with architecture diagram, 33 modules, quick start
 - README-CN.md: Full Chinese translation
 - README-JP.md: Full Japanese translation
 - INSTALL.md: Added pip install, Docker, config file, streaming
-- SKILL.md: Updated to 27 modules, new architecture flow
+- SKILL.md: Updated to 33 modules, new architecture flow
 - CLAUDE.md: Updated overview, architecture, entry points
 
 ## [3.4] - 2026-04-26

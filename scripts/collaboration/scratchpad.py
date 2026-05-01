@@ -70,6 +70,8 @@ class Scratchpad:
             persist_dir: 持久化目录路径（为空则不持久化，纯内存模式）
         """
         self.scratchpad_id = scratchpad_id or f"scratchpad-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        if '..' in self.scratchpad_id or '/' in self.scratchpad_id or '\\' in self.scratchpad_id:
+            raise ValueError(f"Invalid scratchpad_id (path traversal detected): {self.scratchpad_id}")
         self.persist_dir = persist_dir
 
         self._entries: OrderedDict[str, ScratchpadEntry] = OrderedDict()
@@ -162,7 +164,7 @@ class Scratchpad:
                 "results_count": len(results),
                 "has_query": bool(query)
             })
-            return list(reversed(results))
+            return results
 
     def resolve(self, entry_id: str, resolution: str = ""):
         """
@@ -342,6 +344,3 @@ class Scratchpad:
         with self._lock:
             entries = [e.to_dict() for e in self._entries.values()]
             return json.dumps(entries, ensure_ascii=False, indent=2)
-
-
-MAX_ENTRIES_DEFAULT = 1000

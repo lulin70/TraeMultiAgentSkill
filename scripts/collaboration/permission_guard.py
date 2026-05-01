@@ -264,11 +264,15 @@ def _build_default_rules() -> List[PermissionRule]:
 
 # Sensitive keyword patterns for path traversal / injection detection
 _SENSITIVE_PATH_PATTERNS = [
-    r"\.\./",           # Path traversal
-    r"\.\.\\" ,         # Windows traversal
-    r"\x00",            # Null byte
-    r"/etc/passwd",     # Sensitive system file
+    r"\.\./",
+    r"\.\.\\",
+    r"\x00",
+    r"/etc/passwd",
     r"/etc/shadow",
+]
+
+_SENSITIVE_PATH_PATTERNS_COMPILED = [
+    re.compile(p, re.IGNORECASE) for p in _SENSITIVE_PATH_PATTERNS
 ]
 
 _SENSITIVE_KEYWORDS = [
@@ -553,8 +557,8 @@ class PermissionGuard:
             if kw.lower() in target.lower():
                 risk += 0.15
 
-        for pat in _SENSITIVE_PATH_PATTERNS:
-            if re.search(pat, target, re.IGNORECASE):
+        for pat in _SENSITIVE_PATH_PATTERNS_COMPILED:
+            if pat.search(target):
                 risk += 0.25
 
         high_risk_actions = {

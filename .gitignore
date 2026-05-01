@@ -37,11 +37,15 @@ credentials.json
 *.db-shm
 *.db-wal
 data/llm_cache/
+data/briefings/
 data/tier2/corrections.json
 data/tier2/user_preferences.json
 data/registry/skills.json
 data/progress/task_progress.json
 data/progress/agent_loop.json
+benchmarks/
+registry/
+workflows/
 
 # --- Vibe Coding Runtime Data ---
 scripts/vibe_coding/modules/*.json

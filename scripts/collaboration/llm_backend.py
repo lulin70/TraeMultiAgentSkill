@@ -81,11 +81,8 @@ class MockBackend(LLMBackend):
             "This is a mock response. To get real AI analysis,",
             "set --backend openai (or anthropic) with a valid API key.",
             "",
-            "--- Assembled Prompt Preview ---",
-            prompt[:800],
+            f"Prompt length: {len(prompt)} chars",
         ]
-        if len(prompt) > 800:
-            lines.append(f"... ({len(prompt) - 800} more characters)")
         return "\n".join(lines)
 
     def is_available(self) -> bool:

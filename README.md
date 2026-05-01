@@ -7,8 +7,8 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-129%20passing-brightgreen" />
-  <img alt="Version" src="https://img.shields.io/badge/V3.3.0-2026--04--27-orange" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-258%20passing-brightgreen" />
+  <img alt="Version" src="https://img.shields.io/badge/V3.5.0-2026--05--01-orange" />
   <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
 
@@ -88,7 +88,7 @@ python3 scripts/cli.py dispatch -t "Design auth system" -r arch --backend openai
 # Other commands
 python3 scripts/cli.py status          # System status
 python3 scripts/cli.py roles           # List available roles
-python3 scripts/cli.py --version       # Show version (3.3.0)
+python3 scripts/cli.py --version       # Show version (3.5.0)
 ```
 
 **2. Python API**
@@ -165,6 +165,87 @@ DevSquad is built on a layered architecture with clear separation of concerns:
 └─────────────────────────────────────────────────┘
 ```
 
+## What's New in V3.5.0 🆕
+
+### AgentBriefing System
+Context-aware task briefing that helps agents understand project history and make informed decisions:
+
+```python
+from scripts.collaboration.agent_briefing import get_agent_briefing
+
+# Create briefing for agent
+briefing = get_agent_briefing("architect")
+briefing.update_briefing("capabilities", "System design")
+briefing.update_briefing("constraints", "Must use Python 3.8+")
+
+# Generate briefing for task
+content = briefing.generate_briefing(
+    task="Design authentication system",
+    context={"priority": "high"}
+)
+```
+
+**Features**:
+- Historical pattern recognition
+- Priority-based information filtering
+- JSON persistence
+- Multi-section management
+
+### ConfidenceScore System
+Automatic response quality assessment with 5-factor analysis:
+
+```python
+from scripts.collaboration.confidence_score import get_confidence_scorer
+
+scorer = get_confidence_scorer()
+score = scorer.calculate_confidence(
+    prompt="Design a REST API",
+    response=llm_response,
+    metadata={"model": "gpt-4", "temperature": 0.7}
+)
+
+print(f"Confidence: {score.overall_score:.2f}")  # 0.89
+print(f"Level: {score.level.value}")             # "high"
+```
+
+**5 Confidence Factors** (weighted):
+1. **Completeness** (25%): Response length, truncation detection
+2. **Certainty** (25%): Uncertainty phrases, hedging words
+3. **Specificity** (20%): Numbers, code, examples, lists
+4. **Consistency** (15%): Contradictions, self-corrections
+5. **Model Quality** (15%): Model tier, temperature, token count
+
+### EnhancedWorker
+Integrated worker with automatic quality assurance:
+
+```python
+from scripts.collaboration.enhanced_worker import create_enhanced_worker
+
+worker = create_enhanced_worker(
+    worker_id="arch-001",
+    role_id="architect",
+    role_prompt="You are a system architect...",
+    scratchpad=scratchpad,
+    confidence_threshold=0.7,  # Auto-retry if below threshold
+    enable_briefing=True,
+    enable_confidence=True,
+)
+
+result = worker.execute(task)
+print(f"Confidence: {result.output['confidence_score']}")
+```
+
+**Features**:
+- Automatic briefing generation
+- Automatic confidence evaluation
+- Smart retry mechanism (low confidence)
+- Quality gates
+- Auto-flagging for review
+
+See [Integration Guide](docs/guides/agent_briefing_confidence_integration.md) for detailed usage.
+
+---
+
 ## Key Features
 
 ### Security
@@ -186,7 +267,8 @@ DevSquad is built on a layered architecture with clear separation of concerns:
 - **ConsensusEngine**: Weighted voting with veto power and human escalation
 
 ### Developer Experience
-- **Configuration File**: `~/.devsquad.yaml` with env var overrides
+- **Configuration File**: `.devsquad.yaml` in project root with env var overrides
+- **Quality Control Injection**: Auto-inject QC rules (hallucination prevention, overconfidence check, security guard, RACI protocol) into Worker prompts based on `.devsquad.yaml` config
 - **Docker Support**: `docker build -t devsquad . && docker run devsquad dispatch -t "task"`
 - **GitHub Actions CI**: Python 3.9-3.12 matrix testing
 - **pip installable**: `pip install -e .` with optional dependencies
@@ -215,18 +297,34 @@ DevSquad is built on a layered architecture with clear separation of concerns:
 
 ## Configuration
 
-Create `~/.devsquad.yaml`:
+Create `.devsquad.yaml` in your project root:
 
 ```yaml
-devsquad:
+quality_control:
+  enabled: true
+  strict_mode: true
+  min_quality_score: 85
+  ai_quality_control:
+    enabled: true
+    hallucination_check:
+      enabled: true
+      require_traceable_references: true
+    overconfidence_check:
+      enabled: true
+      require_alternatives_min: 2
+  ai_security_guard:
+    enabled: true
+    permission_level: "DEFAULT"
+  ai_team_collaboration:
+    enabled: true
+    raci:
+      mode: "strict"
+
+llm:
   backend: openai
-  base_url: https://api.openai.com/v1
-  model: gpt-4
+  base_url: ""  # Set via LLM_BASE_URL env var
+  model: ""     # Set via LLM_MODEL env var
   timeout: 120
-  output_format: structured
-  strict_validation: false
-  checkpoint_enabled: true
-  cache_enabled: true
   log_level: WARNING
 ```
 
@@ -254,14 +352,14 @@ export OPENAI_API_KEY=sk-...
 ## Running Tests
 
 ```bash
-# Core tests (129 tests)
+# Core tests (258 tests)
 python3 -m pytest scripts/collaboration/core_test.py \
   scripts/collaboration/role_mapping_test.py \
   scripts/collaboration/upstream_test.py \
   scripts/collaboration/mce_adapter_test.py -v
 
 # Quick smoke test
-python3 scripts/cli.py --version    # 3.3.0
+python3 scripts/cli.py --version    # 3.5.0
 python3 scripts/cli.py status       # System ready
 python3 scripts/cli.py roles        # List 7 roles
 ```
@@ -292,7 +390,8 @@ python3 scripts/cli.py roles        # List 7 roles
 
 | Date | Version | Highlights |
 |------|---------|-----------|
-| 2026-04-27 | **V3.3.0** | Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine, TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, 129 unit tests |
+| 2026-05-01 | **V3.5.0** | 🆕 AgentBriefing (context-aware task briefing), ConfidenceScore (5-factor quality assessment), EnhancedWorker (auto quality assurance with retry), Protocol interface system, 258 unit tests (65 new), comprehensive documentation |
+| 2026-04-27 | V3.5.0 | Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine, TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, 258 unit tests |
 | 2026-04-17 | V3.2 | E2E Demo, MCE Adapter, Dispatcher UX |
 | 2026-04-16 | V3.0 | Complete redesign — Coordinator/Worker/Scratchpad architecture |
 

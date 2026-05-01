@@ -207,15 +207,14 @@ class InputValidator:
         # 7. 可疑模式检查（严格模式）
         if self.strict_mode:
             for regex in self._suspicious_regex:
-                match = regex.search(task)
+                match = regex.search(task_normalized)
                 if match:
                     return ValidationResult(
                         valid=False,
                         reason=f"Suspicious pattern detected (strict mode): {match.group(0)}"
                     )
 
-        # 8. 清理输入
-        sanitized = self._sanitize_input(task)
+        sanitized = self._sanitize_input(task_normalized)
         
         return ValidationResult(
             valid=True,
@@ -292,7 +291,7 @@ class InputValidator:
         sanitized = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
         
         # 2. 规范化空白字符
-        sanitized = re.sub(r'\s+', ' ', sanitized)
+        sanitized = re.sub(r'[^\S\n]+', ' ', sanitized)
         
         # 3. 移除前后空白
         sanitized = sanitized.strip()
@@ -310,8 +309,10 @@ class InputValidator:
             List[str]: 检测到的可疑模式列表
         """
         warnings = []
+        task_normalized = unicodedata.normalize('NFKC', task)
+        task_normalized = re.sub(r'[\u200b-\u200f\u2028-\u202f\ufeff]', '', task_normalized)
         for regex in self._suspicious_regex:
-            match = regex.search(task)
+            match = regex.search(task_normalized)
             if match:
                 warnings.append(match.group(0))
         return warnings
@@ -327,8 +328,10 @@ class InputValidator:
             List[str]: 检测到的 Prompt 注入模式列表
         """
         detected = []
+        task_normalized = unicodedata.normalize('NFKC', task)
+        task_normalized = re.sub(r'[\u200b-\u200f\u2028-\u202f\ufeff]', '', task_normalized)
         for regex in self._injection_regex:
-            match = regex.search(task)
+            match = regex.search(task_normalized)
             if match:
                 detected.append(match.group(0))
         return detected

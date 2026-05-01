@@ -42,7 +42,7 @@ python3 scripts/cli.py status
 python3 scripts/cli.py roles
 
 # Show version
-python3 scripts/cli.py --version   # 3.3.0
+python3 scripts/cli.py --version   # 3.5.0
 ```
 
 ### LLM Backend Configuration (Optional — for real AI output)
@@ -83,8 +83,11 @@ pip install openai
 # For Anthropic backend
 pip install anthropic
 
+# For performance monitoring (CPU/memory tracking)
+pip install psutil
+
 # Or install all optional dependencies
-pip install -e ".[openai,anthropic,dev]"
+pip install -e ".[openai,anthropic,monitoring,dev]"
 ```
 
 ### Method 2: Docker
@@ -253,7 +256,7 @@ python3 scripts/cli.py dispatch -t "test" -r architect --dry-run
 
 # 4. Core tests
 python3 -m pytest scripts/collaboration/ -v
-# Expected: 129+ unit tests (all passing)
+# Expected: 258+ unit tests (all passing)
 ```
 
 ## Troubleshooting
@@ -302,8 +305,8 @@ DevSquad/
 ├── scripts/
 │   ├── cli.py                    # Primary CLI entry point
 │   ├── mcp_server.py             # MCP server (OpenClaw/Cursor)
-│   └── collaboration/            # ★ 27 core modules
-│       ├── _version.py           # Version SSOT (3.3.0)
+│   └── collaboration/            # ★ 33 core modules
+│       ├── _version.py           # Version SSOT (3.5.0)
 │       ├── dispatcher.py         # MultiAgentDispatcher
 │       ├── coordinator.py        # Global orchestrator
 │       ├── scratchpad.py         # Shared blackboard
@@ -323,7 +326,7 @@ DevSquad/
 │       ├── config_loader.py      # YAML config + env var overrides
 │       ├── memory_bridge.py      # Cross-session memory
 │       ├── mce_adapter.py        # CarryMem integration adapter
-│       └── *_test.py             # Test suites (129 unit tests)
+│       └── *_test.py             # Test suites (258 unit tests)
 ├── .github/workflows/test.yml    # CI: Python 3.9-3.12 matrix
 ├── Dockerfile                    # Docker support
 ├── pyproject.toml                # pip-installable package
@@ -486,5 +489,5 @@ python scripts\cli.py dispatch -t "test" -r architect --dry-run
 
 # 4. Core tests
 python -m pytest scripts\collaboration\ -q
-# Expected: 129+ unit tests (all passing)
+# Expected: 258+ unit tests (all passing)
 ```

@@ -28,6 +28,7 @@ import hashlib
 import json
 import logging
 import time
+import threading
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, asdict
@@ -84,6 +85,7 @@ class LLMCache:
         self.ttl = ttl_seconds
         self.max_memory_entries = max_memory_entries
         self.memory_cache: Dict[str, CacheEntry] = {}
+        self._lock = threading.RLock()
         
         # 统计信息
         self.stats = {
@@ -119,20 +121,18 @@ class LLMCache:
         """
         cache_key = self._hash_prompt(prompt, backend, model)
         
-        # 1. 检查内存缓存
-        if cache_key in self.memory_cache:
-            entry = self.memory_cache[cache_key]
-            if not entry.is_expired(self.ttl):
-                entry.hit_count += 1
-                entry.last_accessed = time.time()
-                self.stats["hits"] += 1
-                return entry.response
-            else:
-                # 过期，从内存删除
-                del self.memory_cache[cache_key]
-                self.stats["expirations"] += 1
+        with self._lock:
+            if cache_key in self.memory_cache:
+                entry = self.memory_cache[cache_key]
+                if not entry.is_expired(self.ttl):
+                    entry.hit_count += 1
+                    entry.last_accessed = time.time()
+                    self.stats["hits"] += 1
+                    return entry.response
+                else:
+                    del self.memory_cache[cache_key]
+                    self.stats["expirations"] += 1
         
-        # 2. 检查磁盘缓存
         cache_file = self.cache_dir / f"{cache_key}.json"
         if cache_file.exists():
             try:
@@ -140,36 +140,50 @@ class LLMCache:
                 entry = CacheEntry(**data)
                 
                 if not entry.is_expired(self.ttl):
-                    # 加载到内存
                     entry.hit_count += 1
                     entry.last_accessed = time.time()
-                    self._add_to_memory(cache_key, entry)
+                    with self._lock:
+                        self._add_to_memory(cache_key, entry)
                     
-                    # 更新磁盘（记录命中次数）
-                    cache_file.write_text(json.dumps(asdict(entry)), encoding='utf-8')
+                    try:
+                        cache_file.write_text(json.dumps(asdict(entry)), encoding='utf-8')
+                    except Exception:
+                        pass
                     
-                    self.stats["hits"] += 1
+                    with self._lock:
+                        self.stats["hits"] += 1
                     return entry.response
                 else:
-                    # 过期，删除磁盘文件
-                    cache_file.unlink()
-                    self.stats["expirations"] += 1
-            except Exception as e:
-                # 损坏的缓存文件，删除
+                    try:
+                        cache_file.unlink()
+                    except Exception:
+                        pass
+                    with self._lock:
+                        self.stats["expirations"] += 1
+            except Exception:
                 try:
                     cache_file.unlink()
-                except Exception as e:
-                    logger.warning("Failed to delete corrupt cache file: %s", e)
+                except Exception:
+                    pass
         
-        self.stats["misses"] += 1
+        with self._lock:
+            self.stats["misses"] += 1
         return None
     
-    def set(self, prompt: str, response: str, backend: str, model: str):
+    def set(self, prompt: str, response: str, backend: str, model: str, ttl: Optional[int] = None):
         """
         保存响应到缓存
         
         同时保存到：
-        - 内存缓存（快速访- 磁盘缓存（持久化）
+        - 内存缓存（快速访问）
+        - 磁盘缓存（持久化）
+        
+        Args:
+            prompt: 提示词
+            response: LLM 响应
+            backend: LLM 后端
+            model: 模型名称
+            ttl: 过期时间（秒），None 表示使用默认 TTL
         """
         cache_key = self._hash_prompt(prompt, backend, model)
         entry = CacheEntry(
@@ -182,14 +196,14 @@ class LLMCache:
             last_accessed=time.time()
         )
         
-        # 保存到内存
-        self._add_to_memory(cache_key, entry)
+        with self._lock:
+            self._add_to_memory(cache_key, entry)
         
-        # 保存到磁盘
         cache_file = self.cache_dir / f"{cache_key}.json"
         try:
             cache_file.write_text(json.dumps(asdict(entry)), encoding='utf-8')
-            self.stats["sets"] += 1
+            with self._lock:
+                self.stats["sets"] += 1
         except Exception as e:
             logger.warning("Disk cache write failed: %s", e)
     
@@ -206,6 +220,33 @@ class LLMCache:
         
         self.memory_cache[key] = entry
     
+    def is_available(self) -> bool:
+        """
+        检查缓存是否可用
+        
+        Returns:
+            True 表示可用，False 表示不可用（需要降级）
+        
+        检查项：
+        - 缓存目录是否存在
+        - 缓存目录是否可写
+        """
+        try:
+            # 检查缓存目录是否存在且可写
+            if not self.cache_dir.exists():
+                return False
+            
+            # 尝试创建测试文件
+            test_file = self.cache_dir / ".test_write"
+            try:
+                test_file.write_text("test")
+                test_file.unlink()
+                return True
+            except Exception:
+                return False
+        except Exception:
+            return False
+    
     def get_stats(self) -> Dict[str, Any]:
         """
         获取缓存统计信息
@@ -217,16 +258,32 @@ class LLMCache:
         hit_rate = self.stats["hits"] / total_requests if total_requests > 0 else 0.0
         
         # 统计磁盘缓存
-        disk_entries = len(list(self.cache_dir.glob("*.json")))
+        try:
+            disk_entries = len(list(self.cache_dir.glob("*.json")))
+        except Exception:
+            disk_entries = 0
         
         # 计算总命中次数
         total_hits = sum(e.hit_count for e in self.memory_cache.values())
         
+        # 计算总大小（兼容 Protocol 接口）
+        try:
+            total_size = sum(f.stat().st_size for f in self.cache_dir.glob("*.json"))
+        except Exception:
+            total_size = 0
+        
         return {
+            # Protocol 要求的字段
+            "hit_count": self.stats["hits"],
+            "miss_count": self.stats["misses"],
+            "hit_rate": hit_rate,
+            "total_size": total_size,
+            "entry_count": len(self.memory_cache) + disk_entries,
+            
+            # 额外的统计信息
             "total_requests": total_requests,
             "hits": self.stats["hits"],
             "misses": self.stats["misses"],
-            "hit_rate": hit_rate,
             "hit_rate_percent": f"{hit_rate * 100:.1f}%",
             "memory_entries": len(self.memory_cache),
             "disk_entries": disk_entries,
@@ -258,39 +315,54 @@ class LLMCache:
             for key, entry in sorted_entries
         ]
     
-    def clear(self, older_than_hours: Optional[float] = None):
+    def clear(self):
         """
-        清空缓存
+        清空所有缓存
+        
+        实现 CacheProvider Protocol 接口。
+        清空内存缓存和磁盘缓存，重置统计信息。
+        """
+        # 清空磁盘缓存
+        try:
+            for f in self.cache_dir.glob("*.json"):
+                try:
+                    f.unlink()
+                except Exception as e:
+                    logger.warning("Failed to delete cache file %s: %s", f, e)
+        except Exception as e:
+            logger.warning("Failed to clear disk cache: %s", e)
+        
+        # 清空内存缓存
+        self.memory_cache.clear()
+        
+        # 重置统计信息
+        self.stats = {k: 0 for k in self.stats}
+    
+    def clear_old(self, older_than_hours: float):
+        """
+        清除旧缓存（保留此方法以保持向后兼容）
         
         Args:
-            older_than_hours: 如果指定，只清除超过指定小时数的缓存
+            older_than_hours: 清除超过指定小时数的缓存
         """
-        if older_than_hours is None:
-            # 清空所有
-            for f in self.cache_dir.glob("*.json"):
-                f.unlink()
-            self.memory_cache.clear()
-            self.stats = {k: 0 for k in self.stats}
-        else:
-            # 清除旧缓存
-            threshold = time.time() - (older_than_hours * 3600)
-            
-            # 清除内存
-            to_remove = [
-                k for k, v in self.memory_cache.items()
-                if v.timestamp < threshold
-            ]
-            for k in to_remove:
-                del self.memory_cache[k]
-            
-            # 清除磁盘
-            for cache_file in self.cache_dir.glob("*.json"):
-                try:
-                    data = json.loads(cache_file.read_text(encoding='utf-8'))
-                    if data.get("timestamp", 0) < threshold:
-                        cache_file.unlink()
-                except Exception as e:
-                    logger.warning("Failed to clean cache file %s: %s", cache_file, e)
+        threshold = time.time() - (older_than_hours * 3600)
+        
+        # 清除内存
+        to_remove = [
+            k for k, v in self.memory_cache.items()
+            if v.timestamp < threshold
+        ]
+        for k in to_remove:
+            del self.memory_cache[k]
+        
+        # 清除磁盘
+        for cache_file in self.cache_dir.glob("*.json"):
+            try:
+                data = json.loads(cache_file.read_text(encoding='utf-8'))
+                if data.get("timestamp", 0) < threshold:
+                    cache_file.unlink()
+            except Exception as e:
+                logger.warning("Failed to clean cache file %s: %s", cache_file, e)
     
     def invalidate(self, prompt: str, backend: str, model: str):
         """使特定缓存失效"""

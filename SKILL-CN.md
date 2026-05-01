@@ -2,13 +2,13 @@
 name: devsquad
 slug: devsquad
 description: |
-  V3.3.0 多智能体协作平台 — 基于 Coordinator/Worker/Scratchpad 模式的完整多Agent协作系统。
+  V3.5.0 多智能体协作平台 — 基于 Coordinator/Worker/Scratchpad 模式的完整多Agent协作系统。
   7个核心角色（架构师/产品经理/安全专家/测试专家/开发者/DevOps/UI设计师），
   支持真实LLM后端（OpenAI/Anthropic），CLI + MCP + Python API。
-  129个单元测试全通过。支持中英日三语。
+  258个单元测试全通过。支持中英日三语。
 ---
 
-# DevSquad V3.3.0 — 多智能体协作平台
+# DevSquad V3.5.0 — 多智能体协作平台
 
 ## 核心定位
 
@@ -20,7 +20,7 @@ description: |
         → [ConsensusEngine共识] → [报告格式化] → [结构化报告]
 ```
 
-## 架构总览（27大模块）
+## 架构总览（33大模块）
 
 | # | 模块 | 文件 | 职责 |
 |---|------|------|------|
@@ -36,7 +36,7 @@ description: |
 | 9 | **WarmupManager** | `warmup_manager.py` | 3层启动预热(EAGER/ASYNC/LAZY) + 进程级缓存 |
 | 10 | **MemoryBridge** | `memory_bridge.py` | 7类型记忆桥接 + 倒排索引 + TF-IDF + 遗忘曲线 + MCE+Claw集成 |
 | 11 | **TestQualityGuard** | `test_quality_guard.py` | 测试质量审计(API校验/反模式检测/维度覆盖) |
-| 12 | **PromptAssembler** | `prompt_assembler.py` | 动态提示词组装(复杂度检测/3级变体/5种风格/压缩感知) |
+| 12 | **PromptAssembler** | `prompt_assembler.py` | 动态提示词组装(复杂度检测/3级变体/5种风格/压缩感知/QC配置注入) |
 | 13 | **PromptVariantGenerator** | `prompt_variant_generator.py` | Skillify闭环反哺(模式→变体/A/B测试/自动晋升淘汰) |
 | 14 | **MCEAdapter** | `mce_adapter.py` | CarryMem集成适配器(懒加载/优雅降级/线程安全/类型映射) |
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py` (class) | WorkBuddy Claw只读桥接(索引检索/日更记忆/AI新闻流) |
@@ -52,6 +52,12 @@ description: |
 | 25 | **SkillRegistry** | `skill_registry.py` | 可复用技能注册+发现+持久化 |
 | 26 | **LLMBackend** | `llm_backend.py` | Mock/OpenAI/Anthropic + 流式输出 + 120s超时 |
 | 27 | **ConfigManager** | `config_loader.py` | YAML配置 + 环境变量覆盖（16个参数） |
+| 28 | **Protocols** | `protocols.py` | Protocol接口(CacheProvider/RetryProvider/MonitorProvider/MemoryProvider) + 异常层级 |
+| 29 | **NullProviders** | `null_providers.py` | 所有Protocol接口的空实现(降级 + 测试Mock) |
+| 30 | **EnhancedWorker** | `enhanced_worker.py` | 基于Protocol的Provider注入Worker(缓存/重试/监控/简报) |
+| 31 | **PerformanceMonitor** | `performance_monitor.py` | P95/P99响应时间/CPU/内存追踪/瓶颈检测/Markdown报告 |
+| 32 | **AgentBriefing** | `agent_briefing.py` | 上下文感知简报生成 + 优先级过滤 + 持久化 |
+| 33 | **ConfidenceScorer** | `confidence_score.py` | 5因子置信度评分(完整性/确定性/具体性/一致性/模型质量) |
 
 ---
 
@@ -489,7 +495,7 @@ def test_<功能>_<场景>(self):
 
 ## Version History
 
-- **v3.3.0** (2026-04-27): 真实LLM后端(OpenAI/Anthropic/Mock) + ThreadPoolExecutor并行执行 + InputValidator+16种Prompt注入防护 + RoleMatcher/ReportFormatter提取 + AISemanticMatcher双语匹配 + CheckpointManager SHA256完整性 + WorkflowEngine任务拆分+断点恢复 + TaskCompletionChecker完成度跟踪 + CodeMapGenerator AST分析 + DualLayerContext双层上下文 + SkillRegistry技能注册 + ConfigManager YAML配置 + LLMBackend流式输出 + Docker + GitHub Actions CI + pip可安装 + CarryMem集成 + 129单元测试
+- **v3.5.0** (2026-04-27): 真实LLM后端(OpenAI/Anthropic/Mock) + ThreadPoolExecutor并行执行 + InputValidator+16种Prompt注入防护 + RoleMatcher/ReportFormatter提取 + AISemanticMatcher双语匹配 + CheckpointManager SHA256完整性 + WorkflowEngine任务拆分+断点恢复 + TaskCompletionChecker完成度跟踪 + CodeMapGenerator AST分析 + DualLayerContext双层上下文 + SkillRegistry技能注册 + ConfigManager YAML配置 + LLMBackend流式输出 + Docker + GitHub Actions CI + pip可安装 + CarryMem集成 + 258单元测试
 - **v3.3** (2026-04-24): 7核心角色(security+devops提升为核心) + RoleRegistry SSOT + TaskDefinition.role_prompt修复 + 环境变量唯一API key入口 + InputValidator输入验证 + 3个真实场景验证通过
 - **v3.3** (2026-04-17): WorkBuddy Claw集成 + MCE v0.4支持 + 注释EN化 + 多语言README
 - **v3.2** (2026-04-17): MVP Three Lines - E2E Full Demo(10-step flow/CLI) + Dispatcher UX Enhancement(structured/compact/detailed 3-format report) + MCEAdapter Memory Classification Adapter(lazy-load/graceful-degrade) + Delivery Workflow Iron Rule (walkthrough→annotate→docs→Git loop)

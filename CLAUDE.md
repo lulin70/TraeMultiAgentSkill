@@ -2,11 +2,11 @@
 
 ## Project Overview
 
-**DevSquad** is a **V3.3.0 Multi-Role AI Task Orchestrator**. It transforms a single AI task into multi-role AI collaboration with 7 core roles. Based on the Coordinator/Worker/Scratchpad pattern with ThreadPoolExecutor parallel execution.
+**DevSquad** is a **V3.5.0 Multi-Role AI Task Orchestrator**. It transforms a single AI task into multi-role AI collaboration with 7 core roles. Based on the Coordinator/Worker/Scratchpad pattern with ThreadPoolExecutor parallel execution.
 
-**27 Core Modules**: MultiAgentDispatcher, Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor, PermissionGuard, Skillifier, WarmupManager, MemoryBridge, TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource, RoleMatcher, ReportFormatter, InputValidator, AISemanticMatcher, CheckpointManager, WorkflowEngine, TaskCompletionChecker, CodeMapGenerator, DualLayerContext, SkillRegistry, LLMBackend, ConfigManager.
+**33 Core Modules**: MultiAgentDispatcher, Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor, PermissionGuard, Skillifier, WarmupManager, MemoryBridge, TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource, RoleMatcher, ReportFormatter, InputValidator, AISemanticMatcher, CheckpointManager, WorkflowEngine, TaskCompletionChecker, CodeMapGenerator, DualLayerContext, SkillRegistry, LLMBackend, ConfigManager.
 
-**Test Coverage**: 129 unit tests, all passing.
+**Test Coverage**: 258 unit tests, all passing.
 **Cross-Platform**: Trae IDE / Claude Code / Cursor / Any MCP client / CLI / Docker.
 
 ## Architecture
@@ -45,7 +45,7 @@ python3 scripts/cli.py dispatch -t "Design auth system" -r arch sec
 python3 scripts/cli.py dispatch -t "Design auth system" --backend openai --stream
 python3 scripts/cli.py status
 python3 scripts/cli.py roles
-python3 scripts/cli.py --version  # 3.3.0
+python3 scripts/cli.py --version  # 3.5.0
 ```
 
 ### Quick Dispatch
@@ -60,8 +60,8 @@ result = disp.quick_dispatch(task, include_action_items=True)   # auto-generate 
 ```
 DevSquad/
 ├── scripts/
-│   ├── collaboration/          # ★ Core V3 modules (27 files)
-│   │   ├── _version.py         # Version SSOT (3.3.0)
+│   ├── collaboration/          # ★ Core V3 modules (33 files)
+│   │   ├── _version.py         # Version SSOT (3.5.0)
 │   │   ├── dispatcher.py       # MultiAgentDispatcher — unified entry point
 │   │   ├── coordinator.py      # Global orchestrator
 │   │   ├── scratchpad.py       # Shared blackboard
@@ -79,13 +79,20 @@ DevSquad/
 │   │   ├── dual_layer_context.py  # Project + task context with TTL
 │   │   ├── skill_registry.py     # Skill registration + discovery
 │   │   ├── config_loader.py      # YAML config + env var overrides
+│   │   ├── protocols.py         # Protocol interfaces (Cache/Retry/Monitor/Memory)
+│   │   ├── null_providers.py    # No-op implementations for degradation
+│   │   ├── enhanced_worker.py   # Worker with provider injection
+│   │   ├── performance_monitor.py # P95/P99 + bottleneck detection
+│   │   ├── agent_briefing.py    # Context-aware briefing generation
+│   │   ├── confidence_score.py  # 5-factor confidence scoring
 │   │   ├── memory_bridge.py    # MemoryBridge + WorkBuddyClawSource
 │   │   ├── mce_adapter.py      # CarryMem integration adapter
-│   │   └── *_test.py           # Test files (129 unit tests)
+│   │   └── *_test.py           # Test files (258 unit tests)
 │   ├── demo/
 │   │   └── e2e_full_demo.py    # E2E demo with CLI interface
 │   └── vibe_coding/            # Vibe Coding subsystem
 ├── .github/workflows/test.yml  # CI: Python 3.9-3.12 matrix
+├── .devsquad.yaml              # Quality control + LLM + collaboration config
 ├── Dockerfile                  # Docker support
 ├── pyproject.toml              # pip-installable package
 ├── SKILL.md                    # English skill manual (default)
@@ -107,9 +114,9 @@ DevSquad/
 - **Output i18n**: `--lang zh/en/ja/auto` — reports in Chinese (default), English, or Japanese
 - **Business data** (ROLE_TEMPLATES prompts): Chinese (CN locale), with bilingual keyword matching
 - **Documentation**: EN (README.md/SKILL.md) + CN (README-CN.md/SKILL-CN.md) + JP variants
-- **Testing**: pytest-based, 129 unit tests
+- **Testing**: pytest-based, 258 unit tests
 - **Style**: PEP 8, dataclasses for models, type hints throughout
-- **Version**: Single source of truth in `_version.py` (`3.3.0`)
+- **Version**: Single source of truth in `_version.py` (`3.5.0`)
 
 ## Role System (7 Core Roles)
 
@@ -138,14 +145,14 @@ DevSquad/
 ```bash
 cd /path/to/DevSquad
 
-# Core unit tests (129 tests)
+# Core unit tests (258 tests)
 python3 -m pytest scripts/collaboration/core_test.py \
   scripts/collaboration/role_mapping_test.py \
   scripts/collaboration/upstream_test.py \
   scripts/collaboration/mce_adapter_test.py -v
 
 # Quick smoke test
-python3 scripts/cli.py --version    # 3.3.0
+python3 scripts/cli.py --version    # 3.5.0
 python3 scripts/cli.py status       # System ready
 python3 scripts/cli.py roles        # List 7 roles
 ```
@@ -153,8 +160,146 @@ python3 scripts/cli.py roles        # List 7 roles
 ## Important Notes
 
 - This project originated as a **Trae IDE skill** but has been refactored for cross-platform compatibility
-- The `WorkBuddyClawSource` class has a hardcoded path to `/Users/lin/WorkBuddy/Claw` — this is external and optional (graceful degradation if missing)
+- The `WorkBuddyClawSource` class uses `WORKBUDDY_CLAW_PATH` env var (defaults to `/Users/lin/WorkBuddy/Claw`) — this is external and optional (graceful degradation if missing)
 - MCE adapter uses lazy-load pattern — works fine even without MCE installed
 - All components support graceful degradation — no hard dependencies on external systems
 - API keys are **environment variables only** — no `--api-key` CLI flag for security
 - `ThreadPoolExecutor` provides real parallel execution for multi-role dispatch
+
+## Agent Behavior Guidelines (Quality Control)
+
+These guidelines are **always active** regardless of configuration loading status. They provide baseline behavior standards for all DevSquad AI agents.
+
+### 🎯 Quality Control Standards
+
+#### Hallucination Prevention (MANDATORY)
+- ✅ **All API/library references MUST include**: Official documentation URL or specific version number
+- ✅ **Function usage MUST be verified**: Use `import module; dir(module)` to verify signatures before recommending
+- ❌ **FORBIDDEN language**: "obviously", "clearly", "undoubtedly", "everyone knows", "it goes without saying"
+- ✅ **Alternative**: Provide evidence, citations, code examples, or test results instead of absolute statements
+- ✅ **Uncertainty acknowledgment**: Use "appears to", "suggests", "based on X" when not 100% certain
+
+#### Overconfidence Prevention (MANDATORY)
+- ✅ **Technical decisions MUST present ≥2 alternatives** with pros/cons analysis
+- ✅ **Failure scenarios MUST list ≥3 potential failure modes** with mitigation strategies
+- ✅ **Trade-off discussion REQUIRED**: Always acknowledge limitations, risks, and opportunity costs
+- ✅ **Confidence scoring**: Explicitly state confidence level (High/Medium/Low) with reasoning
+
+#### Pattern Diversity (RECOMMENDED)
+- ✅ **Consider current state-of-the-art**: Evaluate approaches from last 6 months
+- ✅ **Multi-approach evaluation**: Assess ≥2 different solutions before recommending
+- ⚠️ **Pattern repetition warning**: Flag if similar solution was used in recent tasks (within 10 dispatches)
+
+#### Self-Verification Trap Avoidance (MANDATORY)
+- ✅ **Creator/Tester separation**: Code implementation and test creation MUST be done by different roles
+- ✅ **Specification-based testing**: Tests based on requirements (PRD), NOT implementation details
+- ✅ **Error coverage minimum**: Test error cases must cover ≥15% of total test cases
+- ❌ **FORBIDDEN**: Testing only happy path or implementation-specific behaviors
+
+### 🔒 Security Behavior Guidelines
+
+#### Permission Levels (ALWAYS ACTIVE)
+| Level | Description | When to Use |
+|-------|-------------|-------------|
+| L1-PLAN | Read-only mode | Analysis, research, design tasks |
+| L2-DEFAULT | Write with confirmation | Standard coding tasks |
+| L3-AUTO | AI-judged safe ops | Trusted contexts with guardrails |
+| L4-BYPASS | Manual auth required | Sensitive operations (rare) |
+
+#### Input Validation (16 Patterns Active)
+- 🔴 **BLOCK immediately**: SQL injection, Command injection, XSS, SSRF, Path traversal
+- 🟡 **SANITIZE + warn**: LDAP injection, XPath injection, Header manipulation, Email injection
+- 🟢 **FLAG advisory**: Template injection, ReDoS, Format string, XXE
+
+#### Sensitive Data Handling (MANDATORY)
+- ❌ **FORBIDDEN**: Write passwords, API keys, tokens to Scratchpad SHARED zone
+- ❌ **FORBIDDEN**: Include secrets in error messages or log output
+- ✅ **REQUIRED**: Use environment variables or secret managers for credentials
+- ✅ **REQUIRED**: Mask sensitive data in outputs (show only last 4 characters)
+
+#### Security Review Triggers
+- Auto-trigger when `security` role is in the task
+- Veto power enabled: Security role can block deployment
+- Critical findings block deployment until resolved
+
+### 👥 Collaboration Protocol
+
+#### RACI Matrix Compliance (STRICT MODE)
+- ✅ **One Responsible (R)** per task: The primary doer/executor
+- ✅ **One Accountable (A)** per task: Final owner/approver (usually architect or pm)
+- ✅ **Consulted (C)** roles MUST be asked BEFORE making decisions
+- ✅ **Informed (I)** roles notified AFTER decisions are made
+- ⚠️ **A can override R** in case of quality/security concerns
+
+#### Scratchpad Zoned Protocol (MANDATORY)
+| Zone | Purpose | Rules |
+|------|---------|-------|
+| READONLY | Other roles' outputs | Read-only, no modifications allowed |
+| WRITE | Your output only | Isolated namespace for your work |
+| SHARED | Consensus conclusions | Requires vote to write, read by all |
+| PRIVATE | Sensitive data | Invisible to other roles |
+
+- ❌ **FORBIDDEN**: Cross-zone writes (WRITE zone cannot modify READONLY)
+- ❌ **FORBIDDEN**: Sensitive data in SHARED zone
+
+#### Consensus Mechanism (ACTIVE)
+- **Threshold**: 70% agreement required for approval
+- **Weighted voting** by role importance:
+  - Architect: 3.0 votes
+  - Security: 2.5 votes
+  - Product Manager: 2.0 votes
+  - Tester/Coder: 1.5 votes each
+  - DevOps/UI: 1.0 vote each
+- **Veto power**: Security and Architect roles can veto decisions
+- **Deadlock handling**: Auto-escalate to user after 5-minute timeout
+
+### 📊 Output Quality Gate
+
+All agent outputs are scored on a 0-100 scale:
+
+| Score Range | Action | Description |
+|-------------|--------|-------------|
+| 0-84 | **REJECTED** (Strict mode) / WARNED (Normal) | Below minimum quality |
+| 85-99 | **CONDITIONAL** | Acceptable with improvement suggestions |
+| 100 | **ACCEPTED** | Meets all quality criteria |
+
+**Scoring Criteria**:
+- Evidence-based claims (+20)
+- Multiple alternatives presented (+15)
+- Failure scenarios analyzed (+15)
+- Trade-offs acknowledged (+10)
+- Security considerations included (+10)
+- Test coverage adequate (+10)
+- Clear action items (+10)
+- No forbidden language (+10)
+
+### 🚨 Escalation Policy
+
+**Auto-escalate to user when**:
+- Consensus deadlock exceeds timeout (5 minutes)
+- Critical security finding blocks deployment
+- Quality score below threshold in strict mode
+- Role responsibility conflict (R/A disagreement)
+- External dependency failure impacts task completion
+
+### 📝 Documentation Requirements
+
+All agents MUST:
+- ✅ Document assumptions and rationale
+- ✅ List dependencies and version requirements
+- ✅ Provide rollback procedure for changes
+- ✅ Include testing instructions
+- ✅ Mark incomplete items with TODO/FIXME
+
+### 🔍 Continuous Improvement
+
+Agents should:
+- ✅ Learn from feedback in subsequent tasks
+- ✅ Propose process improvements via consensus
+- ✅ Report recurring issues for systemic fixes
+- ✅ Share successful patterns across team (via Scratchpad SHARED zone)
+
+---
+
+**Last Updated**: 2026-04-30  
+**Configuration Source**: `.devsquad.yaml` + This document (belt-and-suspenders approach)

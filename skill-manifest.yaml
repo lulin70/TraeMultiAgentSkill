@@ -1,10 +1,10 @@
 name: devsquad
-version: 3.3.0
+version: 3.5.0
 description: |
-  DevSquad V3.3.0 — Multi-Role AI Task Orchestrator.
+  DevSquad V3.5.0 — Multi-Role AI Task Orchestrator.
   One task → Multi-role AI collaboration → One conclusion.
   7 core roles (architect/pm/security/tester/coder/devops/ui), real LLM backend
-  (OpenAI/Anthropic), CLI + MCP + Python API. 129 unit tests, all passing.
+  (OpenAI/Anthropic), CLI + MCP + Python API. 258 unit tests, all passing.
   ThreadPoolExecutor parallel, CheckpointManager, WorkflowEngine, streaming, Docker, CI.
 status: active
 ai_enhanced: true
@@ -21,7 +21,7 @@ ai_capabilities:
 capabilities:
   - name: multi-agent-dispatcher
     description: |
-      V3.3.0 统一调度入口 - 一键完成多Agent协作
+      V3.5.0 统一调度入口 - 一键完成多Agent协作
 
       核心能力：
       - 任务意图分析与角色自动匹配（中英双语关键词）
@@ -189,7 +189,7 @@ metadata:
   repository: https://github.com/lulin70/DevSquad
 
   version_history:
-    - version: 3.3.0
+    - version: 3.5.0
       date: "2026-04-27"
       changes:
         - Real LLM backends (OpenAI/Anthropic/Mock) + streaming
@@ -200,7 +200,7 @@ metadata:
         - CodeMapGenerator, DualLayerContext, SkillRegistry, ConfigManager
         - Docker + GitHub Actions CI + pip installable
         - i18n support (zh/en/ja)
-        - 27 modules, 129 unit tests all passing
+        - 33 modules, 258 unit tests all passing
 
     - version: 3.0.0
       date: "2026-04-16"

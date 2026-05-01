@@ -374,10 +374,7 @@ class Coordinator:
 
     def _get_worker_for_task(self, task: TaskDefinition) -> Optional[Worker]:
         for wid, w in self.workers.items():
-            if w.role_id == task.role_id and not any(
-                existing_r.task_id == task.task_id
-                for existing_r in getattr(w, '_last_results', [])
-            ):
+            if w.role_id == task.role_id:
                 return w
         return None
 

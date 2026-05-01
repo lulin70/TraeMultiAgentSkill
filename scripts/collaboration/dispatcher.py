@@ -404,6 +404,7 @@ class MultiAgentDispatcher:
 
         self._dispatch_history: List[DispatchResult] = []
         self._max_history = 100
+        self._validator = InputValidator()
 
     def analyze_task(self, task_description: str) -> List[Dict[str, str]]:
         """
@@ -453,7 +454,7 @@ class MultiAgentDispatcher:
             except Exception:
                 lang = "zh"
 
-        validator = InputValidator()
+        validator = self._validator
         task_result = validator.validate_task(task_description)
         if not task_result.valid:
             return DispatchResult(
@@ -907,7 +908,7 @@ class MultiAgentDispatcher:
         )
         combined.total_tests = sum(r.total_tests for r in reports)
         combined.issues = [i for r in reports for i in r.issues]
-        combined.test_functions = [tf for r in reports for r in r.test_functions for tf in r.test_functions]
+        combined.test_functions = [tf for r in reports for tf in r.test_functions]
         if reports:
             scores = [r.score.overall for r in reports]
             combined.score.overall = sum(scores) / len(scores) if scores else 0

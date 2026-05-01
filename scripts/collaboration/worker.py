@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Worker - 工作者执行框架
+Worker - Agent Execution Framework
 
-每个 Worker 是一个独立的 Agent 实例，执行具体任务，
-通过 Scratchpad 与其他 Worker 交换信息。
+Each Worker is an independent Agent instance that executes tasks
+and exchanges information with other Workers via Scratchpad.
 """
 
 import time
 import sys
 import os
+import threading
 from typing import List, Optional, Any, Dict
 
 from .models import (
@@ -26,30 +27,31 @@ from .usage_tracker import track_usage
 
 class Worker:
     """
-    工作者 Agent 实例 - 多角色协作的执行单元
+    Worker Agent Instance - Execution Unit for Multi-Role Collaboration
 
-    每个 Worker 代表一个特定角色（架构师/测试专家/开发者等），
-    独立执行分配的任务，通过 Scratchpad 与其他 Worker 交换信息。
+    Each Worker represents a specific role (architect/tester/developer, etc.),
+    independently executes assigned tasks, and exchanges information with
+    other Workers via Scratchpad.
 
-    核心能力:
-    - execute(): 执行 TaskDefinition，产出 WorkerResult
-    - write_finding/question/conflict(): 向共享黑板写入不同类型的信息
-    - send_notification(): 向其他 Worker 发送跨角色消息
-    - vote_on_proposal(): 参与共识投票
+    Core Capabilities:
+    - execute(): Execute TaskDefinition, produce WorkerResult
+    - write_finding/question/conflict(): Write different types of info to shared scratchpad
+    - send_notification(): Send cross-role messages to other Workers
+    - vote_on_proposal(): Participate in consensus voting
 
-    生命周期:
-        创建 → 接收任务 → 读取相关上下文 → 执行工作 → 写入结果 → 发送通知
+    Lifecycle:
+        Create -> Receive Task -> Read Context -> Execute Work -> Write Results -> Send Notifications
 
-    与其他组件的关系:
-    - Scratchpad: 共享数据交换媒介（读写）
-    - ConsensusEngine: 通过 vote_on_proposal 参与共识
-    - Coordinator: 由 Coordinator.spawn_workers() 创建和管理
+    Relationships with Other Components:
+    - Scratchpad: Shared data exchange medium (read/write)
+    - ConsensusEngine: Participate in consensus via vote_on_proposal
+    - Coordinator: Created and managed by Coordinator.spawn_workers()
 
-    使用示例:
+    Usage Example:
         worker = Worker(
             worker_id="arch-abc123",
             role_id="architect",
-            role_prompt="你是系统架构师...",
+            role_prompt="You are a system architect...",
             scratchpad=scratchpad,
         )
         result = worker.execute(task_definition)
@@ -58,14 +60,14 @@ class Worker:
     def __init__(self, worker_id: str, role_id: str, role_prompt: str,
                  scratchpad: Scratchpad, llm_backend=None, stream: bool = False):
         """
-        初始化 Worker 实例
+        Initialize Worker instance.
 
         Args:
-            worker_id: Worker 唯一标识符（格式建议: "{role_id}-{hex}"）
-            role_id: 角色标识（如 "architect", "tester", "solo-coder"）
-            role_prompt: 角色的系统提示词/指令模板
-            scratchpad: 关联的共享黑板实例
-            llm_backend: LLM执行后端（None=MockBackend，返回组装的prompt）
+            worker_id: Unique worker identifier (format: "{role_id}-{hex}")
+            role_id: Role identifier (e.g., "architect", "tester", "solo-coder")
+            role_prompt: Role system prompt / instruction template
+            scratchpad: Associated shared scratchpad instance
+            llm_backend: LLM execution backend (None=MockBackend, returns assembled prompt)
         """
         self.worker_id = worker_id
         self.role_id = role_id
@@ -74,34 +76,36 @@ class Worker:
         self.llm_backend = llm_backend
         self.stream = stream
         self._notifications_outbox: List[TaskNotification] = []
+        self._notifications_lock = threading.Lock()
         self._entries_written_count = 0
         self._last_assembled_prompt = None
 
     def execute(self, task: TaskDefinition) -> WorkerResult:
         """
-        执行分配的任务
+        Execute assigned task.
 
-        完整执行流程:
-        1. 构建执行上下文（读取 Scratchpad 中相关发现）
-        2. 调用 _do_work() 生成工作产出
-        3. 将产出作为 FINDING 写入 Scratchpad
-        4. 返回包含输出和统计信息的 WorkerResult
+        Full execution flow:
+        1. Build execution context (read relevant findings from Scratchpad)
+        2. Call _do_work() to generate work output
+        3. Write output as FINDING to Scratchpad
+        4. Return WorkerResult with output and statistics
 
         Args:
-            task: 任务定义，包含描述、角色ID、阶段ID等
+            task: Task definition containing description, role ID, phase ID, etc.
 
         Returns:
-            WorkerResult: 执行结果，包含:
-                - success: 是否成功
-                - output: 输出内容字典
-                - error: 错误信息（失败时）
-                - scratchpad_entries_written: 写入条目数
-                - notifications_sent: 发送通知数
-                - duration_seconds: 执行耗时
+            WorkerResult: Execution result containing:
+                - success: Whether successful
+                - output: Output content dictionary
+                - error: Error message (on failure)
+                - scratchpad_entries_written: Number of entries written
+                - notifications_sent: Number of notifications sent
+                - duration_seconds: Execution duration
 
         Note:
-            即使 _do_work() 返回空字符串，execute 仍会返回 success=True，
-            只是 output.finding_summary 为空。仅在抛出异常时才标记为失败。
+            Even if _do_work() returns an empty string, execute still returns
+            success=True, just with empty output.finding_summary. Only marks
+            as failed when an exception is raised.
         """
         start_time = time.time()
         try:
@@ -151,7 +155,7 @@ class Worker:
                 task_id=task.task_id,
                 success=False,
                 output={"worker_id": self.worker_id, "role_id": self.role_id,
-                        "task_id": task.task_id, "error_detail": str(e)},
+                        "task_id": task.task_id, "error_detail": "Execution failed"},
                 error=str(e),
                 duration_seconds=time.time() - start_time,
             )
@@ -159,15 +163,15 @@ class Worker:
     def read_scratchpad(self, query: str = "",
                          since=None, limit: int = 20) -> List[ScratchpadEntry]:
         """
-        从共享黑板读取相关条目
+        Read relevant entries from shared scratchpad.
 
         Args:
-            query: 关键词查询（在 content 和 tags 中模糊匹配）
-            since: 起始时间过滤（只返回此时间之后的条目）
-            limit: 最大返回条数
+            query: Keyword query (fuzzy match in content and tags)
+            since: Start time filter (only return entries after this time)
+            limit: Maximum number of entries to return
 
         Returns:
-            List[ScratchpadEntry]: 匹配的条目列表，按时间倒序
+            List[ScratchpadEntry]: Matching entries, sorted by time descending
         """
         return self.scratchpad.read(
             query=query, since=since, limit=limit,
@@ -175,16 +179,16 @@ class Worker:
 
     def write_finding(self, finding: ScratchpadEntry) -> str:
         """
-        向 Scratchpad 写入一条发现（FINDING 类型）
+        Write a finding (FINDING type) to Scratchpad.
 
-        会自动设置 worker_id 和 role_id 为当前 Worker 的身份，
-        并递增内部写入计数器。
+        Automatically sets worker_id and role_id to current Worker identity,
+        and increments internal write counter.
 
         Args:
-            finding: 要写入的发现条目（ScratchpadEntry 实例）
+            finding: Finding entry to write (ScratchpadEntry instance)
 
         Returns:
-            str: 写入后的 entry_id
+            str: entry_id after writing
         """
         finding.worker_id = self.worker_id
         finding.role_id = self.role_id
@@ -195,18 +199,18 @@ class Worker:
     def write_question(self, question: str, to_roles: List[str] = None,
                        tags: List[str] = None) -> str:
         """
-        向 Scratchpad 写入问题并可选地通知其他角色
+        Write a question to Scratchpad and optionally notify other roles.
 
-        创建 QUESTION 类型条目写入黑板。如指定了 to_roles，
-        会同时生成 TaskNotification 发送给目标角色的 Worker。
+        Creates a QUESTION type entry and writes to scratchpad. If to_roles
+        is specified, also generates TaskNotification for target role Workers.
 
         Args:
-            question: 问题内容文本
-            to_roles: 目标角色ID列表（如 ["architect", "tester"]），为空则不发送通知
-            tags: 可选的标签列表
+            question: Question content text
+            to_roles: Target role ID list (e.g., ["architect", "tester"]), empty means no notification
+            tags: Optional tag list
 
         Returns:
-            str: 写入后的 entry_id
+            str: entry_id after writing
         """
         entry = ScratchpadEntry(
             worker_id=self.worker_id,
@@ -226,7 +230,7 @@ class Worker:
                 notification_type="question",
                 summary=question[:100],
                 details=question,
-                action_required="请回答此问题",
+                action_required="Please answer this question",
             )
             self.send_notification(notification)
         return eid
@@ -234,24 +238,24 @@ class Worker:
     def write_conflict(self, conflict: str, conflicting_entry_id: str,
                         reason: str = "") -> str:
         """
-        向 Scratchpad 写入冲突记录（CONFLICT 类型）
+        Write a conflict record (CONFLICT type) to Scratchpad.
 
-        当检测到与其他 Worker 的产出存在矛盾时调用。
-        冲突会触发后续 Coordinator.resolve_conflicts() 共识流程。
+        Called when contradiction with another Worker's output is detected.
+        Conflicts trigger subsequent Coordinator.resolve_conflicts() consensus flow.
 
         Args:
-            conflict: 冲突描述文本
-            conflicting_entry_id: 产生冲突的对端条目 ID
-            reason: 冲突原因说明
+            conflict: Conflict description text
+            conflicting_entry_id: Conflicting peer entry ID
+            reason: Conflict reason explanation
 
         Returns:
-            str: 写入后的 entry_id
+            str: entry_id after writing
         """
         entry = ScratchpadEntry(
             worker_id=self.worker_id,
             role_id=self.role_id,
             entry_type=EntryType.CONFLICT,
-            content=f"{conflict}\n\n[冲突原因] {reason}",
+            content=f"{conflict}\n\n[Conflict reason] {reason}",
             confidence=0.8,
             tags=["conflict", conflicting_entry_id],
         )
@@ -261,60 +265,63 @@ class Worker:
 
     def send_notification(self, notification: TaskNotification):
         """
-        发送跨 Worker 通知
+        Send cross-Worker notification.
 
-        将通知放入内部发件箱（outbox），等待 Coordinator 通过
-        get_pending_notifications() 收取并转发给目标 Worker。
+        Places notification in internal outbox, waiting for Coordinator
+        to collect via get_pending_notifications() and forward to target Workers.
 
         Args:
-            notification: 通知对象，包含发送方、接收方列表、摘要等
+            notification: Notification object containing sender, recipient list, summary, etc.
         """
-        self._notifications_outbox.append(notification)
+        with self._notifications_lock:
+            self._notifications_outbox.append(notification)
 
     def get_pending_notifications(self) -> List[TaskNotification]:
         """
-        获取并清空待发送的通知队列
+        Get and clear pending notification queue.
 
-        由 Coordinator 在 collect_results() 时调用，
-        取出所有累积的通知后清空内部缓冲区。
+        Called by Coordinator during collect_results(),
+        retrieves all accumulated notifications and clears internal buffer.
 
         Returns:
-            List[TaskNotification]: 待处理通知列表（调用后队列为空）
+            List[TaskNotification]: Pending notification list (queue is empty after call)
         """
-        notifications = list(self._notifications_outbox)
-        self._notifications_outbox.clear()
-        return notifications
+        with self._notifications_lock:
+            notifications = list(self._notifications_outbox)
+            self._notifications_outbox.clear()
+            return notifications
 
     def get_last_prompt(self) -> Optional[Any]:
         """
-        获取最近一次 _do_work() 的提示词组装结果
+        Get the most recent _do_work() prompt assembly result.
 
-        由 PromptAssembler 生成，包含复杂度/变体/token估算等元数据。
-        可用于 Skillify 闭环：将成功的 prompt 变体反馈回系统。
+        Generated by PromptAssembler, contains metadata such as
+        complexity/variant/token estimate. Can be used for Skillify
+        feedback loop: feed successful prompt variants back to the system.
 
         Returns:
-            Optional[AssembledPrompt]: 最近一次组装结果，未执行过则返回 None
+            Optional[AssembledPrompt]: Most recent assembly result, None if never executed
         """
         return self._last_assembled_prompt
 
     def vote_on_proposal(self, proposal_id: str, decision: bool,
                           reason: str = "", weight: float = None) -> Dict[str, Any]:
         """
-        对共识提案进行投票
+        Vote on a consensus proposal.
 
-        创建 Vote 对象并包装为标准返回格式。
-        权重默认从 ROLE_WEIGHTS 全局配置中按角色获取。
+        Creates a Vote object and wraps it in standard return format.
+        Weight defaults from ROLE_WEIGHTS global config by role.
 
         Args:
-            proposal_id: 共识提案 ID
-            decision: 投票决定 (True=赞成, False=反对)
-            reason: 投票理由说明
-            weight: 投票权重（None 则使用角色默认权重）
+            proposal_id: Consensus proposal ID
+            decision: Vote decision (True=approve, False=reject)
+            reason: Vote reason explanation
+            weight: Vote weight (None uses role default weight)
 
         Returns:
-            Dict[str, Any]: 包含 proposal_id 和 Vote 对象的字典
-                - proposal_id: 提案ID
-                - vote: Vote 数据对象
+            Dict[str, Any]: Dictionary containing proposal_id and Vote object
+                - proposal_id: Proposal ID
+                - vote: Vote data object
         """
         from .models import Vote, ROLE_WEIGHTS
         w = weight or ROLE_WEIGHTS.get(self.role_id, 1.0)
@@ -330,17 +337,17 @@ class Worker:
     def _build_execution_context(self, task: TaskDefinition,
                                    compression_level=None) -> Dict[str, Any]:
         """
-        构建执行上下文（含提示词组装）
+        Build execution context (including prompt assembly).
 
-        读取 Scratchpad 中与任务相关的发现，并通过 PromptAssembler
-        进行动态提示词裁剪（按任务复杂度和压缩级别）。
+        Reads relevant findings from Scratchpad and performs dynamic prompt
+        trimming via PromptAssembler (based on task complexity and compression level).
 
         Args:
-            task: 任务定义
-            compression_level: ContextCompressor 压缩级别（可选，影响 prompt 风格）
+            task: Task definition
+            compression_level: ContextCompressor compression level (optional, affects prompt style)
 
         Returns:
-            Dict[str, Any]: 执行上下文，包含 task/role_prompt/related_findings/
+            Dict[str, Any]: Execution context containing task/role_prompt/related_findings/
                              worker_id/compression_level
         """
         related = self.read_scratchpad(
@@ -356,21 +363,21 @@ class Worker:
 
     def _do_work(self, context: Dict[str, Any]) -> str:
         """
-        执行核心工作 - 通过 PromptAssembler 动态组装提示词，然后通过 LLMBackend 执行
+        Execute core work - dynamically assemble prompt via PromptAssembler, then execute via LLMBackend.
 
-        组装流程:
-        1. 从 context 提取任务描述、相关发现、压缩级别
-        2. 通过 PromptAssembler.detect_complexity() 自动判断复杂度
-        3. 按复杂度选择模板变体 (compact/standard/enhanced)
-        4. 应用压缩级别覆盖（如有）
-        5. 输出最终工作指令
-        6. 如果配置了 LLMBackend，调用 LLM 执行；否则返回组装的指令
+        Assembly flow:
+        1. Extract task description, related findings, compression level from context
+        2. Auto-detect complexity via PromptAssembler.detect_complexity()
+        3. Select template variant by complexity (compact/standard/enhanced)
+        4. Apply compression level override (if any)
+        5. Output final work instruction
+        6. If LLMBackend is configured, call LLM; otherwise return assembled instruction
 
         Args:
-            context: 由 _build_execution_context() 构建的执行上下文
+            context: Execution context built by _build_execution_context()
 
         Returns:
-            str: LLM 响应文本（有后端时）或组装后的工作指令文本（无后端时）
+            str: LLM response text (with backend) or assembled work instruction text (without backend)
         """
         from .prompt_assembler import PromptAssembler
         from .llm_backend import MockBackend
@@ -402,6 +409,17 @@ class Worker:
         from .models import ROLE_REGISTRY as _RR
         _rdef = _RR.get(self.role_id)
         _rname = _rdef.name if _rdef else self.role_id
+
+        try:
+            from .llm_cache import get_llm_cache
+            cache = get_llm_cache()
+            cached = cache.get(result.instruction, "backend", getattr(backend, 'model', 'unknown'))
+            if cached:
+                print(f"  [{_rname}] Cache hit.", file=sys.stderr)
+                return cached
+        except Exception:
+            cache = None
+
         print(f"  [{_rname}] Calling LLM backend...", file=sys.stderr)
         try:
             if self.stream and hasattr(backend, 'generate_stream'):
@@ -415,6 +433,13 @@ class Worker:
             else:
                 response = backend.generate(result.instruction)
             print(f"  [{_rname}] Response received.", file=sys.stderr)
+
+            if cache and response:
+                try:
+                    cache.set(result.instruction, response, "backend", getattr(backend, 'model', 'unknown'))
+                except Exception:
+                    pass
+
             return response
         except Exception as e:
             print(f"  [{_rname}] LLM call failed: {e}", file=sys.stderr)
@@ -423,12 +448,13 @@ class Worker:
 
 class WorkerFactory:
     """
-    工厂类 - 批量创建 Worker 实例
+    Factory class - batch creation of Worker instances.
 
-    提供 create() 和 create_batch() 两种创建方式，
-    封装 Worker 实例化的细节，使调用方无需关心内部构造逻辑。
+    Provides create() and create_batch() creation methods,
+    encapsulating Worker instantiation details so callers
+    don't need to know internal construction logic.
 
-    使用示例:
+    Usage Example:
         single = WorkerFactory.create("w-1", "architect", prompt, scratchpad)
         batch = WorkerFactory.create_batch([
             {"worker_id": "w-1", "role_id": "architect", ...},
@@ -440,18 +466,18 @@ class WorkerFactory:
     def create(worker_id: str, role_id: str, role_prompt: str,
                scratchpad: Scratchpad, llm_backend=None, stream: bool = False) -> Worker:
         """
-        创建单个 Worker 实例
+        Create a single Worker instance.
 
         Args:
-            worker_id: Worker 唯一标识
-            role_id: 角色标识
-            role_prompt: 角色提示词
-            scratchpad: 共享黑板实例
-            llm_backend: LLM执行后端
-            stream: 是否启用流式输出
+            worker_id: Unique worker identifier
+            role_id: Role identifier
+            role_prompt: Role prompt
+            scratchpad: Shared scratchpad instance
+            llm_backend: LLM execution backend
+            stream: Whether to enable streaming output
 
         Returns:
-            Worker: 新创建的 Worker 实例
+            Worker: Newly created Worker instance
         """
         return Worker(worker_id, role_id, role_prompt, scratchpad, llm_backend, stream=stream)
 
@@ -459,20 +485,20 @@ class WorkerFactory:
     def create_batch(workers_config: List[Dict[str, str]],
                      scratchpad: Scratchpad, llm_backend=None) -> List[Worker]:
         """
-        批量创建 Worker 实例
+        Batch create Worker instances.
 
-        遍历配置列表，为每项配置创建一个 Worker。
-        worker_id 如未提供则自动生成（格式: "w-{index}"）。
+        Iterates through config list, creating a Worker for each entry.
+        worker_id is auto-generated if not provided (format: "w-{index}").
 
         Args:
-            workers_config: Worker 配置列表，每项包含:
-                - worker_id (可选): Worker ID
-                - role_id (必需): 角色标识
-                - role_prompt (可选): 角色提示词
-            scratchpad: 所有 Worker 共享的 Scratchpad 实例
+            workers_config: Worker config list, each entry contains:
+                - worker_id (optional): Worker ID
+                - role_id (required): Role identifier
+                - role_prompt (optional): Role prompt
+            scratchpad: Shared Scratchpad instance for all Workers
 
         Returns:
-            List[Worker]: 创建的 Worker 实例列表
+            List[Worker]: List of created Worker instances
         """
         workers = []
         for cfg in workers_config:
