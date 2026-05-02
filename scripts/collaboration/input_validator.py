@@ -130,6 +130,14 @@ class InputValidator:
             for pattern in self.PROMPT_INJECTION_PATTERNS
         ]
     
+    RULE_COMMAND_PATTERNS = [
+        re.compile(r"^(?:列出|查看|显示).*(?:规则|规范)$"),
+        re.compile(r"^(?:list|show|display)\s+(?:rules?|norms?)$", re.IGNORECASE),
+        re.compile(r"^(?:ルール|規範)(?:一覧|確認)$"),
+        re.compile(r"^(?:删除|移除).*(?:规则|RULE)"),
+        re.compile(r"^(?:delete|remove)\s+(?:rule|RULE)", re.IGNORECASE),
+    ]
+
     def validate_task(self, task: str) -> ValidationResult:
         """
         验证任务描述
@@ -149,7 +157,8 @@ class InputValidator:
         
         # 2. 长度检查
         task_length = len(task)
-        if task_length < self.min_length:
+        is_rule_command = any(p.search(task) for p in self.RULE_COMMAND_PATTERNS)
+        if task_length < self.min_length and not is_rule_command:
             return ValidationResult(
                 valid=False,
                 reason=f"Task too short (min {self.min_length} chars, got {task_length})"
