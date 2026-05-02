@@ -66,6 +66,12 @@ temp/
 *.patch
 PROJECT_REVIEW_*.md
 test_full_integration.py
+test_p2_full.py
+demo_live_system.py
+add_personal_rule.py
+add_rule_native.py
+rule_manager.py
+data/personal_rules*.json
 
 # --- Legacy / Unused (V2 remnants) ---
 memory-bank/
@@ -77,3 +83,4 @@ install.sh
 :memory:
 :memory:-shm
 :memory:-wal
+test_p2_quick.py

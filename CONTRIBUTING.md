@@ -90,8 +90,8 @@ DevSquad/
 ├── skill-manifest.yaml         # Trae IDE skill manifest
 ├── CLAUDE.md                   # Claude Code integration
 ├── SKILL.md                    # Operational manual (EN)
-├── SKILL-CN.md                 # Operational manual (CN)
-├── SKILL-JP.md                 # Operational manual (JP)
+├── docs/i18n/SKILL_CN.md         # Operational manual (CN)
+├── docs/i18n/SKILL_JP.md         # Operational manual (JP)
 └── README.md                   # Project readme
 ```
 
@@ -112,7 +112,7 @@ DevSquad has **7 core roles** with full prompt templates:
 When adding a new role, update:
 1. `ROLE_REGISTRY` in `scripts/collaboration/models.py`
 2. `ROLE_WEIGHTS` in `scripts/collaboration/models.py`
-3. Role table in `README.md`, `SKILL.md`, `SKILL-CN.md`, `SKILL-JP.md`
+3. Role table in `README.md`, `SKILL.md`, `docs/i18n/SKILL_CN.md`, `docs/i18n/SKILL_JP.md`
 
 ## Code Style
 

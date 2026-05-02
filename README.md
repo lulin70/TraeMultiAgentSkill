@@ -335,6 +335,12 @@ See [GUIDE.md](GUIDE.md) §4 for full lifecycle details with gate conditions and
 | **TestQualityGuard** | `test_quality_guard.py` | Test quality enforcement |
 | **PromptVariantGenerator** | `prompt_variant_generator.py` | A/B prompt testing |
 | **ConfigManager (YAML)** | `config_manager.py` | Project-level YAML config |
+| **WorkBuddyClawSource** | `memory_bridge.py` | WorkBuddy read-only bridge |
+| **Models** | `models.py` | Shared data models and type definitions |
+| **LLMCacheAsync** | `llm_cache_async.py` | Async LLM cache for concurrent workloads |
+| **LLMRetryAsync** | `llm_retry_async.py` | Async LLM retry with backoff |
+| **IntegrationExample** | `integration_example.py` | DevSquad integration example code |
+| **AsyncIntegrationExample** | `async_integration_example.py` | Async DevSquad integration example |
 
 ## Configuration
 

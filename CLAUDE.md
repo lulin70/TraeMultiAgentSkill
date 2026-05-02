@@ -4,9 +4,9 @@
 
 **DevSquad** is a **V3.5.0 Multi-Role AI Task Orchestrator**. It transforms a single AI task into multi-role AI collaboration with 7 core roles. Based on the Coordinator/Worker/Scratchpad pattern with ThreadPoolExecutor parallel execution.
 
-**34 Core Modules**: MultiAgentDispatcher, Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor, PermissionGuard, Skillifier, WarmupManager, MemoryBridge, TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource, RoleMatcher, ReportFormatter, InputValidator, AISemanticMatcher, CheckpointManager, WorkflowEngine, TaskCompletionChecker, CodeMapGenerator, DualLayerContext, SkillRegistry, LLMBackend, ConfigManager, Protocols, NullProviders, EnhancedWorker, PerformanceMonitor, AgentBriefing, ConfidenceScorer, RoleTemplateMarket.
+**44 Core Modules**: MultiAgentDispatcher, Coordinator, Scratchpad, Worker, EnhancedWorker, ConsensusEngine, BatchScheduler, ContextCompressor, PermissionGuard, Skillifier, WarmupManager, MemoryBridge, TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource, RoleMatcher, ReportFormatter, InputValidator, AISemanticMatcher, CheckpointManager, WorkflowEngine, TaskCompletionChecker, CodeMapGenerator, DualLayerContext, SkillRegistry, LLMBackend, LLMCache, LLMRetry, ConfigManager, Protocols, NullProviders, PerformanceMonitor, AgentBriefing, ConfidenceScorer, RoleTemplateMarket, UsageTracker, Models, ConfigManager(YAML), LLMCacheAsync, LLMRetryAsync, IntegrationExample, AsyncIntegrationExample.
 
-**Test Coverage**: 234 unit tests + 61 contract tests, all passing.
+**Test Coverage**: 370 tests (129 unit + 234 contract + 7 integration), all passing.
 **Cross-Platform**: Trae IDE / Claude Code / Cursor / Any MCP client / CLI / Docker.
 
 ## Architecture
@@ -60,35 +60,41 @@ result = disp.quick_dispatch(task, include_action_items=True)   # auto-generate 
 ```
 DevSquad/
 ├── scripts/
-│   ├── collaboration/          # ★ Core V3 modules (33 files)
+│   ├── collaboration/          # ★ Core V3.5 modules (44 files)
 │   │   ├── _version.py         # Version SSOT (3.5.0)
 │   │   ├── dispatcher.py       # MultiAgentDispatcher — unified entry point
 │   │   ├── coordinator.py      # Global orchestrator
 │   │   ├── scratchpad.py       # Shared blackboard
 │   │   ├── worker.py           # Role executor (with streaming)
+│   │   ├── enhanced_worker.py  # Worker with provider injection (cache/retry/monitor/briefing/memory) + rule injection
 │   │   ├── consensus.py        # Weighted voting + veto
 │   │   ├── llm_backend.py      # Mock/OpenAI/Anthropic + streaming
+│   │   ├── llm_cache.py        # TTL LRU cache + disk persistence
+│   │   ├── llm_retry.py        # Exponential backoff + circuit breaker
 │   │   ├── role_matcher.py     # Keyword-based role matching
 │   │   ├── report_formatter.py # Structured/compact/detailed reports
 │   │   ├── input_validator.py  # Security + prompt injection detection
 │   │   ├── ai_semantic_matcher.py # LLM-powered semantic matching
 │   │   ├── checkpoint_manager.py  # State persistence + handoff
-│   │   ├── workflow_engine.py     # Task-to-workflow auto-split
+│   │   ├── workflow_engine.py     # Task-to-workflow auto-split + 11-phase lifecycle templates
 │   │   ├── task_completion_checker.py # Completion tracking
 │   │   ├── code_map_generator.py  # AST-based code analysis
 │   │   ├── dual_layer_context.py  # Project + task context with TTL
 │   │   ├── skill_registry.py     # Skill registration + discovery
 │   │   ├── config_loader.py      # YAML config + env var overrides
+│   │   ├── prompt_assembler.py   # Dynamic prompt assembly + QC rule injection
 │   │   ├── protocols.py         # Protocol interfaces (Cache/Retry/Monitor/Memory + match_rules/format_rules_as_prompt)
 │   │   ├── null_providers.py    # No-op implementations for degradation (incl. rule methods)
-│   │   ├── enhanced_worker.py   # Worker with provider injection (cache/retry/monitor/memory)
 │   │   ├── performance_monitor.py # P95/P99 + bottleneck detection
 │   │   ├── agent_briefing.py    # Context-aware briefing generation
 │   │   ├── confidence_score.py  # 5-factor confidence scoring
 │   │   ├── role_template_market.py # Role template marketplace
 │   │   ├── memory_bridge.py    # MemoryBridge + WorkBuddyClawSource
 │   │   ├── mce_adapter.py      # CarryMem integration adapter (DevSquadAdapter preferred)
-│   │   └── *_test.py           # Test files (234 unit + 61 contract tests)
+│   │   ├── models.py           # Shared data models and type definitions
+│   │   ├── usage_tracker.py    # Token/cost tracking
+│   │   ├── config_manager.py   # Project-level YAML config
+│   │   └── *_test.py           # Test files (370 tests: 129 unit + 234 contract + 7 integration)
 │   ├── demo/
 │   │   └── e2e_full_demo.py    # E2E demo with CLI interface
 │   └── vibe_coding/            # Vibe Coding subsystem
@@ -97,16 +103,22 @@ DevSquad/
 ├── Dockerfile                  # Docker support
 ├── pyproject.toml              # pip-installable package
 ├── SKILL.md                    # English skill manual (default)
-├── SKILL-CN.md                 # Chinese skill manual
-├── SKILL-JP.md                 # Japanese skill manual
-├── README.md                   # English readme (default)
-├── README-CN.md                # Chinese readme
-├── README-JP.md                # Japanese readme
+├── SKILL.md                    # Skill manual (EN, with CN/JP in docs/i18n/)
+├── GUIDE.md                    # User guide (Chinese, with EN/JP in docs/i18n/)
+├── README.md                   # English readme (with CN/JP in docs/i18n/)
 ├── EXAMPLES.md                 # Usage examples (Chinese)
-├── EXAMPLES_EN.md              # Usage examples (English)
 ├── skill-manifest.yaml         # Trae skill manifest
 ├── CHANGELOG.md                # Complete version history
-└── docs/                       # Architecture specs, plans, test plans
+└── docs/
+    ├── i18n/                   # International documents
+    │   ├── README_CN.md        # 中文说明
+    │   ├── README_JP.md        # 日本語説明
+    │   ├── SKILL_CN.md         # 中文技能手册
+    │   ├── SKILL_JP.md         # 日本語スキルマニュアル
+    │   ├── GUIDE_EN.md         # English user guide
+    │   └── GUIDE_JP.md         # 日本語ユーザーガイド
+    ├── guides/                 # Integration guides
+    └── prd/                    # Product requirements
 ```
 
 ## Code Conventions
@@ -114,8 +126,8 @@ DevSquad/
 - **Language**: All code comments and docstrings in **English**
 - **Output i18n**: `--lang zh/en/ja/auto` — reports in Chinese (default), English, or Japanese
 - **Business data** (ROLE_TEMPLATES prompts): Chinese (CN locale), with bilingual keyword matching
-- **Documentation**: EN (README.md/SKILL.md) + CN (README-CN.md/SKILL-CN.md) + JP variants
-- **Testing**: pytest-based, 234 unit tests + 61 contract tests
+- **Documentation**: EN (README.md/SKILL.md) + CN (docs/i18n/README_CN.md/docs/i18n/SKILL_CN.md) + JP variants
+- **Testing**: pytest-based, 370 tests (129 unit + 234 contract + 7 integration)
 - **Style**: PEP 8, dataclasses for models, type hints throughout
 - **Version**: Single source of truth in `_version.py` (`3.5.0`)
 
@@ -146,11 +158,12 @@ DevSquad/
 ```bash
 cd /path/to/DevSquad
 
-# Core unit tests (234 tests)
-python3 -m pytest tests/ -v
-
-# Contract tests (MemoryProvider Protocol compliance)
-python3 -m pytest tests/contract/ -v
+# Full test suite (370 tests)
+python3 -m pytest scripts/collaboration/core_test.py \
+  scripts/collaboration/role_mapping_test.py \
+  scripts/collaboration/upstream_test.py \
+  scripts/collaboration/mce_adapter_test.py \
+  tests/ test_v35_integration.py -v
 
 # Quick smoke test
 python3 scripts/cli.py --version    # 3.5.0
@@ -306,5 +319,5 @@ Agents should:
 
 ---
 
-**Last Updated**: 2026-05-01  
+**Last Updated**: 2026-05-02  
 **Configuration Source**: `.devsquad.yaml` + This document (belt-and-suspenders approach)

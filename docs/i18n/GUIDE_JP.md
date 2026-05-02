@@ -1051,21 +1051,30 @@ worker = EnhancedWorker(worker_id="w1", role_id="architect", memory_provider=ada
 | 19 | InputValidator | input_validator.py | 16種注入パターン検出 |
 | 20 | AISemanticMatcher | ai_semantic_matcher.py | LLMセマンティックマッチング |
 | 21 | CheckpointManager | checkpoint_manager.py | 状態永続化 + チェックポイントリカバリ |
-| 22 | WorkflowEngine | workflow_engine.py | タスク分割 + ワークフロー |
+| 22 | WorkflowEngine | workflow_engine.py | タスク分割 + ワークフロー + 11フェーズライフサイクルテンプレート |
 | 23 | TaskCompletionChecker | task_completion_checker.py | 完了度トラッキング |
 | 24 | CodeMapGenerator | code_map_generator.py | ASTコード分析 |
 | 25 | DualLayerContext | dual_layer_context.py | プロジェクト + タスク二層コンテキスト |
 | 26 | SkillRegistry | skill_registry.py | スキル登録 + 検索 |
 | 27 | LLMBackend | llm_backend.py | Mock/OpenAI/Anthropic + ストリーミング |
-| 28 | ConfigManager | config_loader.py | YAML設定 + 環境変数 |
-| 29 | Protocols | protocols.py | プロトコルインターフェース（Cache/Retry/Monitor/Memory + match_rules） |
-| 30 | NullProviders | null_providers.py | Null実装（グレースフルデグラデーション + テストモック） |
-| 31 | EnhancedWorker | enhanced_worker.py | 拡張Worker（キャッシュ/リトライ/モニタ/ルール注入） |
-| 32 | PerformanceMonitor | performance_monitor.py | P95/P99 + ボトルネック検出 |
-| 33 | AgentBriefing | agent_briefing.py | コンテキストブリーフィング生成 |
-| 34 | ConfidenceScorer | confidence_score.py | 5因子信頼度スコアリング |
-| 35 | RoleTemplateMarket | role_template_market.py | ロールテンプレートマーケット |
+| 28 | LLMCache | llm_cache.py | TTL LRUキャッシュ + ディスク永続化 |
+| 29 | LLMRetry | llm_retry.py | 指数バックオフ + サーキットブレーカー |
+| 30 | ConfigManager | config_loader.py | YAML設定 + 環境変数 |
+| 31 | Protocols | protocols.py | プロトコルインターフェース（Cache/Retry/Monitor/Memory + match_rules） |
+| 32 | NullProviders | null_providers.py | Null実装（グレースフルデグラデーション + テストモック） |
+| 33 | EnhancedWorker | enhanced_worker.py | 拡張Worker（キャッシュ/リトライ/モニタ/ブリーフィング/メモリ + ルール注入） |
+| 34 | PerformanceMonitor | performance_monitor.py | P95/P99 + ボトルネック検出 |
+| 35 | AgentBriefing | agent_briefing.py | コンテキストブリーフィング生成 |
+| 36 | ConfidenceScorer | confidence_score.py | 5因子信頼度スコアリング |
+| 37 | RoleTemplateMarket | role_template_market.py | ロールテンプレートマーケット |
+| 38 | UsageTracker | usage_tracker.py | Token/コストトラッキング |
+| 39 | Models | models.py | 共有データモデルと型定義 |
+| 40 | ConfigManager (YAML) | config_manager.py | プロジェクトレベルYAML設定 |
+| 41 | LLMCacheAsync | llm_cache_async.py | 非同期LLMキャッシュ |
+| 42 | LLMRetryAsync | llm_retry_async.py | 非同期LLMリトライ |
+| 43 | IntegrationExample | integration_example.py | 統合サンプルコード |
+| 44 | AsyncIntegrationExample | async_integration_example.py | 非同期統合サンプル |
 
 ---
 
-*DevSquad V3.5.0 — 2026-05-01*
+*DevSquad V3.5.0 — 2026-05-02*

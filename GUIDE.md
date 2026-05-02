@@ -1051,21 +1051,30 @@ worker = EnhancedWorker(worker_id="w1", role_id="architect", memory_provider=ada
 | 19 | InputValidator | input_validator.py | 16种注入模式检测 |
 | 20 | AISemanticMatcher | ai_semantic_matcher.py | LLM语义匹配 |
 | 21 | CheckpointManager | checkpoint_manager.py | 状态持久化+断点恢复 |
-| 22 | WorkflowEngine | workflow_engine.py | 任务拆分+工作流 |
+| 22 | WorkflowEngine | workflow_engine.py | 任务拆分+工作流+11阶段生命周期模板 |
 | 23 | TaskCompletionChecker | task_completion_checker.py | 完成度跟踪 |
 | 24 | CodeMapGenerator | code_map_generator.py | AST代码分析 |
 | 25 | DualLayerContext | dual_layer_context.py | 项目+任务双层上下文 |
 | 26 | SkillRegistry | skill_registry.py | 技能注册+发现 |
 | 27 | LLMBackend | llm_backend.py | Mock/OpenAI/Anthropic+流式 |
-| 28 | ConfigManager | config_loader.py | YAML配置+环境变量 |
-| 29 | Protocols | protocols.py | 协议接口（Cache/Retry/Monitor/Memory + match_rules） |
-| 30 | NullProviders | null_providers.py | 空实现（优雅降级+测试Mock） |
-| 31 | EnhancedWorker | enhanced_worker.py | 增强Worker（缓存/重试/监控/规则注入） |
-| 32 | PerformanceMonitor | performance_monitor.py | P95/P99+瓶颈检测 |
-| 33 | AgentBriefing | agent_briefing.py | 上下文简报生成 |
-| 34 | ConfidenceScorer | confidence_score.py | 5因子置信度评分 |
-| 35 | RoleTemplateMarket | role_template_market.py | 角色模板市场 |
+| 28 | LLMCache | llm_cache.py | TTL LRU缓存+磁盘持久化 |
+| 29 | LLMRetry | llm_retry.py | 指数退避+熔断器 |
+| 30 | ConfigManager | config_loader.py | YAML配置+环境变量 |
+| 31 | Protocols | protocols.py | 协议接口（Cache/Retry/Monitor/Memory + match_rules） |
+| 32 | NullProviders | null_providers.py | 空实现（优雅降级+测试Mock） |
+| 33 | EnhancedWorker | enhanced_worker.py | 增强Worker（缓存/重试/监控/简报/记忆+规则注入） |
+| 34 | PerformanceMonitor | performance_monitor.py | P95/P99+瓶颈检测 |
+| 35 | AgentBriefing | agent_briefing.py | 上下文简报生成 |
+| 36 | ConfidenceScorer | confidence_score.py | 5因子置信度评分 |
+| 37 | RoleTemplateMarket | role_template_market.py | 角色模板市场 |
+| 38 | UsageTracker | usage_tracker.py | Token/成本追踪 |
+| 39 | Models | models.py | 共享数据模型和类型定义 |
+| 40 | ConfigManager (YAML) | config_manager.py | 项目级YAML配置 |
+| 41 | LLMCacheAsync | llm_cache_async.py | 异步LLM缓存 |
+| 42 | LLMRetryAsync | llm_retry_async.py | 异步LLM重试 |
+| 43 | IntegrationExample | integration_example.py | 集成示例代码 |
+| 44 | AsyncIntegrationExample | async_integration_example.py | 异步集成示例 |
 
 ---
 
-*DevSquad V3.5.0 — 2026-05-01*
+*DevSquad V3.5.0 — 2026-05-02*

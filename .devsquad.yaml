@@ -214,3 +214,65 @@ checkpoint:
   auto_create_on_dispatch_start: true
   auto_cleanup_expired_days: 7
   max_checkpoints_per_task: 20
+
+# ===== CarryMem Personal Rules Integration (P2 Enhancement) =====
+carrymem_integration:
+  # Master switch for P2 personalization
+  enabled: true
+  
+  # Rule query strategy: "pre_task" | "on_demand" | "batch"
+  # - pre_task: Query before each agent execution (most accurate)
+  # - on_demand: Only query when task matches specific keywords (saves API calls)
+  # - batch: Coordinator queries once, distributes to all agents (fastest)
+  query_strategy: "pre_task"
+  
+  # Maximum rules per agent (prevents prompt bloat)
+  max_rules_per_agent: 5
+  
+  # Rule type priority (higher priority = matched first)
+  rule_type_priority:
+    - forbid          # Prohibition rules most important
+    - avoid           # Avoidance rules second
+    - always          # Always-do rules third
+    - preference      # Preference rules last
+  
+  # Conflict resolution: "first_wins" | "strictest" | "ask_user"
+  conflict_resolution: "strictest"
+  
+  # Inject rules into prompt (true) or use as reference only (false)
+  inject_to_prompt: true
+  
+  # Injection format: "inline" | "section" | "appendix"
+  # - inline: Merge into existing QC rule paragraphs
+  # - section: Dedicated "Personal Experience Rules" section
+  # - appendix: Add at end of prompt as appendix
+  injection_format: "section"
+  
+  # Experience logging (learn from task outcomes)
+  experience_logging:
+    enabled: true
+    auto_log_on_completion: true
+    log_success_outcomes: true       # Log successful completions
+    log_failures: true              # Log failures for learning
+    
+  # Relevance filtering
+  relevance_threshold: 0.3           # Minimum relevance score to include a rule
+
+# ===== Enhanced Worker Configuration (V3.5.0 Features) =====
+enhanced_worker:
+  enabled: true
+  
+  # Enable AgentBriefing compression (P1)
+  briefing_enabled: true
+  
+  # Enable confidence scoring (P3)
+  confidence_scoring_enabled: true
+  
+  # Memory integration settings
+  memory_integration:
+    enabled: true
+    max_rules_per_agent: 5
+    forbid_check_enabled: true     # Check for forbid rule violations
+    
+  # Performance optimization
+  config_caching: true             # Cache configuration to reduce I/O

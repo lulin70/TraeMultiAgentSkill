@@ -1051,21 +1051,30 @@ Security mechanisms: Two-layer defense (InputValidator + length limit ≤500 cha
 | 19 | InputValidator | input_validator.py | 16 injection pattern detection |
 | 20 | AISemanticMatcher | ai_semantic_matcher.py | LLM semantic matching |
 | 21 | CheckpointManager | checkpoint_manager.py | State persistence + checkpoint recovery |
-| 22 | WorkflowEngine | workflow_engine.py | Task splitting + workflow |
+| 22 | WorkflowEngine | workflow_engine.py | Task splitting + workflow + 11-phase lifecycle templates |
 | 23 | TaskCompletionChecker | task_completion_checker.py | Completion tracking |
 | 24 | CodeMapGenerator | code_map_generator.py | AST code analysis |
 | 25 | DualLayerContext | dual_layer_context.py | Project + task dual-layer context |
 | 26 | SkillRegistry | skill_registry.py | Skill registration + discovery |
 | 27 | LLMBackend | llm_backend.py | Mock/OpenAI/Anthropic + streaming |
-| 28 | ConfigManager | config_loader.py | YAML config + environment variables |
-| 29 | Protocols | protocols.py | Protocol interfaces (Cache/Retry/Monitor/Memory + match_rules) |
-| 30 | NullProviders | null_providers.py | Null implementations (graceful degradation + test mocks) |
-| 31 | EnhancedWorker | enhanced_worker.py | Enhanced Worker (cache/retry/monitor/rule injection) |
-| 32 | PerformanceMonitor | performance_monitor.py | P95/P99 + bottleneck detection |
-| 33 | AgentBriefing | agent_briefing.py | Context briefing generation |
-| 34 | ConfidenceScorer | confidence_score.py | 5-factor confidence scoring |
-| 35 | RoleTemplateMarket | role_template_market.py | Role template market |
+| 28 | LLMCache | llm_cache.py | TTL LRU cache + disk persistence |
+| 29 | LLMRetry | llm_retry.py | Exponential backoff + circuit breaker |
+| 30 | ConfigManager | config_loader.py | YAML config + environment variables |
+| 31 | Protocols | protocols.py | Protocol interfaces (Cache/Retry/Monitor/Memory + match_rules) |
+| 32 | NullProviders | null_providers.py | Null implementations (graceful degradation + test mocks) |
+| 33 | EnhancedWorker | enhanced_worker.py | Enhanced Worker (cache/retry/monitor/briefing/memory + rule injection) |
+| 34 | PerformanceMonitor | performance_monitor.py | P95/P99 + bottleneck detection |
+| 35 | AgentBriefing | agent_briefing.py | Context briefing generation |
+| 36 | ConfidenceScorer | confidence_score.py | 5-factor confidence scoring |
+| 37 | RoleTemplateMarket | role_template_market.py | Role template market |
+| 38 | UsageTracker | usage_tracker.py | Token/cost tracking |
+| 39 | Models | models.py | Shared data models and type definitions |
+| 40 | ConfigManager (YAML) | config_manager.py | Project-level YAML config |
+| 41 | LLMCacheAsync | llm_cache_async.py | Async LLM cache |
+| 42 | LLMRetryAsync | llm_retry_async.py | Async LLM retry |
+| 43 | IntegrationExample | integration_example.py | Integration example code |
+| 44 | AsyncIntegrationExample | async_integration_example.py | Async integration example |
 
 ---
 
-*DevSquad V3.5.0 — 2026-05-01*
+*DevSquad V3.5.0 — 2026-05-02*

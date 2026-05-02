@@ -240,14 +240,16 @@ python3 scripts/cli.py roles        # 列出 7 个角色
 
 | 文档 | 说明 |
 |------|------|
-| [GUIDE.md](GUIDE.md) | 完整用户指南（中文） |
+| [GUIDE.md](../../GUIDE.md) | 完整用户指南（中文） |
 | [GUIDE_EN.md](GUIDE_EN.md) | 完整用户指南（英文） |
 | [GUIDE_JP.md](GUIDE_JP.md) | 完整用户指南（日文） |
-| [INSTALL.md](INSTALL.md) | 安装指南 |
-| [EXAMPLES.md](EXAMPLES.md) | 真实使用示例 |
-| [SKILL.md](SKILL.md) | 技能手册 |
-| [README.md](README.md) | English README |
-| [README-JP.md](README-JP.md) | 日本語説明 |
+| [INSTALL.md](../../INSTALL.md) | 安装指南 |
+| [EXAMPLES.md](../../EXAMPLES.md) | 真实使用示例 |
+| [SKILL.md](../../SKILL.md) | 技能手册 |
+| [SKILL_CN.md](SKILL_CN.md) | 中文技能手册 |
+| [SKILL_JP.md](SKILL_JP.md) | 日本語スキルマニュアル |
+| [README.md](../../README.md) | English README |
+| [README_JP.md](README_JP.md) | 日本語説明 |
 
 ## 版本历史
 
