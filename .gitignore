@@ -64,6 +64,8 @@ temp/
 *.tmp
 *.bak
 *.patch
+PROJECT_REVIEW_*.md
+test_full_integration.py
 
 # --- Legacy / Unused (V2 remnants) ---
 memory-bank/

@@ -59,6 +59,15 @@ description: |
 | 32 | **AgentBriefing** | `agent_briefing.py` | 上下文感知简报生成 + 优先级过滤 + 持久化 |
 | 33 | **ConfidenceScorer** | `confidence_score.py` | 5因子置信度评分(完整性/确定性/具体性/一致性/模型质量) |
 | 34 | **RoleTemplateMarket** | `role_template_market.py` | 角色模板市场(发布/搜索/安装/评分/导出/导入) |
+| 35 | **LLMCache** | `llm_cache.py` | TTL LRU缓存+磁盘持久化（节省60-80%成本） |
+| 36 | **LLMRetry** | `llm_retry.py` | 指数退避+熔断器+多后端回退 |
+| 37 | **UsageTracker** | `usage_tracker.py` | Token/成本使用追踪和报告 |
+| 38 | **Models** | `models.py` | 共享数据模型和类型定义 |
+| 39 | **ConfigManager (YAML)** | `config_manager.py` | 项目级YAML配置管理 |
+| 40 | **LLMCacheAsync** | `llm_cache_async.py` | 异步LLM缓存 |
+| 41 | **LLMRetryAsync** | `llm_retry_async.py` | 异步LLM重试+退避 |
+| 42 | **IntegrationExample** | `integration_example.py` | DevSquad集成示例代码 |
+| 43 | **AsyncIntegrationExample** | `async_integration_example.py` | 异步DevSquad集成示例 |
 
 ---
 
