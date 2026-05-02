@@ -66,17 +66,19 @@ def _create_backend(backend_type: str,
 
 
 def cmd_dispatch(args):
-    # 输入验证
+    task_text = args.task or args.task_positional
+    if not task_text:
+        print("Error: Task description required. Usage: devsquad dispatch \"your task\" or devsquad dispatch -t \"your task\"", file=sys.stderr)
+        return 1
+
     validator = InputValidator()
     
-    # 验证任务描述
-    task_result = validator.validate_task(args.task)
+    task_result = validator.validate_task(task_text)
     if not task_result.valid:
         print(f"Error: Invalid task - {task_result.reason}", file=sys.stderr)
         return 1
     
-    # 使用清理后的任务描述
-    task = task_result.sanitized_input or args.task
+    task = task_result.sanitized_input or task_text
     
     # 验证角色列表（如果提供）
     if args.roles:
@@ -211,7 +213,8 @@ Environment Variables (API keys are read from env vars only, never command line)
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     p_dispatch = subparsers.add_parser("dispatch", aliases=["run", "d"], help="Execute a multi-agent task")
-    p_dispatch.add_argument("--task", "-t", required=True, help="Task description")
+    p_dispatch.add_argument("task_positional", nargs="?", default=None, help="Task description (positional, no -t needed)")
+    p_dispatch.add_argument("--task", "-t", help="Task description (alternative to positional)")
     p_dispatch.add_argument("--roles", "-r", nargs="+", choices=ALL_ROLE_IDS, help="Roles to involve (default: auto-match)")
     p_dispatch.add_argument("--mode", "-m", choices=MODES, default="auto", help="Execution mode (default: auto)")
     p_dispatch.add_argument("--format", "-f", choices=FORMATS, default="markdown", help="Output format")

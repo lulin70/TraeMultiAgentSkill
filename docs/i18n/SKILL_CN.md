@@ -561,7 +561,7 @@ def test_<功能>_<场景>(self):
 
 ## Version History
 
-- **v3.4.0** (2026-05-02): 11阶段项目全生命周期（full/backend/frontend/internal_tool/minimal模板）+ 需求变更管理 + 门禁机制+差距报告 + WorkflowEngine生命周期支持 + 370测试通过
+- **v3.4.0** (2026-05-02): 11阶段项目全生命周期（full/backend/frontend/internal_tool/minimal模板）+ 需求变更管理 + 门禁机制+差距报告 + WorkflowEngine生命周期支持 + 自然语言规则收集(RuleCollector) + 560+测试通过
 - **v3.3** (2026-04-24): 7核心角色(security+devops提升为核心) + RoleRegistry SSOT + TaskDefinition.role_prompt修复 + 环境变量唯一API key入口 + InputValidator输入验证 + 3个真实场景验证通过
 - **v3.3** (2026-04-17): WorkBuddy Claw集成 + MCE v0.4支持 + 注释EN化 + 多语言README
 - **v3.2** (2026-04-17): MVP Three Lines - E2E Full Demo(10-step flow/CLI) + Dispatcher UX Enhancement(structured/compact/detailed 3-format report) + MCEAdapter Memory Classification Adapter(lazy-load/graceful-degrade) + Delivery Workflow Iron Rule (walkthrough→annotate→docs→Git loop)

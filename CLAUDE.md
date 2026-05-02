@@ -94,10 +94,7 @@ DevSquad/
 │   │   ├── models.py           # Shared data models and type definitions
 │   │   ├── usage_tracker.py    # Token/cost tracking
 │   │   ├── config_manager.py   # Project-level YAML config
-│   │   └── *_test.py           # Test files (370 tests: 129 unit + 234 contract + 7 integration)
-│   ├── demo/
-│   │   └── e2e_full_demo.py    # E2E demo with CLI interface
-│   └── vibe_coding/            # Vibe Coding subsystem
+│   │   └── *_test.py           # Test files (560+ tests)
 ├── .github/workflows/test.yml  # CI: Python 3.9-3.12 matrix
 ├── .devsquad.yaml              # Quality control + LLM + collaboration config
 ├── Dockerfile                  # Docker support

@@ -1,6 +1,7 @@
 # DevSquad Dependencies
 
-# Core (zero external dependencies — pure Python stdlib)
+# Core
+pyyaml>=6.0
 python>=3.9
 
 # Standard library modules used (no install needed):

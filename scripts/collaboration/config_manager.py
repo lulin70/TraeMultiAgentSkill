@@ -25,7 +25,11 @@ import os
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
-import yaml
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +107,9 @@ class ConfigManager:
             config_path: Path to YAML file
         """
         try:
+            if yaml is None:
+                logger.warning("pyyaml not installed, skipping config file %s", config_path)
+                return
             with open(config_path, 'r') as f:
                 file_config = yaml.safe_load(f)
             
@@ -216,6 +223,9 @@ class ConfigManager:
             output_path: Path to output YAML file
         """
         try:
+            if yaml is None:
+                logger.warning("pyyaml not installed, cannot save config to %s", output_path)
+                return
             with open(output_path, 'w') as f:
                 yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
             logger.info(f"Configuration saved to {output_path}")

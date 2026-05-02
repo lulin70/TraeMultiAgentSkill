@@ -21,7 +21,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 try:
-    from collaboration.permission_guard import ActionType as PGActionType
+    from .permission_guard import ActionType as PGActionType
 except ImportError:
     class PGActionType(Enum):
         FILE_READ = "file_read"

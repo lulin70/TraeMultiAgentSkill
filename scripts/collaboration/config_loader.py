@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 import os
-import yaml
 import logging
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
+
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 logger = logging.getLogger(__name__)
 
@@ -105,6 +109,9 @@ class ConfigManager:
 
     def _load_from_file(self, path: Path):
         try:
+            if yaml is None:
+                logger.warning("pyyaml not installed, skipping config file %s", path)
+                return
             with open(path, 'r', encoding='utf-8') as f:
                 data = yaml.safe_load(f) or {}
 
@@ -148,6 +155,9 @@ class ConfigManager:
         save_path.parent.mkdir(parents=True, exist_ok=True)
 
         try:
+            if yaml is None:
+                logger.warning("pyyaml not installed, cannot save config to %s", save_path)
+                return
             data = {'devsquad': self.config.to_dict()}
             with open(save_path, 'w', encoding='utf-8') as f:
                 yaml.dump(data, f, default_flow_style=False, allow_unicode=True)

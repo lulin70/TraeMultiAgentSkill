@@ -15,9 +15,9 @@ import random
 from typing import Optional
 
 # Import optimization modules
-from llm_cache import get_llm_cache
-from llm_retry import retry_with_fallback, get_retry_manager
-from performance_monitor import monitor_performance, get_monitor
+from scripts.collaboration.llm_cache import get_llm_cache
+from scripts.collaboration.llm_retry import retry_with_fallback, get_retry_manager
+from scripts.collaboration.performance_monitor import monitor_performance, get_monitor
 
 
 # Simulated LLM API call (replace with real API)
