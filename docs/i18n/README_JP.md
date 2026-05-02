@@ -7,7 +7,7 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-370%20passing-brightgreen" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-560%2B%20passing-brightgreen" />
   <img alt="Version" src="https://img.shields.io/badge/V3.4.0-2026--05--02-orange" />
   <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
@@ -61,7 +61,7 @@ python3 scripts/cli.py dispatch -t "認証システムを設計" -r arch --backe
 
 ### セキュリティ
 - **入力検証**: XSS、SQLインジェクション、コマンドインジェクション、HTMLインジェクション検出
-- **Prompt注入防护**: 16パターン（以前の指示無視、脱獄、DANモード、システムプロンプト抽出等）
+- **Prompt注入防护**: 21+パターン（以前の指示無視、脱獄、DANモード、システムプロンプト抽出等）
 - **APIキー保護**: 環境変数のみ使用、コマンドライン引数やログに露出しない
 - **権限ガード**: 4レベルセーフティゲート（PLAN → DEFAULT → AUTO → BYPASS）
 
@@ -79,7 +79,7 @@ python3 scripts/cli.py dispatch -t "認証システムを設計" -r arch --backe
 
 ### プロジェクトライフサイクル（11フェーズモデル）
 
-DevSquad V3.5は **11フェーズ（4つオプション）** のプロジェクトライフサイクルを定義。各フェーズには明確なロール、依存関係、ゲート条件があります：
+DevSquad V3.4.0は **11フェーズ（4つオプション）** のプロジェクトライフサイクルを定義。各フェーズには明確なロール、依存関係、ゲート条件があります：
 
 ```
 P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→ P9 ──→ P10 ──→ P11
@@ -161,7 +161,7 @@ python3 -m pytest scripts/collaboration/core_test.py \
 
 | 日付 | バージョン | ハイライト |
 |------|-----------|-----------|
-| 2026-05-02 | **V3.4.0** | 🆕 11フェーズプロジェクトライフサイクル（full/backend/frontend/internal_tool/minimalテンプレート）、要件変更管理、ゲートメカニズム+ギャップレポート、370テスト合格 |
+| 2026-05-02 | **V3.4.0** | 🆕 11フェーズプロジェクトライフサイクル（full/backend/frontend/internal_tool/minimalテンプレート）、要件変更管理、ゲートメカニズム+ギャップレポート、560+テスト合格 |
 | 2026-04-27 | V3.4.0 | リアルLLMバックエンド、並列実行、セキュリティ強化、チェックポイント、ワークフロー、ストリーミング、Docker、CI、CarryMem統合 |
 
 ## ライセンス

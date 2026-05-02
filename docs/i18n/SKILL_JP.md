@@ -6,7 +6,7 @@ description: |
   パターンに基づく完全なマルチエージェントコラボレーションシステム。
   7コアロール（アーキテクト/PM/セキュリティ/テスター/コーダー/DevOps/UIデザイナー）、
   リアルLLMバックエンド（OpenAI/Anthropic）、CLI + MCP + Python API対応。
-  370テスト（129ユニット+234契約+7統合）全合格。中日英3ヶ国語対応。
+  560+テスト全合格。中日英3ヶ国語対応。
 ---
 
 # DevSquad V3.4.0 — マルチエージェントコラボレーションプラットフォーム
@@ -22,7 +22,7 @@ description: |
              → [コンセンサス決定] → [レポート整形] → [構造化レポート]
 ```
 
-## アーキテクチャ概要（44コアモジュール）
+## アーキテクチャ概要（45コアモジュール）
 
 | # | モジュール | ファイル | 責任 |
 |---|-----------|--------|------|
@@ -44,7 +44,7 @@ description: |
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py`(class) | Claw読み取り専用ブリッジ |
 | 16 | **RoleMatcher** | `role_matcher.py` | キーワードベースロールマッチング+エイリアス解決 |
 | 17 | **ReportFormatter** | `report_formatter.py` | 構造化/コンパクト/詳細レポート生成 |
-| 18 | **InputValidator** | `input_validator.py` | セキュリティ検証+16パターンPrompt注入検出 |
+| 18 | **InputValidator** | `input_validator.py` | セキュリティ検証+21+パターンPrompt注入検出 |
 | 19 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM駆動セマンティックマッチング+バイリンガルフォールバック |
 | 20 | **CheckpointManager** | `checkpoint_manager.py` | SHA256整合性、ハンドオフ文書、自動クリーンアップ |
 | 21 | **WorkflowEngine** | `workflow_engine.py` | タスク→ワークフロー自動分割、ステップ実行、チェックポイント復元、11フェーズライフサイクルテンプレート、要件変更管理 |
@@ -221,13 +221,13 @@ P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→
 | MCEAdapter (CarryMem統合+タイプマッピング+グレースフルデグラデーション) | 30 | ✅ PASS |
 | Contract Tests (Protocols+NullProviders+Cache+Monitor+Security) | 234 | ✅ PASS |
 | V3.5 Integration (Lifecycle+ChangeRequest+Templates) | 7 | ✅ PASS |
-| **合計** | **370** | **✅ ALL PASS** |
+**合計** | **560+** | **✅ ALL PASS** |
 
 ---
 
 ## バージョン履歴
 
-- **v3.4.0** (2026-05-02): 11フェーズプロジェクトライフサイクル（full/backend/frontend/internal_tool/minimalテンプレート）+ 要件変更管理 + ゲートメカニズム+ギャップレポート + WorkflowEngineライフサイクル対応 + 370テスト合格
+- **v3.4.0** (2026-05-02): 11フェーズプロジェクトライフサイクル（full/backend/frontend/internal_tool/minimalテンプレート）+ 要件変更管理 + ゲートメカニズム+ギャップレポート + WorkflowEngineライフサイクル対応 + 560+テスト合格
 - **v3.3** (2026-04-24): 7コアロール(security+devopsをコアに昇格) + RoleRegistry SSOT + TaskDefinition.role_prompt修正 + 環境変数のみAPI key入力 + InputValidator入力検証 + 3シナリオ検証完了
 - **v3.3** (2026-04-17): WorkBuddy Claw統合 + MCE v0.4サポート + アノテーションEN化 + 多言語README
 - **v3.2** (2026-04-17): MVP 3並行ライン (E2E Demo + Dispatcher UX + MCE Adapter)

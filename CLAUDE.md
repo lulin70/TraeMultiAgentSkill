@@ -60,7 +60,7 @@ result = disp.quick_dispatch(task, include_action_items=True)   # auto-generate 
 ```
 DevSquad/
 ├── scripts/
-│   ├── collaboration/          # ★ Core V3.5 modules (44 files)
+│   ├── collaboration/          # ★ Core modules (45 files)
 │   │   ├── _version.py         # Version SSOT (3.4.0)
 │   │   ├── dispatcher.py       # MultiAgentDispatcher — unified entry point
 │   │   ├── coordinator.py      # Global orchestrator
@@ -124,7 +124,7 @@ DevSquad/
 - **Output i18n**: `--lang zh/en/ja/auto` — reports in Chinese (default), English, or Japanese
 - **Business data** (ROLE_TEMPLATES prompts): Chinese (CN locale), with bilingual keyword matching
 - **Documentation**: EN (README.md/SKILL.md) + CN (docs/i18n/README_CN.md/docs/i18n/SKILL_CN.md) + JP variants
-- **Testing**: pytest-based, 370 tests (129 unit + 234 contract + 7 integration)
+- **Testing**: pytest-based, 560+ tests all passing
 - **Style**: PEP 8, dataclasses for models, type hints throughout
 - **Version**: Single source of truth in `_version.py` (`3.4.0`)
 
@@ -155,7 +155,7 @@ DevSquad/
 ```bash
 cd /path/to/DevSquad
 
-# Full test suite (370 tests)
+# Full test suite (560+ tests)
 python3 -m pytest scripts/collaboration/core_test.py \
   scripts/collaboration/role_mapping_test.py \
   scripts/collaboration/upstream_test.py \
@@ -221,7 +221,7 @@ These guidelines are **always active** regardless of configuration loading statu
 | L3-AUTO | AI-judged safe ops | Trusted contexts with guardrails |
 | L4-BYPASS | Manual auth required | Sensitive operations (rare) |
 
-#### Input Validation (16 Patterns Active)
+#### Input Validation (21+ Patterns Active)
 - 🔴 **BLOCK immediately**: SQL injection, Command injection, XSS, SSRF, Path traversal
 - 🟡 **SANITIZE + warn**: LDAP injection, XPath injection, Header manipulation, Email injection
 - 🟢 **FLAG advisory**: Template injection, ReDoS, Format string, XXE

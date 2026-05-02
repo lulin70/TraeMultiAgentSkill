@@ -43,7 +43,7 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py` (class) | WorkBuddy Claw read-only bridge (INDEX search / daily logs / AI news feed) |
 | 16 | **RoleMatcher** | `role_matcher.py` | Keyword-based role matching with alias resolution (extracted from Dispatcher) |
 | 17 | **ReportFormatter** | `report_formatter.py` | Structured/compact/detailed report generation (extracted from Dispatcher) |
-| 18 | **InputValidator** | `input_validator.py` | Security validation + 16-pattern prompt injection detection |
+| 18 | **InputValidator** | `input_validator.py` | Security validation + 21+-pattern prompt injection detection |
 | 19 | **RuleCollector** | `rule_collector.py` | Natural language rule collection (intent detection / rule extraction / sanitization / CarryMem+JSON storage / prompt injection protection) |
 | 20 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM-powered semantic role matching with bilingual keyword fallback |
 | 21 | **CheckpointManager** | `checkpoint_manager.py` | SHA256 integrity, handoff documents, auto-cleanup, dispatch integration |
@@ -454,7 +454,7 @@ def test_<feature>_<scenario>(self):
 
 ---
 
-## Project Lifecycle: 11-Phase Model (V3.5)
+## Project Lifecycle: 11-Phase Model (V3.4.0)
 
 > **Definition document**: `docs/prd/lifecycle_phases_definition.md` (authoritative)
 > **Review report**: `docs/prd/lifecycle_phases_review.md` (7-role review, 9 suggestions adopted)
@@ -582,7 +582,7 @@ Implement → Test(Regression All) → Code Walkthrough → Annotate → Docs Up
 | MCEAdapter (CarryMem integration+type mapping+graceful degrade) | 30 | ✅ PASS |
 | Contract Tests (Protocols+NullProviders+Cache+Monitor+Security) | 234 | ✅ PASS |
 | V3.5 Integration (Lifecycle+ChangeRequest+Templates) | 7 | ✅ PASS |
-| **Total** | **370** | **✅ ALL PASS** |
+**Total** | **560+** | **✅ ALL PASS** |
 
 ---
 

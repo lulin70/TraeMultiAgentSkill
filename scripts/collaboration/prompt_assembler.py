@@ -417,18 +417,23 @@ class PromptAssembler:
         simple_kw = self._COMPLEXITY_KEYWORDS[TaskComplexity.SIMPLE]
         complex_kw = self._COMPLEXITY_KEYWORDS[TaskComplexity.COMPLEX]
 
+        def _word_match(keyword: str, text: str) -> bool:
+            if '\u4e00' <= keyword[0] <= '\u9fff':
+                return keyword in text
+            return bool(re.search(r'\b' + re.escape(keyword) + r'\b', text))
+
         for kw in simple_kw["positive"]:
-            if kw in desc_lower:
+            if _word_match(kw, desc_lower):
                 score_simple += 0.15
         for kw in simple_kw["negative"]:
-            if kw in desc_lower:
+            if _word_match(kw, desc_lower):
                 score_simple -= 0.2
 
         for kw in complex_kw["positive"]:
-            if kw in desc_lower:
+            if _word_match(kw, desc_lower):
                 score_complex += 0.2
         for kw in complex_kw["negative"]:
-            if kw in desc_lower:
+            if _word_match(kw, desc_lower):
                 score_complex -= 0.15
 
         has_numbering = bool(_RE_NUMBERING.search(task_description))
@@ -626,7 +631,7 @@ class PromptAssembler:
         try:
             from scripts.collaboration.rule_collector import RuleStorage
             if not hasattr(self, '_rule_storage'):
-                self._rule_storage = RuleStorage()
+                self._rule_storage = RuleStorage.get_shared()
             keywords = self._extract_keywords(task_description)
             rules = self._rule_storage.query(
                 trigger_keywords=keywords, min_confidence=0.5
@@ -650,19 +655,28 @@ class PromptAssembler:
         except Exception:
             return ""
 
+    _STOP_WORDS = frozenset({
+        "the", "is", "to", "of", "it", "in", "on", "at", "by", "an", "be",
+        "do", "or", "as", "if", "so", "no", "not", "but", "and", "for",
+        "with", "this", "that", "from", "are", "was", "were", "been", "have",
+        "has", "had", "will", "would", "could", "should", "may", "might",
+        "can", "shall", "a", "i", "you", "he", "she", "we", "they", "me",
+        "him", "her", "us", "them", "my", "your", "his", "its", "our",
+    })
+
     @staticmethod
-    def _extract_keywords(text: str, max_keywords: int = 5) -> List[str]:
+    def _extract_keywords(text: str, max_keywords: int = 8) -> List[str]:
         """Extract keywords from text, supporting both CJK and Latin scripts."""
         keywords = []
         for w in text.split():
-            if len(w) > 1:
+            if len(w) > 1 and w.lower() not in PromptAssembler._STOP_WORDS:
                 keywords.append(w)
         has_cjk = any('\u4e00' <= ch <= '\u9fff' for ch in text)
         if has_cjk:
             cjk_segments = re.findall(r'[\u4e00-\u9fff]{2,}', text)
             for seg in cjk_segments:
                 for i in range(0, len(seg) - 1, 2):
-                    keywords.append(seg[i:i + 3])
+                    keywords.append(seg[i:i + 2])
         return keywords[:max_keywords]
 
     def _get_role_anti_patterns(self) -> List[str]:

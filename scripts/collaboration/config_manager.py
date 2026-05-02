@@ -22,6 +22,7 @@ Usage:
 """
 
 import os
+import copy
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -88,7 +89,7 @@ class ConfigManager:
             config_path: Path to YAML configuration file (optional)
         """
         self.config_path = config_path
-        self.config: Dict[str, Any] = self.DEFAULT_CONFIG.copy()
+        self.config: Dict[str, Any] = copy.deepcopy(self.DEFAULT_CONFIG)
         
         # Load from file if provided
         if config_path and Path(config_path).exists():
@@ -205,12 +206,12 @@ class ConfigManager:
         Returns:
             Configuration section dictionary
         """
-        return self.config.get(section, {}).copy()
+        return copy.deepcopy(self.config.get(section, {}))
     
     def reload(self):
         """Reload configuration from file"""
         if self.config_path and Path(self.config_path).exists():
-            self.config = self.DEFAULT_CONFIG.copy()
+            self.config = copy.deepcopy(self.DEFAULT_CONFIG)
             self.load_from_file(self.config_path)
             self._load_from_env()
             logger.info("Configuration reloaded")
@@ -269,7 +270,7 @@ class ConfigManager:
     
     def export_dict(self) -> Dict[str, Any]:
         """Export configuration as dictionary"""
-        return self.config.copy()
+        return copy.deepcopy(self.config)
     
     def __repr__(self) -> str:
         return f"ConfigManager(config_path={self.config_path})"

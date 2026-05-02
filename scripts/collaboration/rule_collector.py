@@ -91,11 +91,27 @@ PROMPT_INJECTION_PATTERNS = [
     re.compile(r"override\s+(all\s+)?safety", re.IGNORECASE),
     re.compile(r"(?:忽略|无视|忘记)(?:所有|全部)?(?:之前的|上面的)?(?:指令|规则|提示)", re.IGNORECASE),
     re.compile(r"你(?:现在|已经)?是(?:一个)?(?:不受限|越狱|DAN)", re.IGNORECASE),
+    re.compile(r"(?:act|pretend|roleplay)\s+(?:as|to\s+be)", re.IGNORECASE),
+    re.compile(r"(?:new|updated|changed)\s+instructions?\s*[:：]", re.IGNORECASE),
+    re.compile(r"(?:output|reveal|show|print|display)\s+(?:your|the|my)\s+(?:system|initial|original)\s+(?:prompt|instructions?)", re.IGNORECASE),
+    re.compile(r"(?:developer|admin|sudo|root|debug)\s+mode", re.IGNORECASE),
+    re.compile(r"above\s+all\s+else", re.IGNORECASE),
+    re.compile(r"most\s+important\s+rule", re.IGNORECASE),
 ]
 
 _RULE_PARTICLE_RE = re.compile(
-    r"(?:记住.*规则[:：]|添加规则[:：]|我的偏好[:：]|团队规范[:：])"
-    r".+?(?:。|$|\n)",
+    r"(?:记住.*规则[:：]|添加规则[:：]|我的偏好[:：]|团队规范[:：]"
+    r"|禁止[^，。？\n]{1,30}(?:做|使用|执行)?"
+    r"|避免[^，。？\n]{1,30}"
+    r"|必须[^，。？\n]{1,30}"
+    r"|不要[^，。？\n]{1,30}"
+    r"|不可以[^，。？\n]{1,30}"
+    r"|务必[^，。？\n]{1,30}"
+    r"|always\s+[^，。？\n]{1,30}"
+    r"|never\s+[^，。？\n]{1,30}"
+    r"|forbid[^，。？\n]{1,30}"
+    r"|avoid\s+[^，。？\n]{1,30})"
+    r".*?(?:[，。？！,\.!\?]|$|\n)",
     re.IGNORECASE,
 )
 
@@ -332,6 +348,10 @@ class LocalRuleStorage:
                 os.path.abspath(__file__)))), "data", "rules")
             os.makedirs(data_dir, exist_ok=True)
             storage_path = os.path.join(data_dir, "rules_local.json")
+        else:
+            real = os.path.realpath(storage_path)
+            if not storage_path.endswith(".json") or ".." in storage_path:
+                raise ValueError(f"Invalid storage_path: {storage_path}")
         self.storage_path = storage_path
         self._lock = threading.RLock()
         self._cache: Optional[dict] = None
@@ -417,8 +437,18 @@ class LocalRuleStorage:
         if self._cache is not None and (now - self._cache_time) < self._CACHE_TTL:
             return self._cache
         if os.path.exists(self.storage_path):
-            with open(self.storage_path, "r", encoding="utf-8") as f:
-                data = json.load(f)
+            try:
+                with open(self.storage_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                if not isinstance(data, dict) or "rules" not in data or not isinstance(data["rules"], dict):
+                    logger.warning("Invalid rules JSON structure, resetting to default")
+                    data = {"_metadata": {}, "rules": {}}
+                self._cache = data
+                self._cache_time = now
+                return data
+            except (json.JSONDecodeError, ValueError) as e:
+                logger.error("Corrupted rules JSON: %s, resetting", e)
+                data = {"_metadata": {}, "rules": {}}
                 self._cache = data
                 self._cache_time = now
                 return data
@@ -433,6 +463,17 @@ class LocalRuleStorage:
 
 class RuleStorage:
     """Unified rule storage with CarryMem primary + local JSON fallback."""
+
+    _shared_instance: Optional['RuleStorage'] = None
+    _instance_lock = threading.Lock()
+
+    @classmethod
+    def get_shared(cls, carrymem_config: Optional[dict] = None) -> 'RuleStorage':
+        if cls._shared_instance is None:
+            with cls._instance_lock:
+                if cls._shared_instance is None:
+                    cls._shared_instance = cls(carrymem_config)
+        return cls._shared_instance
 
     def __init__(self, carrymem_config: Optional[dict] = None):
         self.carrymem_available = False
@@ -517,10 +558,11 @@ class RuleCollector:
         if intent.type_hint == "_delete":
             remaining = self._strip_rule_particle(text)
             delete_ok = self._handle_delete(text, lang)
+            msg = self._format_delete_response(delete_ok, text, lang)
             return CollectionResult(
                 rule_detected=True, delete_result=delete_ok,
                 remaining_task=remaining,
-                message="Rule deleted" if delete_ok else "Rule not found",
+                message=msg,
             )
 
         extraction = self._extractor.extract(text, intent)
@@ -563,6 +605,21 @@ class RuleCollector:
         if rule_id_match:
             return self._storage.delete_rule(rule_id_match.group(1))
         return False
+
+    def _format_delete_response(self, deleted: bool, text: str, lang: str) -> str:
+        rule_id_match = re.search(r"(RULE-[\w-]+)", text)
+        if lang == "en":
+            if not rule_id_match:
+                return "No rule ID specified. Use 'list rules' first to find the ID, then 'delete rule RULE-xxx'."
+            return f"Rule {rule_id_match.group(1)} deleted." if deleted else f"Rule {rule_id_match.group(1)} not found."
+        elif lang == "ja":
+            if not rule_id_match:
+                return "ルールIDが指定されていません。「ルール一覧」でIDを確認後、「ルール削除 RULE-xxx」を実行してください。"
+            return f"ルール {rule_id_match.group(1)} を削除しました。" if deleted else f"ルール {rule_id_match.group(1)} が見つかりません。"
+        else:
+            if not rule_id_match:
+                return "未指定规则ID。请先「列出规则」获取ID，再「删除规则 RULE-xxx」。"
+            return f"规则 {rule_id_match.group(1)} 已删除。" if deleted else f"规则 {rule_id_match.group(1)} 未找到。"
 
     def _format_success_response(self, rule: RuleData, result: StoreResult,
                                   lang: str) -> str:

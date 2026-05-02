@@ -139,3 +139,4 @@ install.sh
 :memory:
 :memory:-shm
 :memory:-wal
+.DS_Store

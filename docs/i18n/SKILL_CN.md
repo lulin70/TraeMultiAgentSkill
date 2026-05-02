@@ -42,7 +42,7 @@ description: |
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py` (class) | WorkBuddy Claw只读桥接(索引检索/日更记忆/AI新闻流) |
 | 16 | **RoleMatcher** | `role_matcher.py` | 基于关键词的角色匹配+别名解析（从Dispatcher提取） |
 | 17 | **ReportFormatter** | `report_formatter.py` | 结构化/紧凑/详细报告生成（从Dispatcher提取） |
-| 18 | **InputValidator** | `input_validator.py` | 安全验证 + 16种Prompt注入模式检测 |
+| 18 | **InputValidator** | `input_validator.py` | 安全验证 + 21+种Prompt注入模式检测 |
 | 19 | **RuleCollector** | `rule_collector.py` | 自然语言规则收集（意图检测/规则提取/安全清洗/CarryMem+JSON存储/Prompt注入防护） |
 | 20 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM驱动的语义角色匹配 + 中英双语关键词回退 |
 | 21 | **CheckpointManager** | `checkpoint_manager.py` | SHA256完整性校验、交接文档、自动清理 |

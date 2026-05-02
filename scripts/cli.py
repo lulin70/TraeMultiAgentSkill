@@ -66,7 +66,7 @@ def _create_backend(backend_type: str,
 
 
 def cmd_dispatch(args):
-    task_text = args.task or args.task_positional
+    task_text = args.task if args.task is not None else args.task_positional
     if not task_text:
         print("Error: Task description required. Usage: devsquad dispatch \"your task\" or devsquad dispatch -t \"your task\"", file=sys.stderr)
         return 1
@@ -210,7 +210,7 @@ Environment Variables (API keys are read from env vars only, never command line)
     )
     parser.add_argument("--version", action="version", version=f"DevSquad {VERSION}")
 
-    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+    subparsers = parser.add_subparsers(dest="command", required=True, help="Available commands")
 
     p_dispatch = subparsers.add_parser("dispatch", aliases=["run", "d"], help="Execute a multi-agent task")
     p_dispatch.add_argument("task_positional", nargs="?", default=None, help="Task description (positional, no -t needed)")

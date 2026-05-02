@@ -75,7 +75,7 @@ DEVSQUAD_TO_CARRYMEM = {
     "correction": "correction",
 }
 
-RULE_TYPES = frozenset({"forbid", "avoid", "always"})
+RULE_TYPES = frozenset({"forbid", "avoid", "always", "prefer"})
 
 _MAX_RULE_TEXT_LENGTH = 500
 _USER_ID_BLOCKED_CHARS = _re.compile(r'[<>\'";&|`$\\]')
@@ -399,9 +399,22 @@ class MCEAdapter:
                 except Exception as e:
                     logger.warning("CarryMem add_rule failed: %s", e)
 
-        logger.info("CarryMem add_rule unavailable, rule will be stored locally only")
-        return {"rule_id": f"RULE-LOCAL-{uuid.uuid4().hex[:6]}",
-                "storage": "local_fallback", "type": rule_type}
+        logger.info("CarryMem add_rule unavailable, storing locally")
+        try:
+            from scripts.collaboration.rule_collector import RuleData, LocalRuleStorage
+            storage = LocalRuleStorage()
+            rule = RuleData(
+                trigger=trigger, action=action, type=rule_type,
+                confidence=confidence, source="mce_adapter_fallback",
+            )
+            result = storage.store(rule)
+            if result.success:
+                return {"rule_id": result.rule_id, "storage": "local_fallback",
+                        "type": rule_type, "success": True}
+        except Exception as e:
+            logger.error("Local fallback store failed: %s", e)
+        return {"rule_id": f"RULE-LOCAL-{uuid.uuid4().hex[:12]}",
+                "storage": "local_fallback", "type": rule_type, "success": False}
 
     def _keyword_fallback_match(self, task_description: str, user_id: str,
                                  role: Optional[str] = None,

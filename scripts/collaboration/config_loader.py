@@ -120,6 +120,21 @@ class ConfigManager:
             for key, value in devsquad_data.items():
                 key_mapped = key.replace('-', '_')
                 if hasattr(self.config, key_mapped):
+                    current = getattr(self.config, key_mapped)
+                    if isinstance(current, bool) and not isinstance(value, bool):
+                        value = str(value).lower() in ('true', '1', 'yes')
+                    elif isinstance(current, int) and not isinstance(value, int):
+                        try:
+                            value = int(value)
+                        except (ValueError, TypeError):
+                            logger.warning("Invalid int value for %s: %s", key, value)
+                            continue
+                    elif isinstance(current, float) and not isinstance(value, (int, float)):
+                        try:
+                            value = float(value)
+                        except (ValueError, TypeError):
+                            logger.warning("Invalid float value for %s: %s", key, value)
+                            continue
                     setattr(self.config, key_mapped, value)
 
             logger.info("Config loaded from %s", path)

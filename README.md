@@ -280,7 +280,7 @@ See [Integration Guide](docs/guides/agent_briefing_confidence_integration.md) fo
 
 ### Security
 - **InputValidator**: XSS, SQL injection, command injection, HTML injection detection
-- **Prompt Injection Protection**: 16 patterns (ignore previous instructions, jailbreak, DAN mode, system prompt extraction, etc.)
+- **Prompt Injection Protection**: 21+ patterns (ignore previous instructions, jailbreak, DAN mode, system prompt extraction, etc.)
 - **API Key Safety**: Environment variables only, never CLI arguments or logs
 - **PermissionGuard**: 4-level safety gate (PLAN → DEFAULT → AUTO → BYPASS)
 
@@ -298,7 +298,7 @@ See [Integration Guide](docs/guides/agent_briefing_confidence_integration.md) fo
 
 ### Project Lifecycle (11-Phase Model)
 
-DevSquad V3.5 defines an **11-phase (4 optional)** project lifecycle with clear roles, dependencies, and gate conditions:
+DevSquad V3.4.0 defines an **11-phase (4 optional)** project lifecycle with clear roles, dependencies, and gate conditions:
 
 ```
 P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→ P9 ──→ P10 ──→ P11
@@ -323,7 +323,7 @@ See [GUIDE.md](GUIDE.md) §4 for full lifecycle details with gate conditions and
 - **GitHub Actions CI**: Python 3.9-3.12 matrix testing
 - **pip installable**: `pip install -e .` with optional dependencies
 
-## Module Reference (44 Modules)
+## Module Reference (45 Modules)
 
 | Module | File | Purpose |
 |--------|------|---------|
@@ -351,7 +351,7 @@ See [GUIDE.md](GUIDE.md) §4 for full lifecycle details with gate conditions and
 | **AgentBriefing** | `agent_briefing.py` | Context-aware task briefing with priority filtering |
 | **ConfidenceScorer** | `confidence_score.py` | 5-factor response quality assessment |
 | **PerformanceMonitor** | `performance_monitor.py` | P95/P99 tracking + CPU/memory monitoring |
-| **MCEAdapter** | `mce_adapter.py` | CarryMem integration adapter (optional dependency) |
+| **MCEAdapter** | `mce_adapter.py` | CarryMem integration adapter (optional dependency, supports match_rules + format_rules_as_prompt + add_rule) |
 | **Protocols** | `protocols.py` | Interface definitions (CacheProvider, MemoryProvider, etc.) |
 | **NullProviders** | `null_providers.py` | Graceful degradation providers |
 | **PermissionGuard** | `permission_guard.py` | 4-level safety gate |
@@ -471,7 +471,7 @@ python3 scripts/cli.py roles        # List 7 roles
 
 | Date | Version | Highlights |
 |------|---------|-----------|
-| 2026-05-02 | **V3.4.0** | 🆕 11-Phase Project Lifecycle (full/backend/frontend/internal_tool/minimal templates), requirement change management, gate mechanism with gap reporting, 370 tests passing, WorkflowEngine lifecycle support |
+| 2026-05-02 | **V3.4.0** | 🆕 11-Phase Project Lifecycle (full/backend/frontend/internal_tool/minimal templates), requirement change management, gate mechanism with gap reporting, 560+ tests passing, WorkflowEngine lifecycle support |
 | 2026-05-01 | V3.4.0 | AgentBriefing (context-aware task briefing), ConfidenceScore (5-factor quality assessment), EnhancedWorker (auto quality assurance with retry + memory_provider rule injection), Protocol interface system (match_rules/format_rules_as_prompt), CarryMem v0.2.8+ integration, comprehensive documentation |
 | 2026-04-27 | V3.4.0 | Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine, TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, 234 unit tests |
 | 2026-04-17 | V3.2 | E2E Demo, MCE Adapter, Dispatcher UX |
