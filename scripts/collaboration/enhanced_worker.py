@@ -30,6 +30,7 @@ Created: 2026-05-01
 import re
 import time
 import logging
+import unicodedata
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass, field
 
@@ -39,6 +40,17 @@ from .models import TaskDefinition, WorkerResult, ROLE_REGISTRY
 logger = logging.getLogger(__name__)
 
 _SAFE_FILENAME_RE = re.compile(r'[^\w\-.]')
+_MAX_RULE_TEXT_LENGTH = 500
+
+
+def _is_available(provider) -> bool:
+    """Check provider availability, compatible with both property and method."""
+    if provider is None:
+        return False
+    val = provider.is_available
+    if callable(val):
+        return val()
+    return bool(val)
 
 
 @dataclass
@@ -75,6 +87,7 @@ class EnhancedWorker(Worker):
         cache_provider=None,
         retry_provider=None,
         monitor_provider=None,
+        memory_provider=None,
     ):
         """
         Initialize EnhancedWorker.
@@ -89,6 +102,7 @@ class EnhancedWorker(Worker):
             cache_provider: CacheProvider implementation (optional)
             retry_provider: RetryProvider implementation (optional)
             monitor_provider: MonitorProvider implementation (optional)
+            memory_provider: MemoryProvider implementation (optional, for rule injection)
         """
         super().__init__(
             worker_id=worker_id,
@@ -102,6 +116,7 @@ class EnhancedWorker(Worker):
         self.cache_provider = cache_provider
         self.retry_provider = retry_provider
         self.monitor_provider = monitor_provider
+        self.memory_provider = memory_provider
 
         self._briefing = None
         self._briefing_loaded = False
@@ -109,10 +124,17 @@ class EnhancedWorker(Worker):
         self._confidence_scorer = None
         self._injected_rules: List[Dict[str, Any]] = []
         self._rules_applied: List[str] = []
+        self._validator = None
 
         try:
             from .confidence_score import ConfidenceScorer
             self._confidence_scorer = ConfidenceScorer()
+        except Exception:
+            pass
+
+        try:
+            from .input_validator import InputValidator
+            self._validator = InputValidator()
         except Exception:
             pass
 
@@ -194,6 +216,8 @@ class EnhancedWorker(Worker):
         Returns:
             WorkerResult
         """
+        self._inject_rules_from_provider(task)
+
         if self.retry_provider and self.retry_provider.is_available():
             try:
                 result = self.retry_provider.retry_with_fallback(
@@ -234,6 +258,91 @@ class EnhancedWorker(Worker):
                     result.output["rule_violations"] = violations
 
         return result
+
+    def _inject_rules_from_provider(self, task: TaskDefinition):
+        """Fetch and validate rules from MemoryProvider before task execution."""
+        if not self.memory_provider or not _is_available(self.memory_provider):
+            return
+
+        try:
+            if hasattr(self.memory_provider, 'match_rules'):
+                raw_rules = self.memory_provider.match_rules(
+                    task_description=task.description,
+                    user_id=getattr(task, 'user_id', None) or "default",
+                    role=self.role_id,
+                    max_rules=5
+                )
+            else:
+                rule_strings = self.memory_provider.get_rules(
+                    user_id=getattr(task, 'user_id', None) or "default",
+                    context={"task": task.description, "role": self.role_id}
+                )
+                raw_rules = []
+                for rs in rule_strings:
+                    if isinstance(rs, str):
+                        raw_rules.append({
+                            "rule_type": "always",
+                            "trigger": rs.lower(),
+                            "action": rs,
+                            "relevance_score": 0.0,
+                            "rule_id": "",
+                            "override": False,
+                        })
+
+            safe_rules = self._validate_injected_rules(raw_rules)
+            self._injected_rules = safe_rules
+            self._rules_applied = [r.get("rule_id", r.get("action", "")[:50]) for r in safe_rules]
+        except Exception as e:
+            logger.warning("Rule injection from provider failed: %s", e)
+            self._injected_rules = []
+
+    def _validate_injected_rules(self, rules: List[Dict]) -> List[Dict]:
+        """Sanitize rules before prompt injection to prevent prompt injection attacks.
+
+        Two-layer defense:
+        1. InputValidator check on rule text + Unicode NFKC normalization + length limit
+        2. Length check in format_rules_as_prompt() (handled by MCEAdapter)
+
+        Args:
+            rules: List of rule dicts from match_rules()
+
+        Returns:
+            List of validated rule dicts (suspicious rules silently skipped)
+        """
+        safe_rules = []
+        for rule in rules:
+            if not isinstance(rule, dict):
+                continue
+
+            action = rule.get("action", "")
+            trigger = rule.get("trigger", "")
+
+            if isinstance(action, str):
+                action = unicodedata.normalize('NFKC', action)
+                rule["action"] = action
+            if isinstance(trigger, str):
+                trigger = unicodedata.normalize('NFKC', trigger)
+                rule["trigger"] = trigger
+
+            if len(action) > _MAX_RULE_TEXT_LENGTH:
+                rule["action"] = action[:_MAX_RULE_TEXT_LENGTH]
+            if len(trigger) > _MAX_RULE_TEXT_LENGTH:
+                rule["trigger"] = trigger[:_MAX_RULE_TEXT_LENGTH]
+
+            if self._validator:
+                try:
+                    action_valid = self._validator.validate_task(action).valid
+                    trigger_valid = self._validator.validate_task(trigger).valid if trigger else True
+                    if not action_valid or not trigger_valid:
+                        logger.warning("Skipping suspicious rule: action_valid=%s, trigger_valid=%s",
+                                       action_valid, trigger_valid)
+                        continue
+                except Exception:
+                    pass
+
+            safe_rules.append(rule)
+
+        return safe_rules
 
     def _check_forbid_violations(self, result: WorkerResult) -> List[Dict[str, str]]:
         """
@@ -405,16 +514,21 @@ class EnhancedWorker(Worker):
             "worker_id": self.worker_id,
             "role_id": self.role_id,
             "cache": {
-                "available": self.cache_provider.is_available() if self.cache_provider else False,
+                "available": _is_available(self.cache_provider),
                 "type": type(self.cache_provider).__name__ if self.cache_provider else "none",
             },
             "retry": {
-                "available": self.retry_provider.is_available() if self.retry_provider else False,
+                "available": _is_available(self.retry_provider),
                 "type": type(self.retry_provider).__name__ if self.retry_provider else "none",
             },
             "monitor": {
-                "available": self.monitor_provider.is_available() if self.monitor_provider else False,
+                "available": _is_available(self.monitor_provider),
                 "type": type(self.monitor_provider).__name__ if self.monitor_provider else "none",
+            },
+            "memory": {
+                "available": _is_available(self.memory_provider),
+                "type": type(self.memory_provider).__name__ if self.memory_provider else "none",
+                "rules_injected": len(self._injected_rules),
             },
             "briefing": {
                 "available": self._briefing is not None,

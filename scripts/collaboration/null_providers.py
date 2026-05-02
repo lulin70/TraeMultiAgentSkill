@@ -246,6 +246,19 @@ class NullMemoryProvider:
             "degraded": True
         }
 
+    def match_rules(self, task_description: str, user_id: str,
+                     role: Optional[str] = None, max_rules: int = 5) -> List[Dict[str, Any]]:
+        """Match rules based on task description (always returns empty list)."""
+        self._call_count += 1
+        logger.debug("NullMemoryProvider.match_rules() called (empty) - user: %s, call #%d", user_id, self._call_count)
+        return []
+
+    def format_rules_as_prompt(self, rules: List[Dict[str, Any]]) -> str:
+        """Format rules as prompt text (always returns empty string)."""
+        self._call_count += 1
+        logger.debug("NullMemoryProvider.format_rules_as_prompt() called (empty) - call #%d", self._call_count)
+        return ""
+
 
 # ============================================================================
 # Factory functions

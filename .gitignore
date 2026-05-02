@@ -72,3 +72,6 @@ prompt_evolution/
 plans/
 install.sh
 .git_disabled/
+:memory:
+:memory:-shm
+:memory:-wal

@@ -12,7 +12,8 @@ Verifies that our QC injection system works seamlessly with new V3.5.0 features:
 """
 
 import sys
-sys.path.insert(0, '/Users/lin/trae_projects/DevSquad')
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
 def test_qc_compatibility():
@@ -28,22 +29,28 @@ def test_qc_compatibility():
         base_prompt="You are a software architect."
     )
     
+    result = assembler.assemble(
+        task_description="Design a microservice architecture",
+        related_findings=[],
+        task_id="QC-CHECK-001"
+    )
+    
     checks = [
         ("QC Enabled", assembler.qc_enabled),
         ("Config Loaded", bool(assembler.qc_config)),
-        ("QC Injection Built", len(assembler._qc_injection) > 0),
-        ("Injection Length", len(assembler._qc_injection) > 2000),  # Should be ~2442 chars
+        ("QC Injection in Output", "Quality Control" in result.instruction or "quality_control" in result.instruction.lower()),
+        ("Instruction Length", len(result.instruction) > 2000),
     ]
     
     all_passed = True
-    for name, result in checks:
-        status = "✓" if result else "✗"
-        print(f"{status} {name}: {result}")
-        if not result:
+    for name, check_result in checks:
+        status = "✓" if check_result else "✗"
+        print(f"{status} {name}: {check_result}")
+        if not check_result:
             all_passed = False
     
     if all_passed:
-        print(f"\\n✓ QC injection length: {len(assembler._qc_injection)} characters")
+        print(f"\n✓ QC injection present in assembled instruction: {len(result.instruction)} characters")
     
     return all_passed
 
@@ -227,14 +234,14 @@ def test_mce_adapter():
     print("=" * 60)
     
     try:
-        from scripts.collaboration.mce_adapter import MCEAdapter, MCEResult
+        from scripts.collaboration.mce_adapter import MCEAdapter, MCEResult, CARRYMEM_TO_DEVOPSQUAD
         
         adapter = MCEAdapter(enable=True)
         
         checks = [
             ("Adapter Created", adapter is not None),
             ("Availability Checked", hasattr(adapter, 'is_available')),
-            ("Type Mapping Exists", hasattr(adapter, 'CARRYMEM_TO_DEVOPSQUAD')),
+            ("Type Mapping Exists", bool(CARRYMEM_TO_DEVOPSQUAD)),
         ]
         
         all_passed = True
@@ -255,9 +262,12 @@ def test_mce_adapter():
             print("  - QC rules still fully functional")
         
         return all_passed
+    except ImportError as e:
+        print(f"○ MCEAdapter import skipped (CarryMem optional): {e}")
+        return True
     except Exception as e:
-        print(f"⚠️  MCEAdapter test skipped (may not be critical): {e}")
-        return True  # Non-critical, don't fail overall
+        print(f"✗ MCEAdapter test failed: {e}")
+        return False
 
 
 def test_integration_scenario():
@@ -345,7 +355,7 @@ def main():
     print("\\n" + "=" * 60)
     print("DevSquad V3.5.0 + QC Injection Integration Test Suite")
     print("=" * 60)
-    print(f"Working directory: /Users/lin/trae_projects/DevSquad")
+    print(f"Working directory: {os.getcwd()}")
     
     results = []
     

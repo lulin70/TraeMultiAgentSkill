@@ -30,7 +30,7 @@ dependencies = ["pyyaml>=6.0"]
 [project.optional-dependencies]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.18"]
-carrymem = ["carrymem>=0.8"]
+carrymem = ["carrymem[devsquad]>=0.2.8"]
 mcp = ["mcp>=0.9"]
 monitoring = ["psutil>=5.9"]
 dev = [

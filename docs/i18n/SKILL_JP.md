@@ -6,7 +6,7 @@ description: |
   パターンに基づく完全なマルチエージェントコラボレーションシステム。
   7コアロール（アーキテクト/PM/セキュリティ/テスター/コーダー/DevOps/UIデザイナー）、
   リアルLLMバックエンド（OpenAI/Anthropic）、CLI + MCP + Python API対応。
-  258ユニットテスト全合格。中日英3ヶ国語対応。
+  370テスト（129ユニット+234契約+7統合）全合格。中日英3ヶ国語対応。
 ---
 
 # DevSquad V3.5.0 — マルチエージェントコラボレーションプラットフォーム
@@ -22,7 +22,7 @@ description: |
              → [コンセンサス決定] → [レポート整形] → [構造化レポート]
 ```
 
-## アーキテクチャ概要（34コアモジュール）
+## アーキテクチャ概要（44コアモジュール）
 
 | # | モジュール | ファイル | 責任 |
 |---|-----------|--------|------|
@@ -47,7 +47,7 @@ description: |
 | 18 | **InputValidator** | `input_validator.py` | セキュリティ検証+16パターンPrompt注入検出 |
 | 19 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM駆動セマンティックマッチング+バイリンガルフォールバック |
 | 20 | **CheckpointManager** | `checkpoint_manager.py` | SHA256整合性、ハンドオフ文書、自動クリーンアップ |
-| 21 | **WorkflowEngine** | `workflow_engine.py` | タスク→ワークフロー自動分割、ステップ実行、チェックポイント復元 |
+| 21 | **WorkflowEngine** | `workflow_engine.py` | タスク→ワークフロー自動分割、ステップ実行、チェックポイント復元、11フェーズライフサイクルテンプレート、要件変更管理 |
 | 22 | **TaskCompletionChecker** | `task_completion_checker.py` | 完了追跡+進捗永続化 |
 | 23 | **CodeMapGenerator** | `code_map_generator.py` | Python ASTベースコード分析+依存グラフ |
 | 24 | **DualLayerContext** | `dual_layer_context.py` | プロジェクト+タスクレベルコンテキスト（TTL付き） |
@@ -61,6 +61,15 @@ description: |
 | 32 | **AgentBriefing** | `agent_briefing.py` | コンテキスト認識ブリーフィング生成 + 優先度フィルタリング + 永続化 |
 | 33 | **ConfidenceScorer** | `confidence_score.py` | 5因子信頼度スコア(完全性/確実性/具体性/一貫性/モデル品質) |
 | 34 | **RoleTemplateMarket** | `role_template_market.py` | ロールテンプレートマーケット(公開/検索/インストール/評価/エクスポート/インポート) |
+| 35 | **LLMCache** | `llm_cache.py` | TTL LRUキャッシュ+ディスク永続化(60-80%コスト削減) |
+| 36 | **LLMRetry** | `llm_retry.py` | 指数バックオフ+サーキットブレーカー+マルチバックエンドフォールバック |
+| 37 | **UsageTracker** | `usage_tracker.py` | Token/コスト使用量追跡とレポート |
+| 38 | **Models** | `models.py` | 共有データモデルと型定義 |
+| 39 | **ConfigManager (YAML)** | `config_manager.py` | プロジェクトレベルYAML設定管理 |
+| 40 | **LLMCacheAsync** | `llm_cache_async.py` | 非同期LLMキャッシュ |
+| 41 | **LLMRetryAsync** | `llm_retry_async.py` | 非同期LLMリトライ+バックオフ |
+| 42 | **IntegrationExample** | `integration_example.py` | DevSquad統合サンプルコード |
+| 43 | **AsyncIntegrationExample** | `async_integration_example.py` | 非同期DevSquad統合サンプル |
 
 ---
 
@@ -113,6 +122,59 @@ result = quick_collaborate("マイクロサービス設計を手伝って")
 
 ---
 
+## プロジェクトライフサイクル：11フェーズモデル（V3.5）
+
+> **定義ドキュメント**: `docs/prd/lifecycle_phases_definition.md`（権威）
+> **レビューレポート**: `docs/prd/lifecycle_phases_review.md`（7ロールレビュー、9件の採択）
+
+### フェーズ概要
+
+| # | フェーズ | 主導 | レビュー担当者 | オプション | ゲート |
+|---|---------|------|--------------|-----------|--------|
+| P1 | 要件分析 | pm | arch+test+sec+ui | ❌ | 受入基準が定量的 |
+| P2 | アーキテクチャ設計 | arch | pm+sec+infra | ❌ | 重み付きコンセンサス≥70% |
+| P3 | 技術設計 | arch+coder | coder+test | ❌ | API仕様が明確 |
+| P4 | データ設計 | arch+coder | arch+sec | ✅ | 3NFまたは非正規化の正当性 |
+| P5 | インタラクション設計 | ui | pm+test+sec | ✅ | コアフロー可用性検証通過 |
+| P6 | セキュリティレビュー | sec | arch+infra | ✅ | P0/P1脆弱性なし、コンプライアンス全緑 |
+| P7 | テスト計画 | test | arch+sec+infra+pm | ❌ | テスト計画レビュー通過 |
+| P8 | 開発実装 | coder | arch+sec+test+coder | ❌ | コードレビュー通過、P0欠陥なし |
+| P9 | テスト実行 | test | arch+pm+sec+infra | ❌ | カバレッジ≥80%+P7計画100%実行 |
+| P10 | デプロイ | infra | arch+sec+test | ❌ | デプロイ訓練通過 |
+| P11 | 運用保障 | infra+sec | arch+infra | ✅ | P99<目標値、アラート100% |
+
+### 依存グラフ
+
+```
+P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→ P9 ──→ P10 ──→ P11
+           ├──→ P4(∥P3) ──↗
+           └──→ P5(dep P1+P3) ──↗
+```
+
+### ライフサイクルテンプレート
+
+| テンプレート | フェーズ | ユースケース |
+|-------------|---------|-------------|
+| `full` | P1-P11全フェーズ | 完全プロジェクト |
+| `backend` | P5なし | バックエンドサービス |
+| `frontend` | P4,P6なし | フロントエンドアプリ |
+| `internal_tool` | P4,P5,P6,P11なし | 社内ツール |
+| `minimal` | P1,P3,P7,P8,P9 | 最小セット |
+
+### ゲートメカニズム
+
+- **強制実行**: 各フェーズのゲートは必ずチェック
+- **非達成でも非ブロック**: ギャップレポート（ギャップ項目+原因分析）を生成、ユーザーが進行可否を判断
+- **トレーサビリティ**: 全ゲート結果をチェックポイントに記録
+
+### 要件変更プロセス
+
+```
+変更要求(pm/user) → 影響分析(arch+sec+test) → 変更レビュー(全ロール) → 承認/却下(pm+arch) → 影響フェーズへロールバック
+```
+
+---
+
 ## テスト鉄則（⚠️ AIがテストを書く時必須守）
 
 ### 鉄則1：ドキュメント先行 — API呼び出しを推測で書かない
@@ -157,13 +219,15 @@ result = quick_collaborate("マイクロサービス設計を手伝って")
 | Role Mapping (RoleMatcher+エイリアス解決) | 25 | ✅ PASS |
 | Upstream (Checkpoint+SemanticMatcher+Workflow+CompletionChecker) | 35 | ✅ PASS |
 | MCEAdapter (CarryMem統合+タイプマッピング+グレースフルデグラデーション) | 30 | ✅ PASS |
-| **合計** | **129** | **✅ ALL PASS** |
+| Contract Tests (Protocols+NullProviders+Cache+Monitor+Security) | 234 | ✅ PASS |
+| V3.5 Integration (Lifecycle+ChangeRequest+Templates) | 7 | ✅ PASS |
+| **合計** | **370** | **✅ ALL PASS** |
 
 ---
 
 ## バージョン履歴
 
-- **v3.5.0** (2026-04-27): リアルLLMバックエンド(OpenAI/Anthropic/Mock) + ThreadPoolExecutor並列実行 + InputValidator+16パターンPrompt注入検出 + RoleMatcher/ReportFormatter抽出 + AISemanticMatcherバイリンガルマッチング + CheckpointManager SHA256整合性 + WorkflowEngineタスク分割+チェックポイント復元 + TaskCompletionChecker完了追跡 + CodeMapGenerator AST分析 + DualLayerContext二層コンテキスト + SkillRegistryスキル登録 + ConfigManager YAML設定 + LLMBackendストリーミング + Docker + GitHub Actions CI + pipインストール対応 + CarryMem統合 + 258ユニットテスト
+- **v3.5.0** (2026-05-02): 11フェーズプロジェクトライフサイクル（full/backend/frontend/internal_tool/minimalテンプレート）+ 要件変更管理 + ゲートメカニズム+ギャップレポート + WorkflowEngineライフサイクル対応 + 370テスト合格
 - **v3.3** (2026-04-24): 7コアロール(security+devopsをコアに昇格) + RoleRegistry SSOT + TaskDefinition.role_prompt修正 + 環境変数のみAPI key入力 + InputValidator入力検証 + 3シナリオ検証完了
 - **v3.3** (2026-04-17): WorkBuddy Claw統合 + MCE v0.4サポート + アノテーションEN化 + 多言語README
 - **v3.2** (2026-04-17): MVP 3並行ライン (E2E Demo + Dispatcher UX + MCE Adapter)

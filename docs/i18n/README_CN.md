@@ -7,8 +7,8 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-258%20passing-brightgreen" />
-  <img alt="Version" src="https://img.shields.io/badge/V3.5.0-2026--04--27-orange" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-370%20passing-brightgreen" />
+  <img alt="Version" src="https://img.shields.io/badge/V3.5.0-2026--05--02-orange" />
   <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
 
@@ -147,9 +147,29 @@ python3 scripts/mcp_server.py --port 8080  # SSE 模式
 
 ### 可靠性
 - **检查点管理器**：SHA256 完整性校验、交接文档、自动清理
-- **工作流引擎**：任务→工作流自动拆分、步骤执行、断点恢复
+- **工作流引擎**：任务→工作流自动拆分、步骤执行、断点恢复、**11阶段生命周期模板**（full/backend/frontend/internal_tool/minimal）、需求变更管理
 - **任务完成检查器**：DispatchResult/ScheduleResult 完成度跟踪
 - **共识引擎**：加权投票 + 否决权 + 人工升级
+
+### 项目全生命周期（11阶段模型）
+
+DevSquad V3.5 定义了 **11阶段（4可选）** 的项目全生命周期，每个阶段有明确的角色、依赖和门禁条件：
+
+```
+P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→ P9 ──→ P10 ──→ P11
+           ├──→ P4(∥P3) ──↗
+           └──→ P5(dep P1+P3) ──↗
+```
+
+| 模板 | 阶段 | 适用场景 |
+|------|------|---------|
+| `full` | P1-P11全部 | 完整项目 |
+| `backend` | 无P5 | 后端服务 |
+| `frontend` | 无P4,P6 | 前端应用 |
+| `internal_tool` | 无P4,P5,P6,P11 | 内部工具 |
+| `minimal` | P1,P3,P7,P8,P9 | 最小集 |
+
+详见 [GUIDE.md](../../GUIDE.md) §4 获取完整生命周期详情、门禁条件和需求变更流程。
 
 ### 开发者体验
 - **配置文件**：项目根目录 `.devsquad.yaml` + 环境变量覆盖
@@ -203,11 +223,12 @@ export OPENAI_API_KEY=sk-...
 ## 运行测试
 
 ```bash
-# 核心测试（258 个）
+# 核心测试（129 单元 + 234 契约 + 7 集成 = 370 总计）
 python3 -m pytest scripts/collaboration/core_test.py \
   scripts/collaboration/role_mapping_test.py \
   scripts/collaboration/upstream_test.py \
-  scripts/collaboration/mce_adapter_test.py -v
+  scripts/collaboration/mce_adapter_test.py \
+  tests/ test_v35_integration.py -v
 
 # 快速冒烟测试
 python3 scripts/cli.py --version    # 3.5.0
@@ -219,6 +240,9 @@ python3 scripts/cli.py roles        # 列出 7 个角色
 
 | 文档 | 说明 |
 |------|------|
+| [GUIDE.md](GUIDE.md) | 完整用户指南（中文） |
+| [GUIDE_EN.md](GUIDE_EN.md) | 完整用户指南（英文） |
+| [GUIDE_JP.md](GUIDE_JP.md) | 完整用户指南（日文） |
 | [INSTALL.md](INSTALL.md) | 安装指南 |
 | [EXAMPLES.md](EXAMPLES.md) | 真实使用示例 |
 | [SKILL.md](SKILL.md) | 技能手册 |
@@ -229,7 +253,8 @@ python3 scripts/cli.py roles        # 列出 7 个角色
 
 | 日期 | 版本 | 亮点 |
 |------|------|------|
-| 2026-04-27 | **V3.5.0** | 真实 LLM 后端、ThreadPoolExecutor 并行、输入验证+Prompt注入防护、检查点管理、工作流引擎、流式输出、Docker、CI、配置文件、CarryMem集成、258 单元测试 |
+| 2026-05-02 | **V3.5.0** | 🆕 11阶段项目全生命周期（full/backend/frontend/internal_tool/minimal模板）、需求变更管理、门禁机制+差距报告、370测试通过 |
+| 2026-04-27 | V3.5.0 | 真实 LLM 后端、ThreadPoolExecutor 并行、输入验证+Prompt注入防护、检查点管理、工作流引擎、流式输出、Docker、CI、配置文件、CarryMem集成 |
 | 2026-04-17 | V3.2 | E2E Demo、MCE 适配器 |
 | 2026-04-16 | V3.0 | 完整重设计 — Coordinator/Worker/Scratchpad 架构 |
 

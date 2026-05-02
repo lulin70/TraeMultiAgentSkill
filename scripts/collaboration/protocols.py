@@ -194,6 +194,31 @@ class MemoryProvider(Protocol):
         """Return memory statistics (total_users, total_rules, etc.)."""
         ...
 
+    def match_rules(self, task_description: str, user_id: str,
+                     role: Optional[str] = None, max_rules: int = 5) -> List[Dict[str, Any]]:
+        """Match rules based on task description and role.
+
+        Returns list of rule dicts with keys:
+        - rule_type: str (forbid/avoid/always)
+        - trigger: str (condition that activates the rule)
+        - action: str (what the rule requires)
+        - relevance_score: float (0.0-1.0)
+        - rule_id: str (unique identifier)
+        - override: bool (whether rule cannot be overridden)
+        """
+        ...
+
+    def format_rules_as_prompt(self, rules: List[Dict[str, Any]]) -> str:
+        """Format matched rules as injectable prompt text.
+
+        Args:
+            rules: List of rule dicts from match_rules()
+
+        Returns:
+            Formatted string ready for prompt injection, or empty string if no rules.
+        """
+        ...
+
 
 # ============================================================================
 # Exception definitions

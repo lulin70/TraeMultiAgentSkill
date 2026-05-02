@@ -5,7 +5,7 @@ description: |
   V3.5.0 多智能体协作平台 — 基于 Coordinator/Worker/Scratchpad 模式的完整多Agent协作系统。
   7个核心角色（架构师/产品经理/安全专家/测试专家/开发者/DevOps/UI设计师），
   支持真实LLM后端（OpenAI/Anthropic），CLI + MCP + Python API。
-  258个单元测试全通过。支持中英日三语。
+  370个测试（129单元+234契约+7集成）全通过。支持中英日三语。
 ---
 
 # DevSquad V3.5.0 — 多智能体协作平台
@@ -20,7 +20,7 @@ description: |
         → [ConsensusEngine共识] → [报告格式化] → [结构化报告]
 ```
 
-## 架构总览（34大模块）
+## 架构总览（44大模块）
 
 | # | 模块 | 文件 | 职责 |
 |---|------|------|------|
@@ -45,7 +45,7 @@ description: |
 | 18 | **InputValidator** | `input_validator.py` | 安全验证 + 16种Prompt注入模式检测 |
 | 19 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM驱动的语义角色匹配 + 中英双语关键词回退 |
 | 20 | **CheckpointManager** | `checkpoint_manager.py` | SHA256完整性校验、交接文档、自动清理 |
-| 21 | **WorkflowEngine** | `workflow_engine.py` | 任务→工作流自动拆分、步骤执行、断点恢复 |
+| 21 | **WorkflowEngine** | `workflow_engine.py` | 任务→工作流自动拆分、步骤执行、断点恢复、11阶段生命周期模板、需求变更管理 |
 | 22 | **TaskCompletionChecker** | `task_completion_checker.py` | DispatchResult/ScheduleResult完成度跟踪 |
 | 23 | **CodeMapGenerator** | `code_map_generator.py` | Python AST代码结构分析 + 依赖图 |
 | 24 | **DualLayerContext** | `dual_layer_context.py` | 项目级+任务级上下文管理（带TTL） |
@@ -273,6 +273,59 @@ for p in proposals:
 
 ---
 
+## 项目全生命周期：11阶段模型（V3.5）
+
+> **定义文档**: `docs/prd/lifecycle_phases_definition.md`（权威）
+> **评审报告**: `docs/prd/lifecycle_phases_review.md`（7角色评审，9条建议采纳）
+
+### 阶段概览
+
+| # | 阶段 | 主导 | 评审人 | 可选 | 门禁 |
+|---|------|------|--------|------|------|
+| P1 | 需求分析 | pm | arch+test+sec+ui | ❌ | 验收标准可量化 |
+| P2 | 架构设计 | arch | pm+sec+infra | ❌ | 加权共识≥70% |
+| P3 | 技术设计 | arch+coder | coder+test | ❌ | API规范无歧义 |
+| P4 | 数据设计 | arch+coder | arch+sec | ✅ | 3NF或反范式有据 |
+| P5 | 交互设计 | ui | pm+test+sec | ✅ | 核心流程可用性验证通过 |
+| P6 | 安全评审 | sec | arch+infra | ✅ | 无P0/P1漏洞、合规全绿 |
+| P7 | 测试计划 | test | arch+sec+infra+pm | ❌ | 测试计划评审通过 |
+| P8 | 开发实现 | coder | arch+sec+test+coder | ❌ | 代码审查通过、无P0缺陷 |
+| P9 | 测试执行 | test | arch+pm+sec+infra | ❌ | 覆盖率≥80%+P7计划100%执行 |
+| P10 | 部署发布 | infra | arch+sec+test | ❌ | 部署演练通过 |
+| P11 | 运维保障 | infra+sec | arch+infra | ✅ | P99<目标值、告警100% |
+
+### 依赖图
+
+```
+P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→ P9 ──→ P10 ──→ P11
+           ├──→ P4(∥P3) ──↗
+           └──→ P5(dep P1+P3) ──↗
+```
+
+### 生命周期模板
+
+| 模板 | 阶段 | 适用场景 |
+|------|------|---------|
+| `full` | P1-P11全部 | 完整项目 |
+| `backend` | 无P5 | 后端服务 |
+| `frontend` | 无P4,P6 | 前端应用 |
+| `internal_tool` | 无P4,P5,P6,P11 | 内部工具 |
+| `minimal` | P1,P3,P7,P8,P9 | 最小集 |
+
+### 门禁机制
+
+- **强制执行**：每个阶段门禁必须检查
+- **不达标不阻塞**：生成差距报告（差距项+原因分析），由用户决定是否推进
+- **留痕**：所有门禁结果记录到检查点
+
+### 需求变更流程
+
+```
+变更发起(pm/user) → 影响分析(arch+sec+test) → 变更评审(全角色) → 批准/驳回(pm+arch) → 回退到受影响阶段
+```
+
+---
+
 ## 调度模式说明
 
 | 模式 | 说明 | 适用场景 |
@@ -490,13 +543,15 @@ def test_<功能>_<场景>(self):
 | Role Mapping (RoleMatcher+别名解析) | 25 | ✅ | ✅ PASS |
 | Upstream (Checkpoint+SemanticMatcher+Workflow+CompletionChecker) | 35 | ✅ | ✅ PASS |
 | MCEAdapter (CarryMem集成+类型映射+优雅降级) | 30 | ✅ | ✅ PASS |
-| **总计** | **129** | **✅ ALL PASS** | |
+| Contract Tests (Protocols+NullProviders+Cache+Monitor+Security) | 234 | ✅ | ✅ PASS |
+| V3.5 Integration (Lifecycle+ChangeRequest+Templates) | 7 | ✅ | ✅ PASS |
+| **总计** | **370** | **✅ ALL PASS** | |
 
 ---
 
 ## Version History
 
-- **v3.5.0** (2026-04-27): 真实LLM后端(OpenAI/Anthropic/Mock) + ThreadPoolExecutor并行执行 + InputValidator+16种Prompt注入防护 + RoleMatcher/ReportFormatter提取 + AISemanticMatcher双语匹配 + CheckpointManager SHA256完整性 + WorkflowEngine任务拆分+断点恢复 + TaskCompletionChecker完成度跟踪 + CodeMapGenerator AST分析 + DualLayerContext双层上下文 + SkillRegistry技能注册 + ConfigManager YAML配置 + LLMBackend流式输出 + Docker + GitHub Actions CI + pip可安装 + CarryMem集成 + 258单元测试
+- **v3.5.0** (2026-05-02): 11阶段项目全生命周期（full/backend/frontend/internal_tool/minimal模板）+ 需求变更管理 + 门禁机制+差距报告 + WorkflowEngine生命周期支持 + 370测试通过
 - **v3.3** (2026-04-24): 7核心角色(security+devops提升为核心) + RoleRegistry SSOT + TaskDefinition.role_prompt修复 + 环境变量唯一API key入口 + InputValidator输入验证 + 3个真实场景验证通过
 - **v3.3** (2026-04-17): WorkBuddy Claw集成 + MCE v0.4支持 + 注释EN化 + 多语言README
 - **v3.2** (2026-04-17): MVP Three Lines - E2E Full Demo(10-step flow/CLI) + Dispatcher UX Enhancement(structured/compact/detailed 3-format report) + MCEAdapter Memory Classification Adapter(lazy-load/graceful-degrade) + Delivery Workflow Iron Rule (walkthrough→annotate→docs→Git loop)

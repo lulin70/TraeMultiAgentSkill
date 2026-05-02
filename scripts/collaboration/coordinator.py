@@ -442,6 +442,9 @@ class Coordinator:
         Called before execute_plan() to pre-check rules at the orchestrator level,
         avoiding repeated queries from individual Agents.
 
+        Uses match_rules() when available (CarryMem v0.2.9+), falls back to
+        get_rules() for backward compatibility.
+
         Args:
             task_description: Task description for rule matching
             user_id: User identifier for rule lookup
@@ -455,10 +458,31 @@ class Coordinator:
         role_rules: Dict[str, List[dict]] = {}
         for wid, worker in self.workers.items():
             try:
-                rules = self.memory_provider.get_rules(
-                    user_id=user_id,
-                    context={"task": task_description, "role": worker.role_id}
-                )
+                if hasattr(self.memory_provider, 'match_rules'):
+                    rules = self.memory_provider.match_rules(
+                        task_description=task_description,
+                        user_id=user_id,
+                        role=worker.role_id,
+                        max_rules=5
+                    )
+                else:
+                    rule_strings = self.memory_provider.get_rules(
+                        user_id=user_id,
+                        context={"task": task_description, "role": worker.role_id}
+                    )
+                    rules = []
+                    for rs in rule_strings:
+                        if isinstance(rs, str):
+                            rules.append({
+                                "rule_type": "always",
+                                "trigger": rs.lower(),
+                                "action": rs,
+                                "relevance_score": 0.0,
+                                "rule_id": "",
+                                "override": False,
+                            })
+                        elif isinstance(rs, dict):
+                            rules.append(rs)
                 if rules:
                     role_rules[worker.role_id] = rules if isinstance(rules, list) else []
             except Exception:

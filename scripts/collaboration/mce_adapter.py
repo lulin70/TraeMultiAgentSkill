@@ -47,6 +47,12 @@ Example Usage:
 
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
+import re as _re
+import unicodedata
+import logging
+import threading
+
+logger = logging.getLogger(__name__)
 
 CARRYMEM_TO_DEVOPSQUAD = {
     "user_preference": "knowledge",
@@ -67,6 +73,11 @@ DEVSQUAD_TO_CARRYMEM = {
     "analysis": "decision",
     "correction": "correction",
 }
+
+RULE_TYPES = frozenset({"forbid", "avoid", "always"})
+
+_MAX_RULE_TEXT_LENGTH = 500
+_USER_ID_BLOCKED_CHARS = _re.compile(r'[<>\'";&|`$\\]')
 
 @dataclass
 class MCEResult:
@@ -105,13 +116,13 @@ class MCEAdapter:
     """
 
     _instance = None
-    _lock = None
+    _singleton_lock = threading.Lock()
 
     def __init__(self, enable: bool = False):
-        import threading
         self._lock = threading.RLock()
         self._status = MCEStatus()
         self._carrymem = None
+        self._adapter_type = "none"
 
         if enable:
             self._try_init()
@@ -119,9 +130,10 @@ class MCEAdapter:
     def _try_init(self):
         with self._lock:
             try:
-                from memory_classification_engine import CarryMem
-                self._carrymem = CarryMem()
+                from memory_classification_engine.integration.devsquad import DevSquadAdapter
+                self._carrymem = DevSquadAdapter()
                 self._status.available = True
+                self._adapter_type = "devsquad_adapter"
 
                 version = getattr(
                     __import__('memory_classification_engine'),
@@ -130,12 +142,32 @@ class MCEAdapter:
                 )
                 self._status.version = str(version)
 
-            except ImportError as e:
-                self._status.available = False
-                self._status.init_error = f"CarryMem not installed: {e}"
+            except ImportError:
+                try:
+                    from memory_classification_engine import CarryMem
+                    self._carrymem = CarryMem()
+                    self._status.available = True
+                    self._adapter_type = "carrymem_legacy"
+
+                    version = getattr(
+                        __import__('memory_classification_engine'),
+                        '__version__',
+                        'unknown'
+                    )
+                    self._status.version = str(version)
+
+                except ImportError as e:
+                    self._status.available = False
+                    self._status.init_error = f"CarryMem not installed: {e}"
+                    self._adapter_type = "none"
+                except Exception as e:
+                    self._status.available = False
+                    self._status.init_error = f"{type(e).__name__}: {e}"
+                    self._adapter_type = "none"
             except Exception as e:
                 self._status.available = False
                 self._status.init_error = f"{type(e).__name__}: {e}"
+                self._adapter_type = "none"
 
     @property
     def is_available(self) -> bool:
@@ -249,6 +281,215 @@ class MCEAdapter:
         self.shutdown()
         self._try_init()
 
+    def get_stats(self) -> Dict[str, Any]:
+        """Return memory statistics from CarryMem."""
+        if not self.is_available or not self._carrymem:
+            return {
+                "total_users": 0,
+                "total_rules": 0,
+                "available": False,
+                "adapter_type": self._adapter_type,
+            }
+        with self._lock:
+            try:
+                if hasattr(self._carrymem, 'get_stats'):
+                    return self._carrymem.get_stats()
+            except Exception:
+                pass
+            return {
+                "total_users": 0,
+                "total_rules": 0,
+                "available": self.is_available,
+                "adapter_type": self._adapter_type,
+            }
+
+    @staticmethod
+    def _sanitize_user_id(user_id: str) -> str:
+        """Sanitize user_id to prevent injection attacks.
+
+        CarryMem trusts caller-provided user_id without authentication.
+        DevSquad must ensure user_id is safe before passing it.
+        """
+        if not user_id:
+            return "default"
+        normalized = unicodedata.normalize('NFKC', str(user_id))
+        sanitized = _USER_ID_BLOCKED_CHARS.sub('_', normalized)
+        while '../' in sanitized or '..\\' in sanitized:
+            sanitized = sanitized.replace('../', '_').replace('..\\', '_')
+        sanitized = sanitized.replace('/', '_').replace('\\', '_')
+        sanitized = sanitized.strip()[:128]
+        return sanitized or "default"
+
+    def match_rules(self, task_description: str, user_id: str,
+                     role: Optional[str] = None, max_rules: int = 5) -> List[Dict[str, Any]]:
+        """Match rules based on task description and role.
+
+        Calls DevSquadAdapter.match_rules() when available (CarryMem v0.2.8+).
+        Falls back to CarryMem legacy API, then keyword-based matching.
+        """
+        safe_user_id = self._sanitize_user_id(user_id)
+
+        if not self.is_available or not self._carrymem:
+            return self._keyword_fallback_match(task_description, safe_user_id, role, max_rules)
+
+        with self._lock:
+            try:
+                if hasattr(self._carrymem, 'match_rules'):
+                    result = self._carrymem.match_rules(
+                        task_description=task_description,
+                        user_id=safe_user_id,
+                        role=role,
+                        max_rules=max_rules
+                    )
+                else:
+                    return self._keyword_fallback_match(task_description, safe_user_id, role, max_rules)
+                if isinstance(result, list):
+                    return self._normalize_matched_rules(result)
+                return []
+            except Exception as e:
+                logger.warning("CarryMem match_rules failed: %s", e)
+                return self._keyword_fallback_match(task_description, safe_user_id, role, max_rules)
+
+    def format_rules_as_prompt(self, rules: List[Dict[str, Any]]) -> str:
+        """Format matched rules as injectable prompt text.
+
+        Calls DevSquadAdapter.format_rules_as_prompt() when available (CarryMem v0.2.8+).
+        Falls back to simple formatting when CarryMem is unavailable.
+        """
+        if not rules:
+            return ""
+
+        for rule in rules:
+            for key in ("action", "trigger"):
+                text = rule.get(key, "")
+                if isinstance(text, str) and len(text) > _MAX_RULE_TEXT_LENGTH:
+                    rule[key] = text[:_MAX_RULE_TEXT_LENGTH]
+
+        if not self.is_available or not self._carrymem:
+            return self._format_rules_fallback(rules)
+
+        with self._lock:
+            try:
+                if hasattr(self._carrymem, 'format_rules_as_prompt'):
+                    return self._carrymem.format_rules_as_prompt(rules)
+                return self._format_rules_fallback(rules)
+            except Exception as e:
+                logger.warning("CarryMem format_rules_as_prompt failed: %s", e)
+                return self._format_rules_fallback(rules)
+
+    def _keyword_fallback_match(self, task_description: str, user_id: str,
+                                 role: Optional[str] = None,
+                                 max_rules: int = 5) -> List[Dict[str, Any]]:
+        """Keyword-based rule matching fallback when CarryMem is unavailable."""
+        try:
+            all_rules = self._get_all_rules_raw(user_id, role)
+        except Exception:
+            return []
+
+        if not all_rules:
+            return []
+
+        desc_lower = task_description.lower()
+        desc_words = set(desc_lower.split())
+
+        scored = []
+        for rule in all_rules:
+            trigger = rule.get("trigger", "").lower()
+            action = rule.get("action", "").lower()
+            trigger_words = set(trigger.split())
+            overlap = len(desc_words & trigger_words)
+            if trigger and trigger in desc_lower:
+                overlap += 2
+            if overlap > 0:
+                rule_copy = dict(rule)
+                rule_copy["relevance_score"] = min(1.0, overlap / max(len(trigger_words), 1))
+                scored.append(rule_copy)
+
+        scored.sort(key=lambda r: r.get("relevance_score", 0.0), reverse=True)
+        return scored[:max_rules]
+
+    def _get_all_rules_raw(self, user_id: str, role: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Retrieve all rules as raw dicts for keyword fallback matching."""
+        if not self.is_available or not self._carrymem:
+            return []
+
+        with self._lock:
+            try:
+                context = {}
+                if role:
+                    context["role"] = role
+                rules_str = self._carrymem.get_rules(user_id=user_id, context=context)
+                if not isinstance(rules_str, list):
+                    return []
+                return [self._parse_rule_string(r) for r in rules_str if isinstance(r, str)]
+            except Exception:
+                return []
+
+    @staticmethod
+    def _parse_rule_string(rule_str: str) -> Dict[str, Any]:
+        """Parse a prefixed rule string into a structured dict.
+
+        Format: "[TYPE] Description text (override)"
+        """
+        result: Dict[str, Any] = {
+            "rule_type": "always",
+            "trigger": "",
+            "action": rule_str,
+            "relevance_score": 0.0,
+            "rule_id": "",
+            "override": False,
+        }
+
+        stripped = rule_str.strip()
+        type_match = _re.match(r'^\[(FORBID|AVOID|ALWAYS)\]\s*', stripped, _re.IGNORECASE)
+        if type_match:
+            type_str = type_match.group(1).lower()
+            if type_str in RULE_TYPES:
+                result["rule_type"] = type_str
+            stripped = stripped[type_match.end():]
+
+        if stripped.endswith("(override)"):
+            result["override"] = True
+            stripped = stripped[:-len("(override)")].strip()
+
+        result["action"] = stripped
+        result["trigger"] = stripped.lower()
+        return result
+
+    @staticmethod
+    def _format_rules_fallback(rules: List[Dict[str, Any]]) -> str:
+        """Simple rule formatting fallback when CarryMem is unavailable."""
+        if not rules:
+            return ""
+
+        parts = ["=== Applicable Rules ==="]
+        for rule in rules:
+            rule_type = rule.get("rule_type", "always").upper()
+            action = rule.get("action", "")
+            override = " (non-overridable)" if rule.get("override") else ""
+            parts.append(f"[{rule_type}] {action}{override}")
+        parts.append("")
+        return "\n".join(parts)
+
+    @staticmethod
+    def _normalize_matched_rules(rules: List[Any]) -> List[Dict[str, Any]]:
+        """Normalize CarryMem rule objects into standard dict format."""
+        normalized = []
+        for rule in rules:
+            if isinstance(rule, dict):
+                rule_type = rule.get("rule_type", rule.get("type", "always"))
+                if rule_type not in RULE_TYPES:
+                    rule_type = "always"
+                normalized.append({
+                    "rule_type": rule_type,
+                    "trigger": rule.get("trigger", ""),
+                    "action": rule.get("action", rule.get("description", "")),
+                    "relevance_score": float(rule.get("relevance_score", rule.get("score", 0.0))),
+                    "rule_id": str(rule.get("rule_id", rule.get("id", ""))),
+                    "override": bool(rule.get("override", False)),
+                })
+        return normalized
+
     @staticmethod
     def _normalize_result(raw: Any) -> MCEResult:
         if raw is None:
@@ -296,5 +537,7 @@ class MCEAdapter:
 
 def get_global_mce_adapter(enable: bool = False) -> MCEAdapter:
     if MCEAdapter._instance is None:
-        MCEAdapter._instance = MCEAdapter(enable=enable)
+        with MCEAdapter._singleton_lock:
+            if MCEAdapter._instance is None:
+                MCEAdapter._instance = MCEAdapter(enable=enable)
     return MCEAdapter._instance

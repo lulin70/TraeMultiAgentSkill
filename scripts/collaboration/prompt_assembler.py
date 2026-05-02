@@ -1,29 +1,35 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PromptAssembler - 提示词动态组装引擎
+PromptAssembler - Dynamic Prompt Assembly Engine
 
-借鉴 Claude Code 架构中的三个提示词优化机制:
+Inspired by three prompt optimization mechanisms in the Claude Code architecture:
 
-  借鉴① Feature Flag 驱动的动态裁剪:
-    按任务复杂度(Simple/Medium/Complex)自动选择不同冗余度的模板变体，
-    简单任务用3行精简指令，复杂任务用增强模板(+约束+反模式+参考)。
+  Inspired① Feature Flag-driven dynamic trimming:
+    Automatically select template variants with different verbosity levels
+    based on task complexity (Simple/Medium/Complex).
+    Simple tasks use 3-line concise instructions; complex tasks use enhanced
+    templates (+constraints +anti-patterns +references).
 
-  借鉴③ 压缩状态感知适配:
-    ContextCompressor 的压缩级别(NONE/SNIP/SESSION_MEMORY/FULL_COMPACT)
-    直接影响 prompt 的风格和详细程度，实现"越压缩越精简"的自适应。
+  Inspired③ Compression-aware adaptation:
+    ContextCompressor's compression level (NONE/SNIP/SESSION_MEMORY/FULL_COMPACT)
+    directly influences the prompt's style and detail level, achieving
+    "more compression, more concise" self-adaptation.
 
-设计原则:
-    - 不新增独立服务，作为 Worker._do_work() 的内嵌组装器
-    - 所有变体从 ROLE_TEMPLATES 派生（不改原始模板）
-    - 复杂度检测全自动（基于描述长度/关键词/结构信号）
+Design principles:
+    - No new standalone service; embedded as an assembler within Worker._do_work()
+    - All variants derived from ROLE_TEMPLATES (original templates unchanged)
+    - Fully automatic complexity detection (based on description length/keywords/structural signals)
 """
 
 import re
 import os
+import logging
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 from enum import Enum
+
+logger = logging.getLogger(__name__)
 
 try:
     import yaml
@@ -31,12 +37,15 @@ try:
 except ImportError:
     _YAML_AVAILABLE = False
 
+_RE_NUMBERING = re.compile(r'\d+[.\)、]')
+_RE_MULTI_REQ = re.compile(r'[;；\n]')
+
 _config_cache: Dict = {}
 _config_cache_path: Optional[str] = None
 
 
 class TaskComplexity(Enum):
-    """任务复杂度级别"""
+    """Task complexity level"""
     SIMPLE = "simple"
     MEDIUM = "medium"
     COMPLEX = "complex"
@@ -45,14 +54,14 @@ class TaskComplexity(Enum):
 @dataclass
 class AssembledPrompt:
     """
-    组装后的提示词结果
+    Assembled prompt result
 
     Attributes:
-        instruction: 最终工作指令文本
-        complexity: 检测到的任务复杂度
-        variant_used: 使用的模板变体名称
-        tokens_estimate: 估算的 token 数量
-        metadata: 额外元数据（如触发关键词、裁剪原因等）
+        instruction: Final work instruction text
+        complexity: Detected task complexity
+        variant_used: Name of the template variant used
+        tokens_estimate: Estimated token count
+        metadata: Additional metadata (e.g., triggered keywords, trimming reasons)
     """
     instruction: str
     complexity: TaskComplexity
@@ -63,43 +72,43 @@ class AssembledPrompt:
 
 class PromptAssembler:
     """
-    提示词动态组装器
+    Dynamic prompt assembler
 
-    核心流程:
+    Core flow:
         task_description → detect_complexity() → select_template()
             → assemble(related_findings) → AssembledPrompt
 
-    与现有组件的关系:
-    - Worker._do_work(): 调用方，传入 context 后获取 AssembledPrompt
-    - ROLE_TEMPLATES: 变体基线来源（dispatcher.py 中定义）
-    - ContextCompressor.CompressionLevel: 压缩感知输入（可选）
+    Relationship with existing components:
+    - Worker._do_work(): Caller, passes context and gets AssembledPrompt
+    - ROLE_TEMPLATES: Variant baseline source (defined in dispatcher.py)
+    - ContextCompressor.CompressionLevel: Compression-aware input (optional)
 
-    使用示例:
+    Usage example:
         assembler = PromptAssembler(role_id="architect", base_prompt=role_template)
-        result = assembler.assemble(task_description="设计微服务架构",
-                                    related_findings=["发现A"],
+        result = assembler.assemble(task_description="Design microservice architecture",
+                                    related_findings=["Finding A"],
                                     compression_level=CompressionLevel.NONE)
         print(result.instruction)
     """
 
     _COMPLEXITY_KEYWORDS = {
         TaskComplexity.SIMPLE: {
-            "positive": ["写一个", "写个", "创建", "添加", "修复bug",
-                        "改个", "简单", "快速", "单个函数", "一行代码",
-                        "小改动", "补全", "格式化", "重命名", "hello",
-                        "工具类", "小bug", "排序函数", "日志"],
-            "negative": ["架构", "系统设计", "分布式", "重构", "迁移",
-                        "多模块", "全栈", "端到端", "完整方案",
-                        "高可用", "容灾", "微服务架构"],
+            "positive": ["write a", "create", "add", "fix bug",
+                        "change a", "simple", "quick", "single function", "one line of code",
+                        "small change", "complete", "format", "rename", "hello",
+                        "utility class", "minor bug", "sort function", "logging"],
+            "negative": ["architecture", "system design", "distributed", "refactor", "migration",
+                        "multi-module", "full-stack", "end-to-end", "complete solution",
+                        "high availability", "disaster recovery", "microservice architecture"],
         },
         TaskComplexity.COMPLEX: {
-            "positive": ["架构", "设计模式", "微服务", "分布式",
-                        "重构", "迁移", "安全审计", "性能优化",
-                        "完整方案", "系统设计", "技术选型",
-                        "端到端", "全链路", "高可用", "容灾",
-                        "CI/CD", "流水线", "全面优化"],
-            "negative": ["写个函数", "简单修改", "小调整", "补个测试",
-                        "快速修复", "hello world"],
+            "positive": ["architecture", "design pattern", "microservice", "distributed",
+                        "refactor", "migration", "security audit", "performance optimization",
+                        "complete solution", "system design", "tech selection",
+                        "end-to-end", "full pipeline", "high availability", "disaster recovery",
+                        "CI/CD", "pipeline", "comprehensive optimization"],
+            "negative": ["write a function", "simple modification", "minor adjustment", "add a test",
+                        "quick fix", "hello world"],
         },
     }
 
@@ -162,38 +171,36 @@ class PromptAssembler:
 
     def __init__(self, role_id: str, base_prompt: str, config_path: str = None):
         """
-        初始化提示词组装器
+        Initialize the prompt assembler
 
         Args:
-            role_id: 角色标识（用于角色特定的裁剪策略）
-            base_prompt: 基础角色提示词模板（来自 ROLE_TEMPLATES）
-            config_path: 配置文件路径（可选，默认查找 .devsquad.yaml）
+            role_id: Role identifier (for role-specific trimming strategies)
+            base_prompt: Base role prompt template (from ROLE_TEMPLATES)
+            config_path: Configuration file path (optional, defaults to searching for .devsquad.yaml)
         """
         self.role_id = role_id
         self.base_prompt = base_prompt
-        
-        # Load quality control configuration
+
         self.qc_config = self._load_config(config_path)
         self.qc_enabled = self.qc_config.get("quality_control", {}).get("enabled", False)
-        
-        # Pre-build quality control injection (if enabled)
+
         self._qc_injection = ""
         if self.qc_enabled:
             self._qc_injection = self._build_quality_control_injection()
-    
+
     def _load_config(self, config_path: str = None) -> Dict:
         """
         Load DevSquad configuration from YAML file.
-        
+
         Search order:
         1. Explicit config_path parameter
         2. .devsquad.yaml in current directory
         3. .devsquad.yaml in project root (directory with pyproject.toml/.git)
         4. Default empty config (quality control disabled)
-        
+
         Args:
             config_path: Explicit path to config file
-            
+
         Returns:
             Dict: Parsed configuration dictionary
         """
@@ -203,7 +210,7 @@ class PromptAssembler:
         global _config_cache, _config_cache_path
 
         search_paths = []
-        
+
         if config_path and os.path.exists(config_path):
             search_paths.append(config_path)
         else:
@@ -224,7 +231,7 @@ class PromptAssembler:
                     if parent == search_dir:
                         break
                     search_dir = parent
-        
+
         if search_paths:
             resolved = os.path.realpath(search_paths[0])
             if _config_cache_path == resolved and _config_cache:
@@ -236,71 +243,69 @@ class PromptAssembler:
                 _config_cache_path = resolved
                 return config
             except Exception as e:
-                print(f"[PromptAssembler] Warning: Failed to load config from {resolved}: {e}")
+                logger.warning("Failed to load config from %s: %s", resolved, e)
                 return {}
         else:
             return {"quality_control": {"enabled": False}}
-    
+
     def _build_quality_control_injection(self) -> str:
         """
         Build quality control system prompt injection based on configuration.
-        
+
         This creates a comprehensive set of rules that will be injected into
         every Worker's prompt, ensuring consistent quality standards.
-        
+
         Returns:
             str: Formatted quality control instructions
         """
         qc = self.qc_config.get("quality_control", {})
         strict = qc.get("strict_mode", False)
-        
+
         parts = []
-        parts.append("\n\n## ⚠️ Quality Control System (ACTIVE)")
+        parts.append("\n\n## Quality Control System (ACTIVE)")
         parts.append(f"Strict Mode: {'ON' if strict else 'OFF (warnings only)'}")
         parts.append(f"Minimum Score: {qc.get('min_quality_score', 85)}/100")
         parts.append("")
-        
-        # AI Quality Control rules
+
         aqc = qc.get("ai_quality_control", {})
         if aqc.get("enabled", False):
             parts.append("### AI Quality Control Rules:")
-            
+
             hc = aqc.get("hallucination_check", {})
             if hc.get("enabled", False):
                 parts.append("- **Hallucination Prevention**:")
                 if hc.get("require_traceable_references"):
-                    parts.append("  · All API/library references MUST include official URL or version")
+                    parts.append("  . All API/library references MUST include official URL or version")
                 if hc.get("require_signature_verification"):
-                    parts.append("  · Verify function signatures via `import + dir()` before using")
+                    parts.append("  . Verify function signatures via `import + dir()` before using")
                 if hc.get("forbid_absolute_certainty"):
-                    parts.append("  · FORBIDDEN: 'obviously', 'clearly', 'undoubtedly' - provide evidence instead")
-            
+                    parts.append("  . FORBIDDEN: 'obviously', 'clearly', 'undoubtedly' - provide evidence instead")
+
             oc = aqc.get("overconfidence_check", {})
             if oc.get("enabled", False):
                 parts.append("- **Overconfidence Prevention**:")
-                parts.append(f"  · Every technical decision MUST present ≥{oc.get('require_alternatives_min', 2)} alternatives with pros/cons")
-                parts.append(f"  · Must list ≥{oc.get('require_failure_scenarios_min', 3)} potential failure scenarios")
+                parts.append(f"  . Every technical decision MUST present >={oc.get('require_alternatives_min', 2)} alternatives with pros/cons")
+                parts.append(f"  . Must list >={oc.get('require_failure_scenarios_min', 3)} potential failure scenarios")
                 if oc.get("acknowledge_tradeoffs"):
-                    parts.append("  · Always acknowledge limitations and trade-offs")
-            
+                    parts.append("  . Always acknowledge limitations and trade-offs")
+
             pd = aqc.get("pattern_diversity", {})
             if pd.get("enabled", False):
                 parts.append("- **Pattern Diversity**:")
-                parts.append("  · Consider current state-of-the-art (last 6 months)")
-                parts.append("  · Evaluate multiple approaches before recommending")
-                parts.append("  · Flag repeated/solutions from recent tasks")
-            
+                parts.append("  . Consider current state-of-the-art (last 6 months)")
+                parts.append("  . Evaluate multiple approaches before recommending")
+                parts.append("  . Flag repeated/solutions from recent tasks")
+
             sv = aqc.get("self_verification_prevention", {})
             if sv.get("enabled", False):
                 parts.append("- **Self-Verification Trap Avoidance**:")
                 if sv.get("enforce_creator_tester_separation"):
-                    parts.append("  · Code creator and test creator MUST be different roles")
+                    parts.append("  . Code creator and test creator MUST be different roles")
                 if sv.get("require_spec_based_testing"):
-                    parts.append("  · Tests based on specification (PRD), NOT implementation details")
-                parts.append(f"  · Error case coverage ≥{sv.get('min_error_coverage_percent', 15)}%")
+                    parts.append("  . Tests based on specification (PRD), NOT implementation details")
+                parts.append(f"  . Error case coverage >={sv.get('min_error_coverage_percent', 15)}%")
             parts.append("")
-        
-        # AI Security Guard rules
+
         asg = qc.get("ai_security_guard", {})
         if asg.get("enabled", False):
             parts.append("### Security Rules (PermissionGuard):")
@@ -312,79 +317,77 @@ class PromptAssembler:
                 "BYPASS": "Full skip (manual authorization required)"
             }
             parts.append(f"- Current Level: **L1/L2/L3/L4[{perm_level}]**: {level_desc.get(perm_level, 'Unknown')}")
-            
+
             iv = asg.get("input_validation", {})
             if iv.get("enabled", False):
                 parts.append("- **Input Validation (16 patterns active)**:")
                 if iv.get("block_high_severity"):
-                    parts.append("  · BLOCK: SQL/Command/XSS/SSRF/Path injection → immediate rejection")
+                    parts.append("  . BLOCK: SQL/Command/XSS/SSRF/Path injection -> immediate rejection")
                 if iv.get("warn_and_sanitize_medium"):
-                    parts.append("  · SANITIZE: LDAP/XPath/Header/Email injection → cleaned + warning")
+                    parts.append("  . SANITIZE: LDAP/XPath/Header/Email injection -> cleaned + warning")
                 if iv.get("flag_low_severity"):
-                    parts.append("  · FLAG: Template/ReDoS/Format/XXE → advisory warning")
-            
+                    parts.append("  . FLAG: Template/ReDoS/Format/XXE -> advisory warning")
+
             parts.append("- **Sensitive Data Rules**:")
-            parts.append("  · FORBIDDEN: Write passwords/keys/tokens to Scratchpad SHARED zone")
-            parts.append("  · FORBIDDEN: Include secrets in error messages or logs")
-            parts.append("  · REQUIRED: Use environment variables or secret managers for credentials")
+            parts.append("  . FORBIDDEN: Write passwords/keys/tokens to Scratchpad SHARED zone")
+            parts.append("  . FORBIDDEN: Include secrets in error messages or logs")
+            parts.append("  . REQUIRED: Use environment variables or secret managers for credentials")
             parts.append("")
-        
-        # AI Team Collaboration rules
+
         atc = qc.get("ai_team_collaboration", {})
         if atc.get("enabled", False):
             parts.append("### Collaboration Rules:")
-            
+
             raci = atc.get("raci", {})
             if raci.get("mode") == "strict":
                 parts.append("- **RACI Matrix (STRICT mode)**:")
-                parts.append("  · One Responsible (R) per task - the primary doer")
-                parts.append("  · One Accountable (A) per task - final owner/approver")
-                parts.append("  · Consulted (C) roles must be asked BEFORE decisions")
-                parts.append("  · Informed (I) roles notified AFTER decisions")
-            
+                parts.append("  . One Responsible (R) per task - the primary doer")
+                parts.append("  . One Accountable (A) per task - final owner/approver")
+                parts.append("  . Consulted (C) roles must be asked BEFORE decisions")
+                parts.append("  . Informed (I) roles notified AFTER decisions")
+
             scratchpad = atc.get("scratchpad", {})
             if scratchpad.get("protocol") == "zoned":
                 parts.append("- **Scratchpad Zoned Protocol**:")
-                parts.append("  · READONLY zone: Other roles' outputs (read-only, no modify)")
-                parts.append("  · WRITE zone: Your output only (isolated namespace)")
-                parts.append("  · SHARED zone: Consensus-approved conclusions (requires vote)")
-                parts.append("  · PRIVATE zone: Sensitive data (invisible to others)")
-            
+                parts.append("  . READONLY zone: Other roles' outputs (read-only, no modify)")
+                parts.append("  . WRITE zone: Your output only (isolated namespace)")
+                parts.append("  . SHARED zone: Consensus-approved conclusions (requires vote)")
+                parts.append("  . PRIVATE zone: Sensitive data (invisible to others)")
+
             consensus = atc.get("consensus", {})
             if consensus.get("enabled", False):
                 parts.append(f"- **Consensus Mechanism** (threshold: {consensus.get('threshold', 0.7)*100:.0f}%):")
-                parts.append("  · Weighted voting by role importance")
+                parts.append("  . Weighted voting by role importance")
                 if consensus.get("veto_enabled"):
                     veto_roles = consensus.get("veto_allowed_roles", [])
-                    parts.append(f"  · Veto power: {', '.join(veto_roles) if veto_roles else 'None'}")
-                parts.append("  · Deadlock: Auto-escalate to user after timeout")
-            
+                    parts.append(f"  . Veto power: {', '.join(veto_roles) if veto_roles else 'None'}")
+                parts.append("  . Deadlock: Auto-escalate to user after timeout")
+
             parts.append("")
-        
-        # Final quality gate reminder
+
         min_score = qc.get("min_quality_score", 85)
         parts.append("### Output Quality Gate:")
         parts.append(f"- Your output will be scored (0-{min_score-1} REJECTED / {min_score}-99 CONDITIONAL / 100 ACCEPTED)")
         parts.append("- Low score triggers specific improvement requirements")
         if strict:
             parts.append("- **In STRICT mode: Rejected outputs cannot proceed to next phase**")
-        
+
         return "\n".join(parts)
 
     def detect_complexity(self, task_description: str) -> TaskComplexity:
         """
-        自动检测任务复杂度
+        Automatically detect task complexity
 
-        三维评分模型:
-          1. 长度维度: <30字→Simple, 30~150字→Medium, >150字→Complex
-          2. 关键词维度: 匹配 SIMPLE/COMPLEX 关键词组
-          3. 结构维度: 是否包含编号列表/多个问题/多层要求
+        Three-dimensional scoring model:
+          1. Length dimension: <30 chars -> Simple, 30~150 chars -> Medium, >150 chars -> Complex
+          2. Keyword dimension: Match SIMPLE/COMPLEX keyword groups
+          3. Structure dimension: Whether it contains numbered lists/multiple questions/multi-layer requirements
 
         Args:
-            task_description: 任务描述文本
+            task_description: Task description text
 
         Returns:
-            TaskComplexity: 检测到的复杂度级别
+            TaskComplexity: Detected complexity level
         """
         desc_lower = task_description.lower()
         desc_len = len(task_description)
@@ -419,9 +422,9 @@ class PromptAssembler:
             if kw in desc_lower:
                 score_complex -= 0.15
 
-        has_numbering = bool(re.search(r'\d+[.\)、]', task_description))
+        has_numbering = bool(_RE_NUMBERING.search(task_description))
         has_multi_question = task_description.count('?') >= 2
-        has_multi_requirement = len(re.split(r'[;；\n]', task_description)) >= 3
+        has_multi_requirement = len(_RE_MULTI_REQ.split(task_description)) >= 3
 
         structure_bonus = 0.0
         if has_numbering:
@@ -450,23 +453,23 @@ class PromptAssembler:
                  task_id: str = "",
                  compression_level=None) -> AssembledPrompt:
         """
-        组装最终提示词
+        Assemble the final prompt
 
-        完整流程:
-        1. 检测任务复杂度
-        2. 选择基础模板变体
-        3. 应用压缩级别覆盖（如有）
-        4. 按配置裁剪各部分内容
-        5. 组装最终指令
+        Complete flow:
+        1. Detect task complexity
+        2. Select base template variant
+        3. Apply compression level overrides (if any)
+        4. Trim each section according to configuration
+        5. Assemble final instruction
 
         Args:
-            task_description: 任务描述
-            related_findings: 相关发现列表（来自 Scratchpad）
-            task_id: 任务ID（用于指令头）
-            compression_level: ContextCompressor 压缩级别（可选）
+            task_description: Task description
+            related_findings: Related findings list (from Scratchpad)
+            task_id: Task ID (for instruction header)
+            compression_level: ContextCompressor compression level (optional)
 
         Returns:
-            AssembledPrompt: 组装结果，包含 instruction/complexity/variant/metadata
+            AssembledPrompt: Assembly result, containing instruction/complexity/variant/metadata
         """
         complexity = self.detect_complexity(task_description)
         config = dict(self._TEMPLATE_VARIANTS[complexity])
@@ -519,81 +522,80 @@ class PromptAssembler:
                            include_constraints: bool,
                            include_anti_patterns: bool) -> str:
         """
-        按指定风格构建工作指令
+        Build work instruction in the specified style
 
         Args:
-            style: 指令风格 (direct/structured/comprehensive/minimal/ultra_minimal)
-            task_id: 任务ID
-            task_description: 任务描述
-            role_display: 裁剪后的角色提示词
-            findings: 裁剪后的相关发现列表
-            include_constraints: 是否包含约束提醒
-            include_anti_patterns: 是否包含反模式警告
+            style: Instruction style (direct/structured/comprehensive/minimal/ultra_minimal)
+            task_id: Task ID
+            task_description: Task description
+            role_display: Trimmed role prompt
+            findings: Trimmed related findings list
+            include_constraints: Whether to include constraint reminders
+            include_anti_patterns: Whether to include anti-pattern warnings
 
         Returns:
-            str: 组装好的指令文本
+            str: Assembled instruction text
         """
         if style == "ultra_minimal":
             base = (
                 f"[{self.role_id}] {task_description}\n"
-                f"输出核心结论。"
+                f"Output core conclusion."
             )
             return base + (self._qc_injection if self.qc_enabled and self._qc_injection else "")
 
         if style == "minimal":
-            parts = [f"[{self.role_id}] 任务: {task_description}"]
+            parts = [f"[{self.role_id}] Task: {task_description}"]
             if findings:
-                parts.append(f"参考: {findings[0][:50]}")
-            parts.append("输出关键结论。")
+                parts.append(f"Reference: {findings[0][:50]}")
+            parts.append("Output key conclusion.")
             base = "\n".join(parts)
             return base + (self._qc_injection if self.qc_enabled and self._qc_injection else "")
 
         if style == "direct":
             base = (
-                f"=== 任务 ===\n"
-                f"描述: {task_description}\n"
-                f"角色: {role_display}...\n\n"
-                + (f"=== 相关发现 ===\n" +
+                f"=== Task ===\n"
+                f"Description: {task_description}\n"
+                f"Role: {role_display}...\n\n"
+                + (f"=== Related Findings ===\n" +
                    "\n".join(f"- {f}" for f in findings) + "\n\n" if findings else "") +
-                "完成你的工作，输出核心结论。"
+                "Complete your work, output core conclusion."
             )
             return base + (self._qc_injection if self.qc_enabled and self._qc_injection else "")
 
         parts = []
-        parts.append(f"=== 任务 ===")
+        parts.append(f"=== Task ===")
         if task_id:
-            parts.append(f"任务ID: {task_id}")
-        parts.append(f"描述: {task_description}")
-        parts.append(f"角色: {role_display}")
+            parts.append(f"Task ID: {task_id}")
+        parts.append(f"Description: {task_description}")
+        parts.append(f"Role: {role_display}")
         parts.append("")
 
         if findings:
-            parts.append("=== 相关发现（来自其他Worker） ===")
+            parts.append("=== Related Findings (from other Workers) ===")
             for i, f in enumerate(findings, 1):
                 parts.append(f"  {i}. {f}")
             parts.append("")
 
         if include_constraints:
-            parts.append("=== 约束条件 ===")
-            parts.append("- 输出需可执行、可验证")
-            parts.append("- 标注假设和风险点")
+            parts.append("=== Constraints ===")
+            parts.append("- Output must be actionable and verifiable")
+            parts.append("- Mark assumptions and risk points")
             parts.append("")
 
         if include_anti_patterns:
             anti_patterns = self._get_role_anti_patterns()
             if anti_patterns:
-                parts.append("=== 反模式警告 ===")
+                parts.append("=== Anti-Pattern Warnings ===")
                 for ap in anti_patterns:
-                    parts.append(f"- 避免: {ap}")
+                    parts.append(f"- Avoid: {ap}")
                 parts.append("")
 
-        parts.append("请基于以上信息完成你的工作。")
+        parts.append("Please complete your work based on the above information.")
         if style == "comprehensive":
-            parts.append("输出应包含: 分析过程、关键决策、具体方案、风险评估。")
+            parts.append("Output should include: analysis process, key decisions, specific plan, risk assessment.")
         else:
-            parts.append("输出你的核心发现（1-3条关键结论）。")
-        
-        # Inject quality control rules (if enabled)
+            parts.append("Output your core findings (1-3 key conclusions).")
+
         if self.qc_enabled and self._qc_injection:
             parts.append(self._qc_injection)
 
@@ -601,38 +603,38 @@ class PromptAssembler:
 
     def _get_role_anti_patterns(self) -> List[str]:
         """
-        获取角色相关的反模式警告列表
+        Get role-specific anti-pattern warning list
 
-        不同角色有不同的常见反模式。
+        Different roles have different common anti-patterns.
 
         Returns:
-            List[str]: 该角色应避免的反模式列表
+            List[str]: List of anti-patterns this role should avoid
         """
         patterns = {
             "architect": [
-                "过度设计(YAGNI违反)",
-                "忽略非功能性需求(性能/安全/运维)",
-                "技术选型只看流行度不考虑团队能力",
+                "Over-engineering (YAGNI violation)",
+                "Ignoring non-functional requirements (performance/security/ops)",
+                "Tech selection based only on popularity without considering team capability",
             ],
             "tester": [
-                "只写Happy Path测试",
-                "测试与业务需求脱节",
-                "Mock过度导致测试无意义",
+                "Only writing happy path tests",
+                "Tests disconnected from business requirements",
+                "Excessive mocking making tests meaningless",
             ],
             "solo-coder": [
-                "跳过设计直接编码",
-                "不做边界条件处理",
-                "硬编码配置和魔法数字",
+                "Skipping design and jumping to coding",
+                "Not handling edge cases",
+                "Hardcoded configuration and magic numbers",
             ],
             "product_manager": [
-                "需求模糊导致反复变更",
-                "优先级混乱",
-                "忽视技术可行性",
+                "Vague requirements leading to repeated changes",
+                "Priority confusion",
+                "Ignoring technical feasibility",
             ],
             "ui-designer": [
-                "只做视觉稿不考虑交互状态",
-                "忽略响应式和无障碍",
-                "设计系统不一致",
+                "Only creating visual mockups without considering interaction states",
+                "Ignoring responsive design and accessibility",
+                "Inconsistent design system",
             ],
         }
         return patterns.get(self.role_id, [])
@@ -640,14 +642,14 @@ class PromptAssembler:
     @staticmethod
     def estimate_tokens(text: str) -> int:
         """
-        粗估文本的 token 数量
+        Roughly estimate the token count of text
 
-        中英文混合场景下，约 3 字符 ≈ 1 token。
+        In mixed Chinese/English scenarios, approximately 3 characters = 1 token.
 
         Args:
-            text: 待估算的文本
+            text: Text to estimate
 
         Returns:
-            int: 估算的 token 数量
+            int: Estimated token count
         """
         return max(1, len(text) // 3)

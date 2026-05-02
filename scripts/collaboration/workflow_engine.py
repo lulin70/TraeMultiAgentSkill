@@ -45,6 +45,13 @@ class WorkflowStep:
     status: StepStatus = StepStatus.PENDING
     result: Any = None
     error: str = ""
+    dependencies: List[str] = field(default_factory=list)
+    artifacts_in: str = ""
+    artifacts_out: str = ""
+    gate_condition: str = ""
+    reviewers: List[str] = field(default_factory=list)
+    optional: bool = False
+    skip_reason: str = ""
 
     def to_dict(self) -> Dict[str, Any]:
         d = {
@@ -54,6 +61,9 @@ class WorkflowStep:
             'retry_count': self.retry_count,
             'status': self.status.value if isinstance(self.status, StepStatus) else self.status,
             'result': self.result, 'error': self.error,
+            'dependencies': self.dependencies, 'artifacts_in': self.artifacts_in,
+            'artifacts_out': self.artifacts_out, 'gate_condition': self.gate_condition,
+            'reviewers': self.reviewers, 'optional': self.optional, 'skip_reason': self.skip_reason,
         }
         return d
 
@@ -66,6 +76,18 @@ class WorkflowStep:
             except ValueError:
                 data_copy['status'] = StepStatus.PENDING
         return cls(**data_copy)
+
+
+@dataclass
+class RequirementChange:
+    change_id: str = field(default_factory=lambda: f"cr-{uuid.uuid4().hex[:6]}")
+    description: str = ""
+    reason: str = ""
+    requested_by: str = ""
+    impact_analysis: Dict[str, Any] = field(default_factory=dict)
+    affected_phases: List[str] = field(default_factory=list)
+    review_result: str = "pending"
+    rollback_to: str = ""
 
 
 @dataclass
@@ -146,7 +168,7 @@ class WorkflowEngine:
 
         Automatically splits the task into steps based on keyword analysis.
         """
-        steps = self._split_task_into_steps(task_title, task_description)
+        steps = self._split_task_into_steps(task_title, task_description, target_agent)
 
         definition = WorkflowDefinition(
             name=task_title,
@@ -162,7 +184,7 @@ class WorkflowEngine:
         logger.info("Workflow created: %s (%d steps)", definition.workflow_id, len(steps))
         return definition
 
-    def _split_task_into_steps(self, task_title: str, task_description: str) -> List[WorkflowStep]:
+    def _split_task_into_steps(self, task_title: str, task_description: str, target_agent: str = None) -> List[WorkflowStep]:
         steps = []
         task_text = f"{task_title} {task_description}".lower()
 
@@ -368,7 +390,7 @@ class WorkflowEngine:
             return instance
 
         instance.completed_steps = checkpoint.completed_steps
-        instance.variables = checkpoint.variables
+        instance.variables = checkpoint.context_snapshot
         instance.results = checkpoint.outputs
 
         if checkpoint.remaining_steps:
@@ -429,3 +451,234 @@ class WorkflowEngine:
 
     def register_executor(self, action: str, executor: Callable):
         self.executors[action] = executor
+
+    def create_lifecycle(self, template_name: str = "full") -> WorkflowDefinition:
+        """
+        Create a workflow from a predefined lifecycle template.
+
+        Available templates: full, backend, frontend, internal_tool, minimal
+        """
+        if template_name not in LIFECYCLE_TEMPLATES:
+            raise ValueError(f"Unknown template: {template_name}. Available: {list(LIFECYCLE_TEMPLATES.keys())}")
+
+        phase_ids = LIFECYCLE_TEMPLATES[template_name]
+        steps = []
+        for pid in phase_ids:
+            pt = PHASE_TEMPLATES[pid]
+            steps.append(WorkflowStep(
+                step_id=pid,
+                name=pt["name"],
+                description=pt["description"],
+                role_id=pt["role_id"],
+                action=pt["action"],
+                dependencies=pt["dependencies"],
+                artifacts_in=pt["artifacts_in"],
+                artifacts_out=pt["artifacts_out"],
+                gate_condition=pt["gate_condition"],
+                reviewers=pt["reviewers"],
+                optional=pt["optional"],
+            ))
+
+        definition = WorkflowDefinition(
+            name=f"lifecycle-{template_name}",
+            description=f"DevSquad V3.5 {template_name} lifecycle ({len(steps)} phases)",
+            steps=steps,
+            metadata={'template': template_name, 'lifecycle_version': '3.5'},
+        )
+        self.definitions[definition.workflow_id] = definition
+        logger.info("Lifecycle workflow created: %s (%s, %d phases)", definition.workflow_id, template_name, len(steps))
+        return definition
+
+    def submit_change_request(
+        self,
+        instance_id: str,
+        description: str,
+        reason: str,
+        requested_by: str = "user",
+    ) -> Optional[RequirementChange]:
+        """
+        Submit a requirement change request for a running workflow.
+
+        Returns impact analysis and affected phases.
+        """
+        instance = self.instances.get(instance_id)
+        if not instance:
+            return None
+
+        if instance.status not in (WorkflowStatus.RUNNING, WorkflowStatus.PAUSED):
+            logger.warning("Cannot submit change request for instance %s with status %s", instance_id, instance.status.value)
+            return None
+
+        definition = self.definitions.get(instance.workflow_id)
+        if not definition:
+            return None
+
+        affected = []
+        for step in definition.steps:
+            if step.step_id not in instance.completed_steps:
+                affected.append(step.step_id)
+
+        earliest = None
+        for step in definition.steps:
+            if step.step_id not in instance.completed_steps:
+                earliest = step.step_id
+                break
+
+        sanitized_desc = description[:500]
+        sanitized_reason = reason[:500]
+        sanitized_by = requested_by[:100]
+
+        change_request = RequirementChange(
+            description=sanitized_desc,
+            reason=sanitized_reason,
+            requested_by=sanitized_by,
+            affected_phases=affected,
+            rollback_to=earliest or "",
+        )
+
+        logger.info("Change request submitted: %s (rollback_to=%s)", change_request.change_id, earliest)
+        return change_request
+
+
+PHASE_TEMPLATES: Dict[str, Dict[str, Any]] = {
+    "P1": {
+        "name": "Requirements Analysis",
+        "description": "Analyze task requirements and create detailed specification",
+        "role_id": "product-manager",
+        "action": "analyze_requirements",
+        "dependencies": [],
+        "artifacts_in": "User raw requirements",
+        "artifacts_out": "User stories, acceptance criteria, priority matrix, NFRs",
+        "gate_condition": "Acceptance criteria quantifiable and unambiguous",
+        "reviewers": ["architect", "tester", "security", "ui-designer"],
+        "optional": False,
+    },
+    "P2": {
+        "name": "Architecture Design",
+        "description": "Design system architecture and technology selection",
+        "role_id": "architect",
+        "action": "design_architecture",
+        "dependencies": ["P1"],
+        "artifacts_in": "P1 deliverables",
+        "artifacts_out": "Architecture proposal, tech selection, service boundaries, quality attributes",
+        "gate_condition": "Architecture passes weighted consensus (>=70%)",
+        "reviewers": ["product-manager", "security", "devops"],
+        "optional": False,
+    },
+    "P3": {
+        "name": "Technical Design",
+        "description": "Detail architecture into developable technical specs",
+        "role_id": "architect",
+        "action": "design_technical",
+        "dependencies": ["P2"],
+        "artifacts_in": "P2 deliverables",
+        "artifacts_out": "API specs, interface definitions, tech constraints, tech risk assessment",
+        "gate_condition": "API specs unambiguous",
+        "reviewers": ["solo-coder", "tester"],
+        "optional": False,
+    },
+    "P4": {
+        "name": "Data Design",
+        "description": "Design data storage models and migration plans",
+        "role_id": "architect",
+        "action": "design_data",
+        "dependencies": ["P2"],
+        "artifacts_in": "P2 deliverables (+ P3 if available)",
+        "artifacts_out": "Data model (ER), table structure, index strategy, migration plan",
+        "gate_condition": "Data model 3NF or denormalization justified",
+        "reviewers": ["architect", "security"],
+        "optional": True,
+    },
+    "P5": {
+        "name": "Interaction Design",
+        "description": "Design user interaction flows and information architecture",
+        "role_id": "ui-designer",
+        "action": "design_interaction",
+        "dependencies": ["P1", "P3"],
+        "artifacts_in": "P1 + P3 deliverables",
+        "artifacts_out": "Interaction flows, information architecture, prototype, accessibility checklist",
+        "gate_condition": "Core flow usability verified",
+        "reviewers": ["product-manager", "tester", "security"],
+        "optional": True,
+    },
+    "P6": {
+        "name": "Security Review",
+        "description": "Review security implications and compliance",
+        "role_id": "security",
+        "action": "security_review",
+        "dependencies": ["P2", "P3"],
+        "artifacts_in": "P2 + P3 deliverables (+ P4, P5 if exist)",
+        "artifacts_out": "Threat model, vulnerability list, compliance report, security fixes",
+        "gate_condition": "No P0/P1 vulnerabilities, compliance green",
+        "reviewers": ["architect", "devops"],
+        "optional": True,
+    },
+    "P7": {
+        "name": "Test Planning",
+        "description": "Plan all test dimensions before development",
+        "role_id": "tester",
+        "action": "plan_tests",
+        "dependencies": ["P1", "P3"],
+        "artifacts_in": "P1 + P3 deliverables (+ P6 if exists)",
+        "artifacts_out": "Test plan (8 dimensions: functional/integration/performance/security/env/install/regression/acceptance)",
+        "gate_condition": "Test plan review passed",
+        "reviewers": ["architect", "security", "devops", "product-manager"],
+        "optional": False,
+    },
+    "P8": {
+        "name": "Implementation",
+        "description": "Implement feature code with testability",
+        "role_id": "solo-coder",
+        "action": "develop",
+        "dependencies": ["P3", "P7"],
+        "artifacts_in": "P3 + P6 (if exists) + P7 deliverables",
+        "artifacts_out": "Runnable code, code review report, unit tests, testability notes",
+        "gate_condition": "Code review passed, no P0 defects",
+        "reviewers": ["architect", "security", "tester", "solo-coder"],
+        "optional": False,
+    },
+    "P9": {
+        "name": "Test Execution",
+        "description": "Execute all test dimensions per P7 plan",
+        "role_id": "tester",
+        "action": "execute_tests",
+        "dependencies": ["P7", "P8"],
+        "artifacts_in": "P7 + P8 deliverables",
+        "artifacts_out": "Full test report, defect list",
+        "gate_condition": "Coverage>=80% + P7 plan 100% executed + no P0 defects",
+        "reviewers": ["architect", "product-manager", "security", "devops"],
+        "optional": False,
+    },
+    "P10": {
+        "name": "Deployment & Release",
+        "description": "Deploy and release the system to production",
+        "role_id": "devops",
+        "action": "deploy",
+        "dependencies": ["P9"],
+        "artifacts_in": "P9 deliverables",
+        "artifacts_out": "Deployment plan, release strategy, rollback plan, release checklist, IaC",
+        "gate_condition": "Deployment drill passed, rollback verified",
+        "reviewers": ["architect", "security", "tester"],
+        "optional": False,
+    },
+    "P11": {
+        "name": "Operations & Assurance",
+        "description": "Ensure system runs stably in production",
+        "role_id": "devops",
+        "action": "operate",
+        "dependencies": ["P10"],
+        "artifacts_in": "P10 deliverables",
+        "artifacts_out": "Monitoring dashboards, alert rules, incident response plans, performance baselines",
+        "gate_condition": "P99<target, alert coverage 100%",
+        "reviewers": ["architect", "devops"],
+        "optional": True,
+    },
+}
+
+LIFECYCLE_TEMPLATES: Dict[str, List[str]] = {
+    "full": ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11"],
+    "backend": ["P1", "P2", "P3", "P4", "P6", "P7", "P8", "P9", "P10", "P11"],
+    "frontend": ["P1", "P2", "P3", "P5", "P7", "P8", "P9", "P10", "P11"],
+    "internal_tool": ["P1", "P2", "P3", "P7", "P8", "P9", "P10"],
+    "minimal": ["P1", "P3", "P7", "P8", "P9"],
+}

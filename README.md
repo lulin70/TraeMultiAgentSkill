@@ -7,8 +7,8 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-258%20passing-brightgreen" />
-  <img alt="Version" src="https://img.shields.io/badge/V3.5.0-2026--05--01-orange" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-370%20passing-brightgreen" />
+  <img alt="Version" src="https://img.shields.io/badge/V3.5.0-2026--05--02-orange" />
   <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
 
@@ -136,7 +136,7 @@ Exposes 6 tools: `multiagent_dispatch`, `multiagent_quick`, `multiagent_roles`,
 
 **Auto-match**: If no roles specified, the dispatcher automatically matches based on task keywords.
 
-## Architecture
+## Architecture Overview (44 Core Modules)
 
 DevSquad is built on a layered architecture with clear separation of concerns:
 
@@ -262,9 +262,29 @@ See [Integration Guide](docs/guides/agent_briefing_confidence_integration.md) fo
 
 ### Reliability
 - **CheckpointManager**: SHA256 integrity, handoff documents, auto-cleanup
-- **WorkflowEngine**: Task-to-workflow auto-split, step execution, resume from checkpoint
+- **WorkflowEngine**: Task-to-workflow auto-split, step execution, resume from checkpoint, **11-phase lifecycle templates** (full/backend/frontend/internal_tool/minimal), requirement change management
 - **TaskCompletionChecker**: DispatchResult/ScheduleResult completion tracking
 - **ConsensusEngine**: Weighted voting with veto power and human escalation
+
+### Project Lifecycle (11-Phase Model)
+
+DevSquad V3.5 defines an **11-phase (4 optional)** project lifecycle with clear roles, dependencies, and gate conditions:
+
+```
+P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→ P9 ──→ P10 ──→ P11
+           ├──→ P4(∥P3) ──↗
+           └──→ P5(dep P1+P3) ──↗
+```
+
+| Template | Phases | Use Case |
+|----------|--------|----------|
+| `full` | P1-P11 | Complete project |
+| `backend` | No P5 | Backend services |
+| `frontend` | No P4,P6 | Frontend applications |
+| `internal_tool` | No P4,P5,P6,P11 | Internal tools |
+| `minimal` | P1,P3,P7,P8,P9 | Minimum set |
+
+See [GUIDE.md](GUIDE.md) §4 for full lifecycle details with gate conditions and requirement change process.
 
 ### Developer Experience
 - **Configuration File**: `.devsquad.yaml` in project root with env var overrides
@@ -273,13 +293,14 @@ See [Integration Guide](docs/guides/agent_briefing_confidence_integration.md) fo
 - **GitHub Actions CI**: Python 3.9-3.12 matrix testing
 - **pip installable**: `pip install -e .` with optional dependencies
 
-## Module Reference
+## Module Reference (44 Modules)
 
 | Module | File | Purpose |
 |--------|------|---------|
 | **MultiAgentDispatcher** | `dispatcher.py` | Unified entry point |
 | **Coordinator** | `coordinator.py` | Global orchestration: plan → assign → execute → collect |
 | **Worker** | `worker.py` | Role executor with LLM backend integration |
+| **EnhancedWorker** | `enhanced_worker.py` | Worker with auto QA (briefing + confidence + retry + memory rules) |
 | **Scratchpad** | `scratchpad.py` | Shared blackboard for inter-worker communication |
 | **ConsensusEngine** | `consensus.py` | Weighted voting + veto + escalation |
 | **RoleMatcher** | `role_matcher.py` | Keyword-based role matching with alias resolution |
@@ -287,13 +308,33 @@ See [Integration Guide](docs/guides/agent_briefing_confidence_integration.md) fo
 | **InputValidator** | `input_validator.py` | Security validation + prompt injection detection |
 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM-powered semantic role matching |
 | **CheckpointManager** | `checkpoint_manager.py` | State persistence + handoff documents |
-| **WorkflowEngine** | `workflow_engine.py` | Task-to-workflow auto-split + step execution |
+| **WorkflowEngine** | `workflow_engine.py` | Task-to-workflow auto-split + 11-phase lifecycle templates + requirement change |
 | **TaskCompletionChecker** | `task_completion_checker.py` | Completion tracking + progress reporting |
 | **CodeMapGenerator** | `code_map_generator.py` | Python AST-based code structure analysis |
 | **DualLayerContext** | `dual_layer_context.py` | Project-level + task-level context management |
 | **SkillRegistry** | `skill_registry.py` | Reusable skill registration + discovery |
 | **LLMBackend** | `llm_backend.py` | Mock/OpenAI/Anthropic with streaming support |
+| **LLMCache** | `llm_cache.py` | TTL-based LRU cache with disk persistence |
+| **LLMRetry** | `llm_retry.py` | Exponential backoff + circuit breaker |
 | **ConfigManager** | `config_loader.py` | YAML config + env var overrides |
+| **PromptAssembler** | `prompt_assembler.py` | Dynamic prompt assembly + QC rule injection |
+| **AgentBriefing** | `agent_briefing.py` | Context-aware task briefing with priority filtering |
+| **ConfidenceScorer** | `confidence_score.py` | 5-factor response quality assessment |
+| **PerformanceMonitor** | `performance_monitor.py` | P95/P99 tracking + CPU/memory monitoring |
+| **MCEAdapter** | `mce_adapter.py` | CarryMem integration adapter (optional dependency) |
+| **Protocols** | `protocols.py` | Interface definitions (CacheProvider, MemoryProvider, etc.) |
+| **NullProviders** | `null_providers.py` | Graceful degradation providers |
+| **PermissionGuard** | `permission_guard.py` | 4-level safety gate |
+| **MemoryBridge** | `memory_bridge.py` | Cross-session memory |
+| **BatchScheduler** | `batch_scheduler.py` | Batch task scheduling |
+| **ContextCompressor** | `context_compressor.py` | Context compression for long tasks |
+| **RoleTemplateMarket** | `role_template_market.py` | Role template sharing marketplace |
+| **Skillifier** | `skillifier.py` | Auto skill learning from tasks |
+| **UsageTracker** | `usage_tracker.py` | Token/cost tracking |
+| **WarmupManager** | `warmup_manager.py` | Startup warmup optimization |
+| **TestQualityGuard** | `test_quality_guard.py` | Test quality enforcement |
+| **PromptVariantGenerator** | `prompt_variant_generator.py` | A/B prompt testing |
+| **ConfigManager (YAML)** | `config_manager.py` | Project-level YAML config |
 
 ## Configuration
 
@@ -352,11 +393,12 @@ export OPENAI_API_KEY=sk-...
 ## Running Tests
 
 ```bash
-# Core tests (258 tests)
+# Core tests (129 unit + 234 contract + 7 integration = 370 total)
 python3 -m pytest scripts/collaboration/core_test.py \
   scripts/collaboration/role_mapping_test.py \
   scripts/collaboration/upstream_test.py \
-  scripts/collaboration/mce_adapter_test.py -v
+  scripts/collaboration/mce_adapter_test.py \
+  tests/ test_v35_integration.py -v
 
 # Quick smoke test
 python3 scripts/cli.py --version    # 3.5.0
@@ -368,13 +410,16 @@ python3 scripts/cli.py roles        # List 7 roles
 
 | Document | Description |
 |----------|-------------|
+| [GUIDE.md](GUIDE.md) | Complete user guide (Chinese) |
+| [GUIDE_EN.md](docs/i18n/GUIDE_EN.md) | Complete user guide (English) |
+| [GUIDE_JP.md](docs/i18n/GUIDE_JP.md) | Complete user guide (Japanese) |
 | [INSTALL.md](INSTALL.md) | Installation guide (Unix + Windows) |
 | [EXAMPLES.md](EXAMPLES.md) | Real-world usage examples |
 | [SKILL.md](SKILL.md) | Skill manual (EN/CN/JP) |
 | [CLAUDE.md](CLAUDE.md) | Claude Code project instructions |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [README-CN.md](README-CN.md) | 中文说明 |
-| [README-JP.md](README-JP.md) | 日本語説明 |
+| [README-CN.md](docs/i18n/README_CN.md) | 中文说明 |
+| [README-JP.md](docs/i18n/README_JP.md) | 日本語説明 |
 
 ## Cross-Platform Compatibility
 
@@ -390,8 +435,9 @@ python3 scripts/cli.py roles        # List 7 roles
 
 | Date | Version | Highlights |
 |------|---------|-----------|
-| 2026-05-01 | **V3.5.0** | 🆕 AgentBriefing (context-aware task briefing), ConfidenceScore (5-factor quality assessment), EnhancedWorker (auto quality assurance with retry), Protocol interface system, 258 unit tests (65 new), comprehensive documentation |
-| 2026-04-27 | V3.5.0 | Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine, TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, 258 unit tests |
+| 2026-05-02 | **V3.5.0** | 🆕 11-Phase Project Lifecycle (full/backend/frontend/internal_tool/minimal templates), requirement change management, gate mechanism with gap reporting, 370 tests passing, WorkflowEngine lifecycle support |
+| 2026-05-01 | V3.5.0 | AgentBriefing (context-aware task briefing), ConfidenceScore (5-factor quality assessment), EnhancedWorker (auto quality assurance with retry + memory_provider rule injection), Protocol interface system (match_rules/format_rules_as_prompt), CarryMem v0.2.8+ integration, comprehensive documentation |
+| 2026-04-27 | V3.5.0 | Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine, TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, 234 unit tests |
 | 2026-04-17 | V3.2 | E2E Demo, MCE Adapter, Dispatcher UX |
 | 2026-04-16 | V3.0 | Complete redesign — Coordinator/Worker/Scratchpad architecture |
 

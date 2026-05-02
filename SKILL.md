@@ -5,7 +5,7 @@ description: |
   V3.5.0 DevSquad — Multi-Role AI Task Orchestrator.
   One task in, multi-role AI collaboration, one conclusion out.
   7 core roles (architect/pm/security/tester/coder/devops/ui), real LLM backend
-  (OpenAI/Anthropic), CLI + MCP + Python API. 258 unit tests, all passing.
+  (OpenAI/Anthropic), CLI + MCP + Python API. 370 tests (129 unit + 234 contract + 7 integration), all passing.
   ThreadPoolExecutor parallel, CheckpointManager, WorkflowEngine, streaming, Docker, CI.
 ---
 
@@ -21,7 +21,7 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
            → [ConsensusEngine] → [ReportFormatter] → [Structured Report]
 ```
 
-## Architecture Overview (34 Core Modules)
+## Architecture Overview (44 Core Modules)
 
 | # | Module | File | Responsibility |
 |---|-------|------|---------------|
@@ -39,27 +39,36 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
 | 11 | **TestQualityGuard** | `test_quality_guard.py` | Test quality audit (API validation / anti-pattern detection / dimension coverage) |
 | 12 | **PromptAssembler** | `prompt_assembler.py` | Dynamic prompt assembly (complexity detection / 3 variants / 5 styles / compression-aware / QC config injection) |
 | 13 | **PromptVariantGenerator** | `prompt_variant_generator.py` | Skillify closed-loop feedback (pattern→variant / A-B test / auto promote-deprecate) |
-| 14 | **MCEAdapter** | `mce_adapter.py` | CarryMem integration adapter (lazy-load / graceful-degrade / thread-safe / type mapping) |
+| 14 | **MCEAdapter** | `mce_adapter.py` | CarryMem integration adapter (DevSquadAdapter preferred, lazy-load / graceful-degrade / thread-safe / match_rules + format_rules_as_prompt) |
 | 15 | **WorkBuddyClawSource** | `memory_bridge.py` (class) | WorkBuddy Claw read-only bridge (INDEX search / daily logs / AI news feed) |
 | 16 | **RoleMatcher** | `role_matcher.py` | Keyword-based role matching with alias resolution (extracted from Dispatcher) |
 | 17 | **ReportFormatter** | `report_formatter.py` | Structured/compact/detailed report generation (extracted from Dispatcher) |
 | 18 | **InputValidator** | `input_validator.py` | Security validation + 16-pattern prompt injection detection |
 | 19 | **AISemanticMatcher** | `ai_semantic_matcher.py` | LLM-powered semantic role matching with bilingual keyword fallback |
 | 20 | **CheckpointManager** | `checkpoint_manager.py` | SHA256 integrity, handoff documents, auto-cleanup, dispatch integration |
-| 21 | **WorkflowEngine** | `workflow_engine.py` | Task-to-workflow auto-split, step execution, checkpointing, agent handoff |
+| 21 | **WorkflowEngine** | `workflow_engine.py` | Task-to-workflow auto-split, step execution, checkpointing, agent handoff, 11-phase lifecycle templates |
 | 22 | **TaskCompletionChecker** | `task_completion_checker.py` | DispatchResult/ScheduleResult completion tracking + progress persistence |
 | 23 | **CodeMapGenerator** | `code_map_generator.py` | Python AST-based code structure analysis + dependency graph |
 | 24 | **DualLayerContext** | `dual_layer_context.py` | Project-level + task-level context management with TTL |
 | 25 | **SkillRegistry** | `skill_registry.py` | Reusable skill registration + discovery + persistence |
 | 26 | **LLMBackend** | `llm_backend.py` | Mock/OpenAI/Anthropic with streaming support + 120s timeout |
 | 27 | **ConfigManager** | `config_loader.py` | YAML config + env var overrides (16 parameters) |
-| 28 | **Protocols** | `protocols.py` | Protocol interfaces (CacheProvider/RetryProvider/MonitorProvider/MemoryProvider) + exception hierarchy |
-| 29 | **NullProviders** | `null_providers.py` | No-op implementations for all Protocol interfaces (degradation + test mocking) |
-| 30 | **EnhancedWorker** | `enhanced_worker.py` | Worker with protocol-based provider injection (cache/retry/monitor/briefing) |
+| 28 | **Protocols** | `protocols.py` | Protocol interfaces (CacheProvider/RetryProvider/MonitorProvider/MemoryProvider + match_rules/format_rules_as_prompt) + exception hierarchy |
+| 29 | **NullProviders** | `null_providers.py` | No-op implementations for all Protocol interfaces (incl. match_rules/format_rules_as_prompt, degradation + test mocking) |
+| 30 | **EnhancedWorker** | `enhanced_worker.py` | Worker with protocol-based provider injection (cache/retry/monitor/briefing/memory) + rule injection pipeline |
 | 31 | **PerformanceMonitor** | `performance_monitor.py` | P95/P99 response time, CPU/memory tracking, bottleneck detection, Markdown reports |
 | 32 | **AgentBriefing** | `agent_briefing.py` | Context-aware briefing generation with priority filtering + persistence |
 | 33 | **ConfidenceScorer** | `confidence_score.py` | 5-factor confidence scoring (completeness/certainty/specificity/consistency/model quality) |
 | 34 | **RoleTemplateMarket** | `role_template_market.py` | Role template marketplace (publish/search/install/rate/export/import) |
+| 35 | **LLMCache** | `llm_cache.py` | TTL-based LRU cache with disk persistence (60-80% cost reduction) |
+| 36 | **LLMRetry** | `llm_retry.py` | Exponential backoff + circuit breaker + multi-backend fallback |
+| 37 | **UsageTracker** | `usage_tracker.py` | Token/cost usage tracking and reporting |
+| 38 | **Models** | `models.py` | Shared data models and type definitions |
+| 39 | **ConfigManager (YAML)** | `config_manager.py` | Project-level YAML configuration management |
+| 40 | **LLMCacheAsync** | `llm_cache_async.py` | Async LLM cache for concurrent workloads |
+| 41 | **LLMRetryAsync** | `llm_retry_async.py` | Async LLM retry with backoff |
+| 42 | **IntegrationExample** | `integration_example.py` | DevSquad integration example code |
+| 43 | **AsyncIntegrationExample** | `async_integration_example.py` | Async DevSquad integration example |
 
 ---
 
@@ -444,6 +453,59 @@ def test_<feature>_<scenario>(self):
 
 ---
 
+## Project Lifecycle: 11-Phase Model (V3.5)
+
+> **Definition document**: `docs/prd/lifecycle_phases_definition.md` (authoritative)
+> **Review report**: `docs/prd/lifecycle_phases_review.md` (7-role review, 9 suggestions adopted)
+
+### Phase Overview
+
+| # | Phase | Lead | Reviewers | Optional | Gate |
+|---|-------|------|-----------|----------|------|
+| P1 | Requirements Analysis | pm | arch+test+sec+ui | ❌ | Acceptance criteria quantifiable |
+| P2 | Architecture Design | arch | pm+sec+infra | ❌ | Weighted consensus ≥70% |
+| P3 | Technical Design | arch+coder | coder+test | ❌ | API specs unambiguous |
+| P4 | Data Design | arch+coder | arch+sec | ✅ | 3NF or denormalization justified |
+| P5 | Interaction Design | ui | pm+test+sec | ✅ | Core flow usability verified |
+| P6 | Security Review | sec | arch+infra | ✅ | No P0/P1 vulns, compliance green |
+| P7 | Test Planning | test | arch+sec+infra+pm | ❌ | Test plan review passed |
+| P8 | Implementation | coder | arch+sec+test+coder | ❌ | Code review passed, no P0 defects |
+| P9 | Test Execution | test | arch+pm+sec+infra | ❌ | Coverage≥80% + P7 plan 100% executed |
+| P10 | Deployment & Release | infra | arch+sec+test | ❌ | Deployment drill passed |
+| P11 | Operations & Assurance | infra+sec | arch+infra | ✅ | P99<target, alerts 100% |
+
+### Dependency Graph
+
+```
+P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→ P9 ──→ P10 ──→ P11
+           ├──→ P4(∥P3) ──↗
+           └──→ P5(dep P1+P3) ──↗
+```
+
+### Lifecycle Templates
+
+| Template | Phases | Use Case |
+|----------|--------|----------|
+| `full` | P1-P11 | Complete project |
+| `backend` | No P5 | Backend services |
+| `frontend` | No P4,P6 | Frontend applications |
+| `internal_tool` | No P4,P5,P6,P11 | Internal tools |
+| `minimal` | P1,P3,P7,P8,P9 | Minimum set |
+
+### Gate Mechanism
+
+- **Mandatory**: Every phase gate must be checked
+- **Non-blocking on failure**: Generate gap report → user decides
+- **Traceability**: All gate results recorded to checkpoints
+
+### Requirement Change Process
+
+```
+Change Request(pm/user) → Impact Analysis(arch+sec+test) → Change Review(all roles) → Approve/Reject → Rollback to affected phase
+```
+
+---
+
 ## Delivery Workflow Iron Rules (⚠️ Must Execute After Every Push)
 
 > This section defines the standard closed-loop workflow: Implement→Test→Walkthrough→Annotate→Docs→Git.
@@ -517,13 +579,15 @@ Implement → Test(Regression All) → Code Walkthrough → Annotate → Docs Up
 | Role Mapping (RoleMatcher+alias resolution+bilingual keywords) | 25 | ✅ PASS |
 | Upstream (Checkpoint+SemanticMatcher+Workflow+CompletionChecker) | 35 | ✅ PASS |
 | MCEAdapter (CarryMem integration+type mapping+graceful degrade) | 30 | ✅ PASS |
-| **Total** | **129** | **✅ ALL PASS** |
+| Contract Tests (Protocols+NullProviders+Cache+Monitor+Security) | 234 | ✅ PASS |
+| V3.5 Integration (Lifecycle+ChangeRequest+Templates) | 7 | ✅ PASS |
+| **Total** | **370** | **✅ ALL PASS** |
 
 ---
 
 ## Version History
 
-- **v3.5.0** (2026-04-27): Real LLM Backend (OpenAI/Anthropic/Mock) + ThreadPoolExecutor parallel + InputValidator + 16-pattern prompt injection + RoleMatcher/ReportFormatter extracted + AISemanticMatcher bilingual + CheckpointManager SHA256 + WorkflowEngine + TaskCompletionChecker + CodeMapGenerator + DualLayerContext + SkillRegistry + ConfigManager YAML + LLMBackend streaming + Docker + GitHub Actions CI + pip installable + i18n (zh/en/ja) + 34 modules + 258 unit tests
+- **v3.5.0** (2026-05-02): 11-Phase Project Lifecycle (full/backend/frontend/internal_tool/minimal templates) + requirement change management + gate mechanism with gap reporting + WorkflowEngine lifecycle support + 370 tests passing
 - **v3.3** (2026-04-17): WorkBuddy Claw Integration - WorkBuddyClawSource(read-only bridge/INDEX search/daily logs/AI news feed) + Dispatcher AI News auto-inject + Annotation Standards (EN docs/docstring/inline) + Code comment audit (all EN) + MCE v0.4 support (tenant/permission) + Multi-language README (EN/CN/JP) + 33 new tests
 - **v3.2** (2026-04-17): MVP Three Lines - E2E Full Demo(10-step flow/CLI) + Dispatcher UX Enhancement(structured/compact/detailed 3-format report) + MCEAdapter Memory Classification Adapter(lazy-load/graceful-degrade) + Delivery Workflow Iron Rule
 - **v3.1** (2026-04-16): Prompt Optimization System - Dynamic Prompt Assembly(3 variants) + Skillify Closed-loop Feedback(A/B promotion) + Compression-Aware Adaptation

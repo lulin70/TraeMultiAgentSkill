@@ -4,9 +4,9 @@
 
 **DevSquad** is a **V3.5.0 Multi-Role AI Task Orchestrator**. It transforms a single AI task into multi-role AI collaboration with 7 core roles. Based on the Coordinator/Worker/Scratchpad pattern with ThreadPoolExecutor parallel execution.
 
-**34 Core Modules**: MultiAgentDispatcher, Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor, PermissionGuard, Skillifier, WarmupManager, MemoryBridge, TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource, RoleMatcher, ReportFormatter, InputValidator, AISemanticMatcher, CheckpointManager, WorkflowEngine, TaskCompletionChecker, CodeMapGenerator, DualLayerContext, SkillRegistry, LLMBackend, ConfigManager.
+**34 Core Modules**: MultiAgentDispatcher, Coordinator, Scratchpad, Worker, ConsensusEngine, BatchScheduler, ContextCompressor, PermissionGuard, Skillifier, WarmupManager, MemoryBridge, TestQualityGuard, PromptAssembler, PromptVariantGenerator, MCEAdapter, WorkBuddyClawSource, RoleMatcher, ReportFormatter, InputValidator, AISemanticMatcher, CheckpointManager, WorkflowEngine, TaskCompletionChecker, CodeMapGenerator, DualLayerContext, SkillRegistry, LLMBackend, ConfigManager, Protocols, NullProviders, EnhancedWorker, PerformanceMonitor, AgentBriefing, ConfidenceScorer, RoleTemplateMarket.
 
-**Test Coverage**: 258 unit tests, all passing.
+**Test Coverage**: 234 unit tests + 61 contract tests, all passing.
 **Cross-Platform**: Trae IDE / Claude Code / Cursor / Any MCP client / CLI / Docker.
 
 ## Architecture
@@ -79,16 +79,16 @@ DevSquad/
 │   │   ├── dual_layer_context.py  # Project + task context with TTL
 │   │   ├── skill_registry.py     # Skill registration + discovery
 │   │   ├── config_loader.py      # YAML config + env var overrides
-│   │   ├── protocols.py         # Protocol interfaces (Cache/Retry/Monitor/Memory)
-│   │   ├── null_providers.py    # No-op implementations for degradation
-│   │   ├── enhanced_worker.py   # Worker with provider injection
+│   │   ├── protocols.py         # Protocol interfaces (Cache/Retry/Monitor/Memory + match_rules/format_rules_as_prompt)
+│   │   ├── null_providers.py    # No-op implementations for degradation (incl. rule methods)
+│   │   ├── enhanced_worker.py   # Worker with provider injection (cache/retry/monitor/memory)
 │   │   ├── performance_monitor.py # P95/P99 + bottleneck detection
 │   │   ├── agent_briefing.py    # Context-aware briefing generation
 │   │   ├── confidence_score.py  # 5-factor confidence scoring
 │   │   ├── role_template_market.py # Role template marketplace
 │   │   ├── memory_bridge.py    # MemoryBridge + WorkBuddyClawSource
-│   │   ├── mce_adapter.py      # CarryMem integration adapter
-│   │   └── *_test.py           # Test files (258 unit tests)
+│   │   ├── mce_adapter.py      # CarryMem integration adapter (DevSquadAdapter preferred)
+│   │   └── *_test.py           # Test files (234 unit + 61 contract tests)
 │   ├── demo/
 │   │   └── e2e_full_demo.py    # E2E demo with CLI interface
 │   └── vibe_coding/            # Vibe Coding subsystem
@@ -115,7 +115,7 @@ DevSquad/
 - **Output i18n**: `--lang zh/en/ja/auto` — reports in Chinese (default), English, or Japanese
 - **Business data** (ROLE_TEMPLATES prompts): Chinese (CN locale), with bilingual keyword matching
 - **Documentation**: EN (README.md/SKILL.md) + CN (README-CN.md/SKILL-CN.md) + JP variants
-- **Testing**: pytest-based, 258 unit tests
+- **Testing**: pytest-based, 234 unit tests + 61 contract tests
 - **Style**: PEP 8, dataclasses for models, type hints throughout
 - **Version**: Single source of truth in `_version.py` (`3.5.0`)
 
@@ -137,7 +137,7 @@ DevSquad/
 
 | Component | Path | Status |
 |-----------|------|--------|
-| CarryMem | Local pip package | v0.1.2 integrated |
+| CarryMem | Local pip package | v0.2.8+ optional (carrymem[devsquad]) |
 | WorkBuddy Claw | `/Users/lin/WorkBuddy/Claw` | Read-only bridge |
 | GitHub Remote | `github.com/lulin70/DevSquad` | Active |
 
@@ -146,11 +146,11 @@ DevSquad/
 ```bash
 cd /path/to/DevSquad
 
-# Core unit tests (258 tests)
-python3 -m pytest scripts/collaboration/core_test.py \
-  scripts/collaboration/role_mapping_test.py \
-  scripts/collaboration/upstream_test.py \
-  scripts/collaboration/mce_adapter_test.py -v
+# Core unit tests (234 tests)
+python3 -m pytest tests/ -v
+
+# Contract tests (MemoryProvider Protocol compliance)
+python3 -m pytest tests/contract/ -v
 
 # Quick smoke test
 python3 scripts/cli.py --version    # 3.5.0
@@ -162,7 +162,11 @@ python3 scripts/cli.py roles        # List 7 roles
 
 - This project originated as a **Trae IDE skill** but has been refactored for cross-platform compatibility
 - The `WorkBuddyClawSource` class uses `WORKBUDDY_CLAW_PATH` env var (defaults to `/Users/lin/WorkBuddy/Claw`) — this is external and optional (graceful degradation if missing)
-- MCE adapter uses lazy-load pattern — works fine even without MCE installed
+- MCE adapter uses lazy-load pattern — works fine even without CarryMem installed
+- MCEAdapter prefers DevSquadAdapter (CarryMem v0.2.8+) when available, falls back to CarryMem legacy API
+- MemoryProvider Protocol includes `match_rules()` and `format_rules_as_prompt()` for rule injection
+- EnhancedWorker supports `memory_provider` injection for rule-based prompt augmentation
+- Rule types: `forbid` / `avoid` / `always` — identical between DevSquad and CarryMem (no conversion needed)
 - All components support graceful degradation — no hard dependencies on external systems
 - API keys are **environment variables only** — no `--api-key` CLI flag for security
 - `ThreadPoolExecutor` provides real parallel execution for multi-role dispatch
@@ -302,5 +306,5 @@ Agents should:
 
 ---
 
-**Last Updated**: 2026-04-30  
+**Last Updated**: 2026-05-01  
 **Configuration Source**: `.devsquad.yaml` + This document (belt-and-suspenders approach)

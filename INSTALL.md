@@ -86,8 +86,11 @@ pip install anthropic
 # For performance monitoring (CPU/memory tracking)
 pip install psutil
 
+# For CarryMem cross-session memory + rule injection (optional)
+pip install carrymem[devsquad]>=0.2.8
+
 # Or install all optional dependencies
-pip install -e ".[openai,anthropic,monitoring,dev]"
+pip install -e ".[openai,anthropic,carrymem,monitoring,dev]"
 ```
 
 ### Method 2: Docker
@@ -255,8 +258,8 @@ python3 scripts/cli.py dispatch -t "test" -r architect --dry-run
 # Expected: [DRY RUN] message
 
 # 4. Core tests
-python3 -m pytest scripts/collaboration/ -v
-# Expected: 258+ unit tests (all passing)
+python3 -m pytest scripts/collaboration/ tests/ test_v35_integration.py -v
+# Expected: 370 tests (129 unit + 234 contract + 7 integration) all passing
 ```
 
 ## Troubleshooting
@@ -305,7 +308,7 @@ DevSquad/
 ├── scripts/
 │   ├── cli.py                    # Primary CLI entry point
 │   ├── mcp_server.py             # MCP server (OpenClaw/Cursor)
-│   └── collaboration/            # ★ 33 core modules
+│   └── collaboration/            # ★ 44 core modules
 │       ├── _version.py           # Version SSOT (3.5.0)
 │       ├── dispatcher.py         # MultiAgentDispatcher
 │       ├── coordinator.py        # Global orchestrator
@@ -326,21 +329,32 @@ DevSquad/
 │       ├── config_loader.py      # YAML config + env var overrides
 │       ├── memory_bridge.py      # Cross-session memory
 │       ├── mce_adapter.py        # CarryMem integration adapter
-│       └── *_test.py             # Test suites (258 unit tests)
+│       ├── agent_briefing.py     # Context-aware task briefing
+│       ├── confidence_score.py   # 5-factor quality assessment
+│       ├── enhanced_worker.py    # Worker with auto QA
+│       ├── performance_monitor.py # P95/P99 monitoring
+│       ├── protocols.py          # Interface definitions
+│       ├── null_providers.py     # Graceful degradation providers
+│       ├── prompt_assembler.py   # Dynamic prompt assembly + QC injection
+│       ├── role_template_market.py # Role template marketplace
+│       └── *_test.py             # Test suites (370 tests)
 ├── .github/workflows/test.yml    # CI: Python 3.9-3.12 matrix
 ├── Dockerfile                    # Docker support
 ├── pyproject.toml                # pip-installable package
-├── SKILL.md                      # English skill manual
-├── SKILL-CN.md                   # Chinese skill manual
-├── SKILL-JP.md                   # Japanese skill manual
+├── SKILL.md                      # Skill manual (EN/CN/JP)
+├── GUIDE.md                      # User guide (Chinese)
 ├── README.md                     # English readme
-├── README-CN.md                  # Chinese readme
-├── README-JP.md                  # Japanese readme
-├── EXAMPLES.md                   # Usage examples (Chinese)
-├── EXAMPLES_EN.md                # Usage examples (English)
 ├── CLAUDE.md                     # Claude Code instructions
 ├── CHANGELOG.md                  # Version history
-└── INSTALL.md                    # This file
+├── INSTALL.md                    # This file
+└── docs/
+    └── i18n/                     # International docs
+        ├── README_CN.md          # 中文说明
+        ├── README_JP.md          # 日本語説明
+        ├── SKILL_CN.md           # 中文技能手册
+        ├── SKILL_JP.md           # 日本語スキルマニュアル
+        ├── GUIDE_EN.md           # English user guide
+        └── GUIDE_JP.md           # 日本語ユーザーガイド
 
 ---
 
@@ -488,6 +502,6 @@ python scripts\cli.py dispatch -t "test" -r architect --dry-run
 # Expected: [DRY RUN] message
 
 # 4. Core tests
-python -m pytest scripts\collaboration\ -q
-# Expected: 258+ unit tests (all passing)
+python -m pytest scripts\collaboration\ tests\ test_v35_integration.py -q
+# Expected: 370 tests (129 unit + 234 contract + 7 integration) all passing
 ```
