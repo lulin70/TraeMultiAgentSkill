@@ -743,7 +743,7 @@ def cmd_lifecycle(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="DevSquad V3.4 — Multi-Agent Orchestration Engine for Software Development",
+        description="DevSquad V3.6 — Multi-Agent Orchestration Engine for Software Development",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
