@@ -130,6 +130,115 @@ def _create_backend(backend_type: str,
     return create_backend(backend_type, **kwargs)
 
 
+def cmd_demo(args):
+    """
+    Demo command — show DevSquad capabilities in mock mode (no API key needed).
+
+    Scenarios:
+      intent     - Intent detection & role auto-matching
+      security   - Security scanning with permission checks
+      dispatch   - Dispatch dry-run simulation
+      all        - Run all scenarios (default)
+    """
+    import time as _time
+
+    scenario = getattr(args, 'scenario', 'all')
+
+    print("\n" + "=" * 60)
+    print("  🚀 DevSquad V3.6.0 Quick Demo")
+    print("=" * 60)
+    print("  Mode: Mock (no API key required)\n")
+
+    results = []
+
+    if scenario in ("all", "intent"):
+        print("▶️ Scenario 1: Intent Detection")
+        print("-" * 40)
+        start = _time.time()
+        try:
+            from scripts.collaboration.intent_workflow_mapper import IntentWorkflowMapper
+
+            mapper = IntentWorkflowMapper()
+            task = "修复用户登录模块中的认证失败问题，报错信息显示token验证异常"
+            result = mapper.detect_intent(task)
+
+            print(f"  Task: {task}")
+            print(f"  Intent: {result.intent_type}")
+            print(f"  Confidence: {result.confidence:.1%}")
+            print(f"  Required roles: {', '.join(result.required_roles)}")
+            if result.optional_roles:
+                print(f"  Optional roles: {', '.join(result.optional_roles)}")
+            print(f"  ✅ Completed in {_time.time() - start:.2f}s\n")
+            results.append({"scenario": "Intent Detection", "success": True, "duration": _time.time() - start})
+        except Exception as e:
+            print(f"  ❌ Failed: {e}\n")
+            results.append({"scenario": "Intent Detection", "success": False, "duration": _time.time() - start})
+
+    if scenario in ("all", "security"):
+        print("▶️ Scenario 2: Security Scan")
+        print("-" * 40)
+        start = _time.time()
+        try:
+            from scripts.collaboration.input_validator import InputValidator
+
+            validator = InputValidator()
+            test_inputs = [
+                ("DROP TABLE users;", "SQL Injection"),
+                ("<script>alert('xss')</script>", "XSS"),
+                ("rm -rf / && format C:", "Command Injection"),
+                ("$(cat /etc/passwd)", "OS Command Injection"),
+            ]
+            for inp, label in test_inputs:
+                result = validator.validate_task(inp)
+                status = "🚫 BLOCKED" if not result.valid else ("⚠️ WARNING" if result.sanitized_input != inp else "✅ OK")
+                print(f"  [{status}] {label}: {inp[:40]}")
+            print(f"  ✅ Completed in {_time.time() - start:.2f}s\n")
+            results.append({"scenario": "Security Scan", "success": True, "duration": _time.time() - start})
+        except Exception as e:
+            print(f"  ❌ Failed: {e}\n")
+            results.append({"scenario": "Security Scan", "success": False, "duration": _time.time() - start})
+
+    if scenario in ("all", "dispatch"):
+        print("▶️ Scenario 3: Dispatch Dry-Run")
+        print("-" * 40)
+        start = _time.time()
+        try:
+            disp = MultiAgentDispatcher(enable_warmup=False)
+            result = disp.dispatch(
+                "设计一个微服务架构的用户认证系统",
+                dry_run=True,
+            )
+            print(f"  Task: 设计一个微服务架构的用户认证系统")
+            print(f"  Mode: Dry-run (simulation)")
+            if hasattr(result, 'matched_roles'):
+                print(f"  Matched roles: {', '.join(result.matched_roles)}")
+            if hasattr(result, 'summary'):
+                print(f"  Summary: {result.summary[:100]}...")
+            print(f"  ✅ Completed in {_time.time() - start:.2f}s\n")
+            disp.shutdown()
+            results.append({"scenario": "Dispatch Dry-Run", "success": True, "duration": _time.time() - start})
+        except Exception as e:
+            print(f"  ❌ Failed: {e}\n")
+            results.append({"scenario": "Dispatch Dry-Run", "success": False, "duration": _time.time() - start})
+
+    # Summary
+    print("=" * 60)
+    print("  📊 Demo Summary")
+    print("=" * 60)
+    success_count = sum(1 for r in results if r['success'])
+    total_time = sum(r['duration'] for r in results)
+    print(f"  Scenarios run: {len(results)}")
+    print(f"  Successful: {success_count}/{len(results)}")
+    print(f"  Total time: {total_time:.2f}s")
+    print()
+    print("💡 Next steps:")
+    print("  devsquad init          # Interactive setup")
+    print('  devsquad dispatch -t "your task"')
+    print("  devsquad --help        # All commands\n")
+
+    return 0 if all(r['success'] for r in results) else 1
+
+
 def cmd_init(args):
     """
     Interactive initialization wizard for DevSquad.
@@ -142,6 +251,10 @@ def cmd_init(args):
     - Config file generation
     """
     import sys as _sys
+
+    # Quick init: non-interactive mode with sensible defaults
+    if getattr(args, 'quick', False) or getattr(args, 'non_interactive', False):
+        return _quick_init()
 
     print("\n" + "=" * 60)
     print("🚀 Welcome to DevSquad Setup Wizard!")
@@ -425,6 +538,85 @@ def _save_config(config: dict, config_path: str) -> bool:
     except Exception as e:
         logger.warning("Failed to save config: %s", e)
         return False
+
+
+def _quick_init():
+    """
+    Quick non-interactive initialization with sensible defaults.
+
+    Generates:
+      - ~/.devsquad.yaml (main config)
+      - ~/.devsquad/.env (environment template, copied from .env.example if exists)
+    """
+    import shutil as _shutil
+
+    print("\n⚡ DevSquad Quick Setup (non-interactive)")
+
+    config = {
+        "project_type": "generic",
+        "llm_backend": "mock",
+        "default_roles": ["auto"],
+        "language": "auto",
+        "features": {
+            "warmup": True,
+            "compression": True,
+            "memory": False,
+            "permission": True,
+        },
+    }
+
+    # Save main config
+    config_path = os.path.expanduser("~/.devsquad.yaml")
+    saved = _save_config(config, config_path)
+
+    if saved:
+        print(f"  ✅ Config saved: {config_path}")
+    else:
+        print(f"  ⚠️  Could not save config to {config_path}")
+
+    # Copy .env.example to ~/.devsquad/.env (if not exists)
+    devsquad_dir = os.path.expanduser("~/.devsquad")
+    env_path = os.path.join(devsquad_dir, ".env")
+
+    try:
+        os.makedirs(devsquad_dir, exist_ok=True)
+
+        if not os.path.exists(env_path):
+            # Try to copy from project root .env.example
+            project_env_example = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                ".env.example"
+            )
+            if os.path.exists(project_env_example):
+                _shutil.copy2(project_env_example, env_path)
+                print(f"  ✅ Env template: {env_path}")
+                print("     Edit this file to add your API keys")
+            else:
+                # Create minimal .env
+                with open(env_path, 'w') as f:
+                    f.write("# DevSquad Environment Configuration\n")
+                    f.write("# Generated by quick init\n\n")
+                    f.write("DEVSQUAD_LLM_BACKEND=mock\n")
+                    f.write("# Uncomment and fill in your API keys:\n")
+                    f.write("# OPENAI_API_KEY=\n")
+                    f.write("# ANTHROPIC_API_KEY=\n")
+                print(f"  ✅ Env template: {env_path} (minimal)")
+        else:
+            print(f"  ℹ️  Env file already exists: {env_path}")
+
+    except Exception as e:
+        logger.warning("Failed to create env template: %s", e)
+        print(f"  ⚠️  Could not create env template: {e}")
+
+    # Summary
+    print("\n🎉 Quick setup complete!")
+    print("\n📋 Next steps:")
+    print('  1. Run demo:  devsquad demo')
+    print('  2. Run task:  devsquad dispatch -t "your task"')
+    print("  3. Set keys:  edit ~/.devsquad/.env (optional, for real AI)")
+    print()
+
+    return 0
 
 
 def cmd_dispatch(args):
@@ -759,6 +951,8 @@ Examples:
   %(prog)s ship -t "Deploy v2.0 to production"
   %(prog)s roles
   %(prog)s status
+  %(prog)s demo                              # Quick demo (no API key needed)
+  %(prog)s demo --scenario intent            # Run only intent detection scenario
   %(prog)s --version
 
 Getting Started (New Users):
@@ -792,6 +986,16 @@ Environment Variables (API keys are read from env vars only, never command line)
                                     help="Interactive setup wizard for new users")
     p_init.add_argument("--non-interactive", action="store_true",
                         help="Run in non-interactive mode (use defaults)")
+    p_init.add_argument("--quick", "-q", action="store_true",
+                        help="Quick non-interactive setup with sensible defaults")
+
+    # Demo command (quick demo, no API key needed)
+    p_demo = subparsers.add_parser("demo", aliases=["play", "try"],
+                                   help="Quick demo showing DevSquad capabilities (mock mode)")
+    p_demo.add_argument("--scenario", "-s",
+                        choices=["all", "intent", "security", "dispatch"],
+                        default="all",
+                        help="Which scenario to run (default: all)")
 
     p_dispatch = subparsers.add_parser("dispatch", aliases=["run", "d"], help="Execute a multi-agent task")
     p_dispatch.add_argument("task_positional", nargs="?", default=None, help="Task description (positional, no -t needed)")
@@ -869,6 +1073,8 @@ Environment Variables (API keys are read from env vars only, never command line)
 
     if args.command in ("init", "setup", "i"):
         return cmd_init(args)
+    elif args.command in ("demo", "play", "try"):
+        return cmd_demo(args)
     elif args.command in ("dispatch", "run", "d"):
         return cmd_dispatch(args)
     elif args.command in ("status", "s"):
