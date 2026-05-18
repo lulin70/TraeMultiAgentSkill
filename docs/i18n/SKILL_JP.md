@@ -6,7 +6,7 @@ description: |
   Coordinator/Worker/Scratchpad パターンに基づく完全なマルチエージェントコラボレーションシステム。
   7コアロール（アーキテクト/PM/セキュリティ/テスター/コーダー/DevOps/UIデザイナー）、
   リアルLLMバックエンド（OpenAI/Anthropic）、CLI + REST API + Dashboard + MCP + Python API対応。
-  1561+テスト全合格。
+  1662+テスト全合格。
   V3.6.1新機能: FeedbackControlLoop（制御論フィードバックループ）、ExecutionGuard（リアルタイム実行ガード）、
   PerformanceFingerprint（統一実行フィンガープリント）、SimilarTaskRecommender（履歴タスク推奨）、AdaptiveRoleSelector（適応型ロール選択）。
 ---
@@ -24,7 +24,7 @@ description: |
              → [コンセンサス決定] → [レポート整形] → [構造化レポート]
 ```
 
-## アーキテクチャ概要（59コアモジュール）
+## アーキテクチャ概要（70+コアモジュール）
 
 | # | モジュール | ファイル | 責任 |
 |---|-----------|--------|------|

@@ -1,3 +1,27 @@
+#!/bin/bash
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+TARGET_PATH="$HOME/.trae/skills/devsquad/SKILL.md"
+SOURCE_PATH="$PROJECT_ROOT/SKILL.md"
+
+echo "=========================================="
+echo "DevSquad SKILL.md Sync Tool (V3.6.1)"
+echo "=========================================="
+echo ""
+echo "Source: $SOURCE_PATH"
+echo "Target: $TARGET_PATH"
+echo ""
+
+if [ ! -f "$SOURCE_PATH" ]; then
+    echo "❌ ERROR: Source file not found: $SOURCE_PATH"
+    exit 1
+fi
+
+mkdir -p "$(dirname "$TARGET_PATH")"
+
+cat > "$TARGET_PATH" << 'SKILLEOF'
 ---
 name: devsquad
 slug: devsquad
@@ -24,7 +48,7 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
            → [ConsensusEngine] → [ReportFormatter] → [Structured Report]
 ```
 
-## Architecture Overview (70+ Core Modules)
+## Architecture Overview (66 Core Modules)
 
 | # | Module | File | Responsibility |
 |---|-------|------|---------------|
@@ -94,11 +118,11 @@ User Task → [InputValidator] → [RoleMatcher] → [Coordinator Orchestration]
 | 63 | **AlertManager** | `alert_manager.py` | Multi-channel alerting: Console/Slack/Email/Webhook, rate limiting, deduplication, severity levels |
 | 64 | **HistoryManager** | `history_manager.py` | SQLite time-series storage: metrics snapshots, alert history, API logs, lifecycle events |
 | 65 | **StreamlitDashboard** | `dashboard.py` | Interactive web dashboard with authentication, real-time monitoring, phase visualization |
-| 66 | **FeedbackControlLoop** | `feedback_control_loop.py` | Sense→Decide→Act→Feedback closed-loop iteration for continuous improvement |
-| 67 | **ExecutionGuard** | `execution_guard.py` | Real-time abort guard (timeout/output/keywords) for safe execution |
-| 68 | **PerformanceFingerprint** | `performance_fingerprint.py` | Unified fingerprint with TF-IDF similarity search for task matching |
-| 69 | **SimilarTaskRecommender** | `similar_task_recommender.py` | History-based task config recommendation using performance data |
-| 70 | **AdaptiveRoleSelector** | `adaptive_role_selector.py` | Success-rate-driven adaptive role selection for optimal team composition |
+| 66 | **FeedbackControlLoop** | `feedback_control_loop.py` | Sense→Decide→Act→Feedback closed-loop iteration (V3.6.1 NEW) |
+| 67 | **ExecutionGuard** | `execution_guard.py` | Real-time abort guard (timeout/output/keywords) (V3.6.1 NEW) |
+| 68 | **PerformanceFingerprint** | `performance_fingerprint.py` | Unified fingerprint with TF-IDF similarity search (V3.6.1 NEW) |
+| 69 | **SimilarTaskRecommender** | `similar_task_recommender.py` | History-based task config recommendation (V3.6.1 NEW) |
+| 70 | **AdaptiveRoleSelector** | `adaptive_role_selector.py` | Success-rate-driven adaptive role selection (V3.6.1 NEW) |
 
 ---
 
@@ -203,24 +227,9 @@ roles = selector.select_roles("Fix security bug", intent="bug_fix")
 
 ---
 
-## Architecture Overview (70+ Core Modules)
+## Architecture Overview (66 Core Modules)
 
 ## Quick Start (Must Follow)
-
-### Installation
-
-```bash
-# Install from PyPI (recommended)
-pip install devsquad
-
-# With optional dependencies
-pip install "devsquad[api]"    # Includes FastAPI + Streamlit dashboard
-pip install "devsquad[all]"    # All optional dependencies
-
-# Or install in development mode (for contributors)
-pip install -e .
-pip install -e ".[api]"       # With API/dashboard dependencies
-```
 
 ### Method 1: One-Click Collaboration (Recommended for most scenarios)
 
@@ -522,7 +531,7 @@ Consensus records in `result.consensus_records`.
 status = disp.get_status()
 # Returns:
 # {
-#   "version": "3.6.0",
+#   "version": "3.6.1",
 #   "components": {...},        # Component enabled status
 #   "dispatch_count": N,         # Completed dispatch count
 #   "scratchpad_stats": {...}, # Blackboard stats
@@ -837,12 +846,14 @@ Implement → Test(Regression All) → Code Walkthrough → Annotate → Docs Up
 | **P1-3 OutputSlicer** | **26** | **✅ PASS** |
 | **P1-4 FiveAxisConsensusEngine** | **29** | **✅ PASS** |
 | **P1-5 CIFeedbackAdapter** | **22** | **✅ PASS** |
+| **V3.6.1 Cybernetics (5 new modules)** | **TBD** | **🔄 Pending** |
 **Total** | **1662+** | **✅ ALL PASS** |
 
 ---
 
 ## Version History
 
+- **v3.6.1** (2026-05-18): Cybernetics Enhancement - FeedbackControlLoop + ExecutionGuard + PerformanceFingerprint + SimilarTaskRecommender + AdaptiveRoleSelector + 71 core modules + control theory feedback loops from upstream v2.5
 - **v3.4.2** (2026-05-03): P1 Enhancement Complete - RoleTemplateMarket V2(27 tests) + OperationClassifier(29 tests) + OutputSlicer(26 tests) + FiveAxisConsensusEngine(29 tests) + CIFeedbackAdapter(22 tests) + 166 new tests + 53 core modules
 - **v3.4.1** (2026-05-03): Agent Skills Quality Framework (P0) - AntiRationalizationEngine(39 tests) + VerificationGate(42 tests) + IntentWorkflowMapper(58 tests) + CLI Lifecycle Commands(28 tests) + 167 new tests + Google Agent Skills integration + 49 core modules
 - **v3.5.0** (2026-05-02): 11-Phase Project Lifecycle (full/backend/frontend/internal_tool/minimal templates) + requirement change management + gate mechanism with gap reporting + WorkflowEngine lifecycle support + Natural Language Rule Collection (RuleCollector) + 748+ tests passing
@@ -857,3 +868,12 @@ Implement → Test(Regression All) → Code Walkthrough → Annotate → Docs Up
 - **v2.2** (2026-03-21): Long-running Agent (Checkpoint + Handoff)
 - **v2.1** (2026-03-17): Dual-layer context + AI semantic matching
 - **v2.0/v1.0** (2026-03-16): Initial release
+SKILLEOF
+
+echo "✅ Done: .trae SKILL.md synced to V3.6.1"
+echo ""
+echo "File location: $TARGET_PATH"
+echo "File size: $(wc -c < "$TARGET_PATH") bytes"
+echo "Lines: $(wc -l < "$TARGET_PATH")"
+echo ""
+echo "Sync completed at: $(date '+%Y-%m-%d %H:%M:%S %Z')"

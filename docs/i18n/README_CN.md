@@ -9,7 +9,7 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-1561%20passing-brightgreen" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-1662%20passing-brightgreen" />
   <img alt="Version" src="https://img.shields.io/badge/V3.6.1-success" />
   <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
@@ -33,143 +33,218 @@
 #### 1️⃣ FeedbackControlLoop（反馈闭环控制器）
 **中文名称**：反馈闭环控制器
 **核心能力**：
-- 闭环反馈控制，实时监控调度质量指标
-- 自动调整角色权重和策略参数
-- 基于历史表现的动态优化
+- 闭环反馈控制，自动迭代优化直到质量达标
+- 可配置质量门禁（quality_gate）和最大迭代次数
+- 轻量级质量评估（无需LLM调用），支持dry-run模式
 
 ```python
 from scripts.collaboration.feedback_control_loop import FeedbackControlLoop
+from scripts.collaboration.dispatcher import MultiAgentDispatcher
 
-loop = FeedbackControlLoop()
-result = loop.run(dispatch_result)
-print(f"Quality score: {result.quality_score}")
-print(f"Adjustments made: {result.adjustments}")
-# 自动分析调度结果并生成改进建议
+dispatcher = MultiAgentDispatcher()
+loop = FeedbackControlLoop(dispatcher, quality_gate=0.7, max_iterations=3)
+result = loop.run("设计安全认证系统", roles=["architect", "security"])
+print(f"迭代次数: {loop.iteration_count}")
+print(f"最佳质量分: {loop.best_quality:.2f}")
+# 自动迭代直到质量达标或达到最大次数
 ```
 
 #### 2️⃣ ExecutionGuard（执行守护者）
 **中文名称**：执行守护者
 **核心能力**：
-- 实时执行监控和安全检查
-- 异常检测与自动回滚机制
-- 执行超时和资源限制管理
+- 实时执行监控，支持超时、输出大小、token数、关键词4种中止条件
+- 轻量级检查（<1ms），零外部依赖
+- 可动态配置阈值（max_duration_sec, max_output_tokens等）
 
 ```python
 from scripts.collaboration.execution_guard import ExecutionGuard
 
-guard = ExecutionGuard()
-guarded_result = guard.execute_with_protection(
-    task="设计认证系统",
-    roles=["architect", "security"],
-    timeout=300,
-    auto_rollback=True
+guard = ExecutionGuard(max_duration_sec=300.0, max_output_tokens=8000)
+should_abort, reason = guard.check_abort(
+    worker_output="正在生成代码...",
+    elapsed_time=120.5,
+    token_count=5000
 )
-print(f"Execution status: {guarded_result.status}")
-print(f"Safety checks passed: {guarded_result.safety_passed}")
+if should_abort:
+    print(f"中止执行: {reason}")
+    # 示例输出: "Timeout exceeded: 120.5s > 300.0s"
+# 也可检测警告关键词（不触发中止）
+warnings = guard.check_warnings("WARNING: 内存使用率过高")
+print(f"警告: {warnings}")  # ['WARNING']
 ```
 
 #### 3️⃣ PerformanceFingerprint（性能指纹）
 **中文名称**：性能指纹系统
 **核心能力**：
-- 统一的性能基线跟踪和对比
-- 多维度性能指标采集（延迟、吞吐量、资源消耗）
-- 历史趋势分析和异常检测
+- 统一执行指纹记录（融合4个数据源：调用次数、延迟、状态快照、复盘偏差）
+- 纯Python TF-IDF实现（无sklearn/numpy依赖），支持中英文混合
+- JSON持久化到 .devsquad_data/fingerprints/，支持冷启动优雅降级
 
 ```python
 from scripts.collaboration.performance_fingerprint import PerformanceFingerprint
 
 fingerprint = PerformanceFingerprint()
-fp = fingerprint.capture(dispatch_result)
-print(f"Response time: {fp.response_time_ms}ms")
-print(f"Token usage: {fp.tokens_used}")
-print(f"Memory peak: {fp.memory_peak_mb}MB")
-# 与历史基线对比
-comparison = fingerprint.compare_with_baseline(fp)
-print(f"Performance regression: {comparison.has_regression}")
+fid = fingerprint.record_execution(
+    task="实现用户认证",
+    result=dispatch_result,
+    timing={"total": 12.5, "planning": 2.0, "coding": 8.0, "review": 2.5},
+    roles_used=["architect", "coder", "tester"],
+)
+print(f"指纹ID: {fid}")  # fp_20260518_143052_a1b2c3d4
+
+# 基于TF-IDF查找相似历史任务
+similar = fingerprint.find_similar("添加登录页面", top_k=3)
+for case in similar:
+    print(f"任务: {case['task']}")
+    print(f"相似度: {case['similarity']:.2%}")
+    print(f"角色组合: {case['roles_used']}")
+    print(f"成功: {case['success']}")
+
+# 获取整体统计
+stats = fingerprint.get_stats()
+print(f"总执行数: {stats['total']}")
+print(f"成功率: {stats['success_rate']:.1%}")
 ```
 
 #### 4️⃣ SimilarTaskRecommender（相似任务推荐器）
 **中文名称**：相似任务推荐器
 **核心能力**：
-- 基于 TF-IDF 的任务相似度搜索
-- 历史成功案例推荐
-- 复用已验证的角色组合和策略
+- 基于TF-IDF的任务相似度搜索，推荐历史成功配置
+- 智能角色组合推荐、意图预测、执行时间估算
+- 置信度评分（high/medium/low），冷启动优雅降级
 
 ```python
 from scripts.collaboration.similar_task_recommender import SimilarTaskRecommender
 
 recommender = SimilarTaskRecommender()
-recommendations = recommender.find_similar_tasks("设计用户认证系统")
-for rec in recommendations:
-    print(f"Task: {rec.task_description}")
-    print(f"Similarity: {rec.similarity_score:.2%}")
-    print(f"Suggested roles: {rec.recommended_roles}")
-    print(f"Success rate: {rec.historical_success_rate:.2%}")
-    print("---")
+result = recommender.recommend("设计用户认证系统")
+print(f"推荐角色: {result['recommended_roles']}")
+# 输出: ['architect', 'coder', 'tester', 'security']
+print(f"置信度: {result['confidence']}")  # high/medium/low
+print(f"预估耗时: {result['estimated_duration_s']:.1f}s")
+
+# 查看相似案例详情
+for case in result['similar_cases']:
+    print(f"任务: {case['task']}")
+    print(f"相似度: {case['similarity']:.2%}")
+    print(f"历史角色: {case['roles']}")
+    print(f"是否成功: {case['success']}")
+
+# 快捷方法：仅获取角色建议
+roles = recommender.get_role_suggestion("实现支付接口")
+print(f"建议角色: {roles}")
 ```
 
 #### 5️⃣ AdaptiveRoleSelector（自适应角色选择器）
 **中文名称**：自适应角色选择器
 **核心能力**：
-- 基于任务特征智能选择最优角色组合
-- 动态调整角色权重和优先级
-- 考虑历史表现和任务复杂度
+- 基于历史成功率的三层策略选择（相似任务→意图匹配→降级到默认）
+- 可配置最低成功率和最大角色数
+- 支持手动统计更新和完整角色效能报告
 
 ```python
 from scripts.collaboration.adaptive_role_selector import AdaptiveRoleSelector
 
 selector = AdaptiveRoleSelector()
-selection = selector.select_roles(
+roles = selector.select_roles(
     task="构建高并发微服务架构",
-    complexity="high",
-    domain="backend",
-    consider_history=True
+    intent="feature_implementation",
+    min_success_rate=0.5,
+    max_roles=5,
 )
-print(f"Selected roles: {selection.roles}")
-print(f"Confidence: {selection.confidence_score:.2%}")
-print(f"Rationale: {selection.rationale}")
-# 输出类似：
-# Selected roles: ['architect', 'devops', 'security', 'tester']
-# Confidence: 94.5%
-# Rationale: 高复杂度后端任务需要架构设计+运维+安全+测试全覆盖
+print(f"推荐角色: {roles}")
+# 输出: ['architect', 'devops', 'security', 'tester']
+# 或: [] （无历史数据时返回空，由调用方回退到默认RoleMatcher）
+
+# 手动更新统计数据（用于外部系统集成）
+selector.update_stats(["architect", "coder"], success=True, duration_s=12.5)
+
+# 生成角色效能报告
+report = selector.get_role_report()
+for role_name, metrics in report.items():
+    print(f"{role_name}: 成功率={metrics['success_rate']:.1%}, "
+          f"平均耗时={metrics['avg_duration']:.1f}s")
 ```
 
 **集成示例**：五个模块可独立使用，也可组合形成完整的控制论闭环：
 
 ```python
 from scripts.collaboration import (
-    FeedbackControlLoop,
-    ExecutionGuard,
-    PerformanceFingerprint,
-    SimilarTaskRecommender,
-    AdaptiveRoleSelector,
+    MultiAgentDispatcher, FeedbackControlLoop,
+    ExecutionGuard, PerformanceFingerprint,
+    SimilarTaskRecommender, AdaptiveRoleSelector,
 )
 
-# 完整的控制论工作流
-recommender = SimilarTaskRecommender()
-selector = AdaptiveRoleSelector()
+dispatcher = MultiAgentDispatcher()
 guard = ExecutionGuard()
 fingerprint = PerformanceFingerprint()
-loop = FeedbackControlLoop()
 
-task = "设计分布式缓存系统"
+# 选项1: 完整控制论栈（自动迭代+质量门禁）
+loop = FeedbackControlLoop(dispatcher, quality_gate=0.7)
+result = loop.dispatch("设计分布式缓存系统")  # 自动迭代优化
 
-# 步骤 1: 查找相似任务
-similar = recommender.find_similar_tasks(task)
+# 选项2: 仅守护模式（最小化采用）
+result = dispatcher.dispatch("设计分布式缓存系统")
+for w in result.worker_results:
+    abort, reason = guard.check_abort(w.output, w.duration)
+    if abort:
+        print(f"中止: {reason}")
 
-# 步骤 2: 智能选择角色
-roles = selector.select_roles(task, consider_history=True)
+# 选项3: 仅学习模式（积累指纹+推荐）
+fingerprint.record_execution("任务", result, result.timing, result.matched_roles)
+similar = fingerprint.find_similar("新任务", top_k=3)
 
-# 步骤 3: 安全执行
-result = guard.execute_with_protection(task, roles.roles)
-
-# 步骤 4: 性能指纹采集
-fp = fingerprint.capture(result)
-
-# 步骤 5: 反馈闭环优化
-improvement = loop.run(result)
-print(f"Next iteration suggestions: {improvement.suggestions}")
+# 所有模块都是可选开关 — 不使用时DevSquad完全正常工作
 ```
+
+### 🔗 集成架构
+
+5个控制论模块设计为**非侵入式包装器** — 它们可以独立或协同工作，无需修改现有核心逻辑：
+
+```
+用户任务
+    ↓
+[SimilarTaskRecommender] ← 可选：从历史记录推荐角色
+    ↓
+[AdaptiveRoleSelector]   ← 可选：优化角色选择
+    ↓
+[MultiAgentDispatcher]
+    ↓
+[FeedbackControlLoop]     ← 包装dispatcher实现自动迭代
+    ↓ [每个worker步骤]
+[ExecutionGuard]          ← 守护每个worker执行
+    ↓
+[PerformanceFingerprint]  → 调度完成后记录指纹
+```
+
+**推荐用法**（渐进式采用）：
+```python
+from scripts.collaboration import (
+    MultiAgentDispatcher, FeedbackControlLoop,
+    ExecutionGuard, PerformanceFingerprint
+)
+
+dispatcher = MultiAgentDispatcher()
+guard = ExecutionGuard()
+fingerprint = PerformanceFingerprint()
+
+# 选项1: 完整控制论栈（自动迭代+质量门禁）
+loop = FeedbackControlLoop(dispatcher, quality_gate=0.7)
+result = loop.run("你的任务描述")
+
+# 选项2: 仅守护模式（最小化采用）
+result = dispatcher.dispatch("你的任务")
+for w in result.worker_results:
+    abort, reason = guard.check_abort(w.output, w.duration)
+    if abort:
+        print(f"中止: {reason}")
+
+# 选项3: 仅学习模式（积累指纹+推荐）
+fingerprint.record_execution("任务", result, result.timing, result.matched_roles)
+similar = fingerprint.find_similar("新任务", top_k=3)
+```
+
+所有模块都是**可选开关** — 不使用时DevSquad完全正常工作。
 
 ## DevSquad 是什么？
 
@@ -450,6 +525,11 @@ result = backend.generate("设计认证系统")
 - 优先级路由配置
 - 自动主后端恢复检测
 
+### 🔍 VerificationGate — 基于证据的质量保障
+- **证明模式 (Prove-It Pattern)**：每个完成声明必须包含可验证的证据（测试输出、代码差异、性能基准）
+- **7个红旗警告**：`no_test`（无测试）| `tests_pass_first_run`（首次运行即通过）| `no_regression_test`（无回归测试）| `no_security_scan`（无安全扫描）| `no_perf_baseline`（无性能基线）| `vague_description`（描述模糊）| `evidence_missing`（证据缺失）
+- **自动激活**：已集成到 TaskCompletionChecker 中 — 零配置即可使用
+
 ### 自然语言规则收集
 
 自动从用户自然语言输入中检测并存储规则，无需手动编辑配置文件：
@@ -505,7 +585,7 @@ P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→
 - **GitHub Actions CI**：Python 3.9-3.12 矩阵测试
 - **pip 可安装**：`pip install -e .` + 可选依赖
 
-## 📦 模块参考 (53 模块)
+## 📦 模块参考 (60+ 模块)
 
 | # | 模块 | 文件 | 职责 |
 |---|------|------|------|
@@ -608,7 +688,7 @@ export OPENAI_API_KEY=sk-...
 ## 运行测试
 
 ```bash
-# 核心测试（1561+测试全通过）
+# 核心测试（1662+测试全通过）
 python3 -m pytest scripts/collaboration/core_test.py \
   scripts/collaboration/role_mapping_test.py \
   scripts/collaboration/upstream_test.py \
@@ -619,6 +699,18 @@ python3 -m pytest scripts/collaboration/core_test.py \
 python3 scripts/cli.py --version    # 3.6.1
 python3 scripts/cli.py status       # 系统就绪
 python3 scripts/cli.py roles        # 列出 7 个角色
+```
+
+### 🔄 升级后冒烟测试
+升级 DevSquad 后，运行以下命令验证环境是否正常：
+```bash
+# 快速健康检查（应在 30 秒内完成）
+python3 scripts/cli.py --version       # 预期输出: DevSquad 3.6.1
+python3 scripts/cli.py status          # 预期输出: 系统就绪
+python3 scripts/cli.py roles           # 预期输出: 列出 7 个核心角色
+
+# 完整测试套件
+python3 -m pytest tests/ -q --tb=line # 预期输出: 1662 passed
 ```
 
 ## 文档
@@ -640,13 +732,11 @@ python3 scripts/cli.py roles        # 列出 7 个角色
 
 | 日期 | 版本 | 亮点 |
 |------|------|------|
-| 2026-05-17 | **V3.6.1** | 🔄 **控制论增强** — 5个新模块(反馈闭环/执行守护/性能指纹/任务推荐/自适应角色)，来自上游v2.5控制论架构分析。110个新测试，总计1561。Mock模式零依赖可用。 |
-| 2026-05-16 | **V3.6.0** | 🧩 **分层子Skill架构** — 6个原子子Skill(dispatch/intent/review/security/test/retrospective)，懒加载注册表，每个~50行薄封装。跨平台兼容：Claude Code/Cursor/OpenClaw/纯Python/Docker/MCP 全部支持。Mock模式零依赖可用。 |
-| 2026-05-13 | **V3.6.0** | ⚓ AnchorChecker（里程碑锚点验证+漂移检测）、RetrospectiveEngine（独立复盘+模式提取）、StructuredGoal（层次化目标分解+进度跟踪）、FallbackBackend（自动LLM故障转移+健康监控）、FeatureUsageTracker（功能调用统计+使用报告+自动持久化）、7模块集成（IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders）、1548+测试、48核心模块 |
+| 2026-05-17 | **V3.6.1** | 🔄 **控制论增强** — 5个新模块(反馈闭环/执行守护/性能指纹/任务推荐/自适应角色)，来自上游v2.5控制论架构分析。110个新测试，总计1662。Mock模式零依赖可用。 |
+| 2026-05-16 | **V3.6.0** | 🧩 **分层子Skill架构 + 核心模块** — 6个原子子Skill(dispatch/intent/review/security/test/retrospective)，懒加载注册表，每个~50行薄封装。加上：AnchorChecker（里程碑锚点验证+漂移检测）、RetrospectiveEngine（独立复盘+模式提取）、StructuredGoal（层次化目标分解+进度跟踪）、FallbackBackend（自动LLM故障转移+健康监控）、FeatureUsageTracker（功能调用统计+使用报告+自动持久化）、7模块集成（IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders）、1662+测试、48核心模块。跨平台兼容：Claude Code/Cursor/OpenClaw/纯Python/Docker/MCP 全部支持。 |
 | 2026-05-05 | **V3.5.0** | 📋 增强冲刺 — 代码走读增强、文档一致性检查、Karpathy原则、项目理解（AgentBriefing）、CLI生命周期命令、结构化输出、748+测试 |
 | 2026-05-03 | **V3.4.1** | 🚀 智能体技能质量框架 (P0) — AntiRationalizationEngine + VerificationGate + IntentWorkflowMapper + CLI生命周期命令 (spec/plan/build/test/review/ship) + 167新测试 + Google智能体技能集成 + 49核心模块 |
-| 2026-05-02 | **V3.4.0** | 🆕 11阶段项目全生命周期（full/backend/frontend/internal_tool/minimal模板）、需求变更管理、门禁机制+差距报告、自然语言规则收集(RuleCollector)、560+测试通过 |
-| 2026-04-27 | V3.4.0 | 真实 LLM 后端、ThreadPoolExecutor 并行、输入验证+Prompt注入防护、检查点管理、工作流引擎、流式输出、Docker、CI、配置文件、CarryMem集成 |
+| 2026-05-02 | **V3.4.0** | 🆕 **基础版本发布** — 真实LLM后端、ThreadPoolExecutor并行执行、输入验证+Prompt注入防护、检查点管理、工作流引擎（11阶段生命周期模板：full/backend/frontend/internal_tool/minimal）、任务完成检查器、语义匹配器、流式输出、Docker、CI、配置文件、代码地图生成器、双层上下文、技能注册表、CarryMem集成、AgentBriefing、ConfidenceScore、EnhancedWorker自动QA、协议接口系统、234+单元测试、需求变更管理与门禁机制及差距报告 |
 | 2026-04-17 | V3.2 | E2E Demo、MCE 适配器 |
 | 2026-04-16 | V3.0 | 完整重设计 — Coordinator/Worker/Scratchpad 架构 |
 

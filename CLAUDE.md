@@ -8,7 +8,7 @@
 
 **6 Sub-Skills** (Layered Architecture): DispatchSkill (7-role orchestration), IntentSkill (6 intents × 3 languages), ReviewSkill (5-axis code review), SecuritySkill (input scan + op classify), TestSkill (test strategy + quality audit), RetrospectiveSkill (post-dispatch pattern extraction).
 
-**Test Coverage**: 1561+ tests all passing.
+**Test Coverage**: 1662+ tests all passing.
 **Cross-Platform**: Trae IDE / Claude Code / Cursor / Any MCP client / CLI / Docker / Web Dashboard / REST API.
 
 ## Architecture (V3.6.1 Three-Layer)
@@ -124,7 +124,7 @@ DevSquad/
 │   │   ├── models.py           # Shared data models and type definitions
 │   │   ├── usage_tracker.py    # Token/cost tracking
 │   │   ├── config_manager.py   # Project-level YAML config
-│   │   └── *_test.py           # Test files (1561+ tests)
+│   │   └── *_test.py           # Test files (1662+ tests)
 ├── skills/                     # ★ Layered Sub-Skill Architecture (V3.6.1)
 │   ├── __init__.py             # Package init, exports get_skill/list_skills/discover_all
 │   ├── registry.py              # BaseSkill class + lazy-loading registry
@@ -163,7 +163,7 @@ DevSquad/
 - **Output i18n**: `--lang zh/en/ja/auto` — reports in Chinese (default), English, or Japanese
 - **Business data** (ROLE_TEMPLATES prompts): Chinese (CN locale), with bilingual keyword matching
 - **Documentation**: EN (README.md/SKILL.md) + CN (docs/i18n/README_CN.md/docs/i18n/SKILL_CN.md) + JP variants
-- **Testing**: pytest-based, 1561+ tests all passing
+- **Testing**: pytest-based, 1662+ tests all passing
 - **Style**: PEP 8, dataclasses for models, type hints throughout
 - **Version**: Single source of truth in `_version.py` (`3.6.1`)
 
@@ -194,7 +194,7 @@ DevSquad/
 ```bash
 cd /path/to/DevSquad
 
-# Full test suite (1561+ tests)
+# Full test suite (1662+ tests)
 python3 -m pytest scripts/collaboration/core_test.py \
   scripts/collaboration/role_mapping_test.py \
   scripts/collaboration/upstream_test.py \

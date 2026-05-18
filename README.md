@@ -9,7 +9,7 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-1561%20passing-brightgreen" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-1662%20passing-brightgreen" />
   <img alt="Version" src="https://img.shields.io/badge/V3.6.1-success" />
   <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
   <img alt="Quality" src="https://img.shields.io/badge/Code%20Quality-4.3%2F5%20%E2%98%85%E2%98%85%E2%98%85%E2%98%85%E2%98%86-blue" />
@@ -31,6 +31,193 @@
 
 **DevSquad V3.6.1** adds 5 new cybernetics modules: FeedbackControlLoop for closed-loop feedback control, ExecutionGuard for safe execution with rollback, PerformanceFingerprint for performance baseline tracking, SimilarTaskRecommender for TF-IDF-based task similarity search, and AdaptiveRoleSelector for intelligent role selection based on task characteristics — making multi-agent collaboration more adaptive, self-optimizing, and resilient.
 
+### 🔄 V3.6.1 Cybernetics Module Details
+
+#### 1️⃣ FeedbackControlLoop (Feedback Controller)
+**Chinese Name**: 反馈闭环控制器 (Feedback Closed-Loop Controller)
+**Core Capabilities**:
+- Closed-loop feedback control with automatic iteration until quality threshold met
+- Configurable quality gate (`quality_gate`) and maximum iterations
+- Lightweight quality assessment (no LLM calls), supports dry-run mode
+
+```python
+from scripts.collaboration.feedback_control_loop import FeedbackControlLoop
+from scripts.collaboration.dispatcher import MultiAgentDispatcher
+
+dispatcher = MultiAgentDispatcher()
+loop = FeedbackControlLoop(dispatcher, quality_gate=0.7, max_iterations=3)
+result = loop.run("Design secure auth system", roles=["architect", "security"])
+print(f"Iterations: {loop.iteration_count}")
+print(f"Best quality: {loop.best_quality:.2f}")
+# Automatically iterates until quality gate met or max iterations reached
+```
+
+#### 2️⃣ ExecutionGuard (Execution Guardian)
+**Chinese Name**: 执行守护者 (Execution Guardian)
+**Core Capabilities**:
+- Real-time execution monitoring with 4 abort conditions: timeout, output size, token count, critical keywords
+- Lightweight checks (<1ms), zero external dependencies
+- Dynamically configurable thresholds (max_duration_sec, max_output_tokens, etc.)
+
+```python
+from scripts.collaboration.execution_guard import ExecutionGuard
+
+guard = ExecutionGuard(max_duration_sec=300.0, max_output_tokens=8000)
+should_abort, reason = guard.check_abort(
+    worker_output="Generating code...",
+    elapsed_time=120.5,
+    token_count=5000
+)
+if should_abort:
+    print(f"Aborting: {reason}")
+    # Example: "Timeout exceeded: 120.5s > 300.0s"
+# Also detect warning keywords (without triggering abort)
+warnings = guard.check_warnings("WARNING: High memory usage")
+print(f"Warnings: {warnings}")  # ['WARNING']
+```
+
+#### 3️⃣ PerformanceFingerprint (Performance Fingerprint)
+**Chinese Name**: 性能指纹系统 (Performance Fingerprint System)
+**Core Capabilities**:
+- Unified execution fingerprint recording (fuses 4 data sources: invocation counts, latency, state snapshots, retrospective deviations)
+- Pure Python TF-IDF implementation (no sklearn/numpy), supports English/Chinese mixed content
+- JSON persistence to `.devsquad_data/fingerprints/`, graceful cold-start degradation
+
+```python
+from scripts.collaboration.performance_fingerprint import PerformanceFingerprint
+
+fingerprint = PerformanceFingerprint()
+fid = fingerprint.record_execution(
+    task="Implement user authentication",
+    result=dispatch_result,
+    timing={"total": 12.5, "planning": 2.0, "coding": 8.0, "review": 2.5},
+    roles_used=["architect", "coder", "tester"],
+)
+print(f"Fingerprint ID: {fid}")  # fp_20260518_143052_a1b2c3d4
+
+# Find similar historical tasks using TF-IDF
+similar = fingerprint.find_similar("Add login page", top_k=3)
+for case in similar:
+    print(f"Task: {case['task']}")
+    print(f"Similarity: {case['similarity']:.2%}")
+    print(f"Roles used: {case['roles_used']}")
+    print(f"Success: {case['success']}")
+
+# Get overall statistics
+stats = fingerprint.get_stats()
+print(f"Total executions: {stats['total']}")
+print(f"Success rate: {stats['success_rate']:.1%}")
+```
+
+#### 4️⃣ SimilarTaskRecommender (Similar Task Recommender)
+**Chinese Name**: 相似任务推荐器 (Similar Task Recommender)
+**Core Capabilities**:
+- TF-IDF-based task similarity search with historical success configuration recommendations
+- Intelligent role combination recommendation, intent prediction, execution time estimation
+- Confidence scoring (high/medium/low), graceful cold-start degradation
+
+```python
+from scripts.collaboration.similar_task_recommender import SimilarTaskRecommender
+
+recommender = SimilarTaskRecommender()
+result = recommender.recommend("Design user authentication system")
+print(f"Recommended roles: {result['recommended_roles']}")
+# Output: ['architect', 'coder', 'tester', 'security']
+print(f"Confidence: {result['confidence']}")  # high/medium/low
+print(f"Estimated duration: {result['estimated_duration_s']:.1f}s")
+
+# View similar case details
+for case in result['similar_cases']:
+    print(f"Task: {case['task']}")
+    print(f"Similarity: {case['similarity']:.2%}")
+    print(f"Historical roles: {case['roles']}")
+    print(f"Success: {case['success']}")
+
+# Quick method: get role suggestions only
+roles = recommender.get_role_suggestion("Implement payment API")
+print(f"Suggested roles: {roles}")
+```
+
+#### 5️⃣ AdaptiveRoleSelector (Adaptive Role Selector)
+**Chinese Name**: 自适应角色选择器 (Adaptive Role Selector)
+**Core Capabilities**:
+- Three-tier selection strategy based on historical success rates (similar tasks → intent match → fallback to default)
+- Configurable minimum success rate and maximum role count
+- Supports manual statistics updates and comprehensive role effectiveness reporting
+
+```python
+from scripts.collaboration.adaptive_role_selector import AdaptiveRoleSelector
+
+selector = AdaptiveRoleSelector()
+roles = selector.select_roles(
+    task="Build high-concurrency microservices architecture",
+    intent="feature_implementation",
+    min_success_rate=0.5,
+    max_roles=5,
+)
+print(f"Recommended roles: {roles}")
+# Output: ['architect', 'devops', 'security', 'tester']
+# Or: [] (returns empty when no historical data, caller falls back to default RoleMatcher)
+
+# Manually update statistics (for external system integration)
+selector.update_stats(["architect", "coder"], success=True, duration_s=12.5)
+
+# Generate role effectiveness report
+report = selector.get_role_report()
+for role_name, metrics in report.items():
+    print(f"{role_name}: success_rate={metrics['success_rate']:.1%}, "
+          f"avg_duration={metrics['avg_duration']:.1f}s")
+```
+
+### 🔗 Integration Architecture
+
+The 5 cybernetic modules are designed as **non-invasive wrappers** — they work independently or together without modifying existing core logic:
+
+```
+User Task
+    ↓
+[SimilarTaskRecommender] ← Optional: suggest roles from history
+    ↓
+[AdaptiveRoleSelector]   ← Optional: optimize role selection
+    ↓
+[MultiAgentDispatcher]
+    ↓
+[FeedbackControlLoop]     ← Wrap dispatcher for auto-iteration
+    ↓ [each worker step]
+[ExecutionGuard]          ← Guard each worker execution
+    ↓
+[PerformanceFingerprint]  ← Record after dispatch completes
+```
+
+**Recommended usage** (progressive adoption):
+```python
+from scripts.collaboration import (
+    MultiAgentDispatcher, FeedbackControlLoop,
+    ExecutionGuard, PerformanceFingerprint
+)
+
+dispatcher = MultiAgentDispatcher()
+guard = ExecutionGuard()
+fingerprint = PerformanceFingerprint()
+
+# Option 1: Full cybernetics stack
+loop = FeedbackControlLoop(dispatcher, quality_gate=0.7)
+result = loop.run("Your task here")
+
+# Option 2: Guard only (minimal adoption)
+result = dispatcher.dispatch("Your task")
+for w in result.worker_results:
+    abort, reason = guard.check_abort(w.output, w.duration)
+    if abort:
+        print(f"Aborted: {reason}")
+
+# Option 3: Learning only
+fingerprint.record_execution("task", result, result.timing, result.matched_roles)
+similar = fingerprint.find_similar("new task", top_k=3)
+```
+
+All modules are **optional switches** — DevSquad works perfectly without them.
+
 ### 🎯 Quick Start (4 Ways to Use DevSquad)
 
 #### 0️⃣ First Time? Start Here!
@@ -48,7 +235,10 @@ devsquad dispatch -t "your task description"
 streamlit run scripts/dashboard.py
 
 # Open http://localhost:8501
-# Login with: admin / admin123
+# ⚠️ Security: Default credentials are for initial setup only.
+#    Login with default account, then change password immediately.
+#    Username: admin   Password: <your-secure-password>
+#    Or set via environment variables: $DASHBOARD_USER / $DASHBOARD_PASS
 ```
 
 #### 2️⃣ REST API Server
@@ -147,6 +337,11 @@ Automatic backend failover that ensures LLM availability even when primary backe
 - **Automatic Failover** — Seamlessly switch to backup backend when primary fails
 - **Priority-Based Routing** — Configure backend priority order (e.g., OpenAI → Anthropic → Mock)
 - **Recovery Detection** — Automatically restore primary backend when it recovers
+
+### 🔍 VerificationGate — Evidence-Based Quality
+- **Prove-It Pattern**: Every completion claim must include verifiable evidence (test output, diff, benchmark)
+- **7 Red Flags**: `no_test` | `tests_pass_first_run` | `no_regression_test` | `no_security_scan` | `no_perf_baseline` | `vague_description` | `evidence_missing`
+- **Auto-active**: Integrated into TaskCompletionChecker — zero config required
 
 ### 🔐 Authentication & Authorization
 - **Multi-user support** with role-based access control (RBAC)
@@ -462,7 +657,7 @@ Exposes 6 tools: `multiagent_dispatch`, `multiagent_quick`, `multiagent_roles`,
 
 **Auto-match**: If no roles specified, the dispatcher automatically matches based on task keywords.
 
-## Architecture Overview (53 Core Modules)
+## Architecture Overview (60+ Core Modules)
 
 DevSquad is built on a layered architecture with clear separation of concerns:
 
@@ -652,7 +847,7 @@ See [GUIDE.md](GUIDE.md) §4 for full lifecycle details with gate conditions and
 - **GitHub Actions CI**: Python 3.9-3.12 matrix testing
 - **pip installable**: `pip install -e .` with optional dependencies
 
-## Module Reference (53 Modules)
+## Module Reference (60+ Modules)
 
 | Module | File | Purpose |
 |--------|------|---------|
@@ -790,6 +985,18 @@ python3 scripts/cli.py review -t "Check PR #123"
 python3 scripts/cli.py ship -t "Deploy to production"
 ```
 
+### 🔄 Upgrade Smoke Test
+After upgrading DevSquad, run these commands to verify your environment:
+```bash
+# Quick health check (should complete in < 30s)
+python3 scripts/cli.py --version       # Expected: DevSquad 3.6.1
+python3 scripts/cli.py status          # Expected: System ready
+python3 scripts/cli.py roles           # Expected: 7 core roles listed
+
+# Full test suite
+python3 -m pytest tests/ -q --tb=line # Expected: 1662 passed
+```
+
 ## Documentation
 
 | Document | Description |
@@ -877,13 +1084,10 @@ docker build -t devsquad . && docker run -it devsquad dispatch -t "test"
 | Date | Version | Highlights |
 |------|---------|-----------|
 | 2026-05-17 | **V3.6.1** | 🔄 **Cybernetics Enhancement** — 5 new modules (FeedbackControlLoop/ExecutionGuard/PerformanceFingerprint/SimilarTaskRecommender/AdaptiveRoleSelector) with feedback loops, execution guards, TF-IDF similarity search, and adaptive role selection. Inspired by upstream TraeMultiAgentSkill v2.5's cybernetics architecture. |
-| 2026-05-16 | **V3.6.0** | 🧩 **Layered Sub-Skill Architecture** — 6 atomic sub-skills (dispatch/intent/review/security/test/retrospective) with lazy-loading registry via importlib, each ~50 lines wrapping existing core modules, no duplicated logic. All sub-skills work in Mock mode without API keys. Plus: Cross-platform compatibility docs updated for Claude Code/Cursor/OpenClaw/Pure Python/Docker/MCP. |
-| 2026-05-13 | **V3.6.0** | ⚓ AnchorChecker (milestone anchor verification + drift detection), RetrospectiveEngine (independent retrospective + pattern extraction), StructuredGoal (structured goal decomposition + progress tracking), FallbackBackend (automatic LLM failover + health monitoring), FeatureUsageTracker (feature usage tracking + reporting + auto-persistence), 7 module integrations (IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders), 1548+ tests, 48 core modules |
+| 2026-05-16 | **V3.6.0** | 🧩 **Layered Sub-Skill Architecture + Core Modules** — 6 atomic sub-skills (dispatch/intent/review/security/test/retrospective) with lazy-loading registry via importlib, each ~50 lines wrapping existing core modules. Plus: AnchorChecker (milestone anchor verification + drift detection), RetrospectiveEngine (independent retrospective + pattern extraction), StructuredGoal (structured goal decomposition + progress tracking), FallbackBackend (automatic LLM failover + health monitoring), FeatureUsageTracker (feature usage tracking + reporting + auto-persistence), 7 module integrations (IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders), 1662+ tests, 48 core modules. Cross-platform compatibility: Claude Code/Cursor/OpenClaw/Pure Python/Docker/MCP. |
 | 2026-05-05 | **V3.5.0** | 📋 Enhancement Sprint — Code walkthrough enhancement, documentation consistency checks, Karpathy principles, project understanding (AgentBriefing), CLI lifecycle commands, structured output, 748+ tests |
 | 2026-05-03 | **V3.4.1** | 🚀 Agent Skills Quality Framework (P0) — AntiRationalizationEngine + VerificationGate + IntentWorkflowMapper + CLI Lifecycle Commands (spec/plan/build/test/review/ship) + 167 new tests + Google Agent Skills integration + 49 core modules |
-| 2026-05-02 | **V3.4.0** | 🆕 11-Phase Project Lifecycle (full/backend/frontend/internal_tool/minimal templates), requirement change management, gate mechanism with gap reporting, 748+ tests passing, WorkflowEngine lifecycle support |
-| 2026-05-01 | V3.4.0 | AgentBriefing (context-aware task briefing), ConfidenceScore (5-factor quality assessment), EnhancedWorker (auto quality assurance with retry + memory_provider rule injection), Protocol interface system (match_rules/format_rules_as_prompt), CarryMem v0.2.8+ integration, comprehensive documentation |
-| 2026-04-27 | V3.4.0 | Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine, TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, 234 unit tests |
+| 2026-05-02 | **V3.4.0** | 🆕 **Foundation Release** — Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine with 11-phase lifecycle templates (full/backend/frontend/internal_tool/minimal), TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, AgentBriefing, ConfidenceScore, EnhancedWorker with auto QA, Protocol interface system, 234+ unit tests, requirement change management with gate mechanism and gap reporting |
 | 2026-04-17 | V3.2 | E2E Demo, MCE Adapter, Dispatcher UX |
 | 2026-04-16 | V3.0 | Complete redesign — Coordinator/Worker/Scratchpad architecture |
 

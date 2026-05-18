@@ -246,7 +246,7 @@ python scripts/cli.py dispatch -t "测试任务"
 | P0 质量框架 (AntiRationalization/VerificationGate/IntentWorkflow) | 139 | 100% |
 | P1 增强模块 (OperationClassifier/FiveAxisConsensus等) | 133 | 100% |
 | V3.6.0 新模块 (AnchorChecker/RetrospectiveEngine等) | 45 | 100% |
-| **总计** | **1548+** | **100%** |
+| **总计** | **1662+** | **100%** |
 
 ---
 

@@ -246,7 +246,7 @@ python scripts/cli.py dispatch -t "テストタスク"
 | P0 品質フレームワーク (AntiRationalization/VerificationGate/IntentWorkflow) | 139 | 100% |
 | P1 拡張モジュール (OperationClassifier/FiveAxisConsensus等) | 133 | 100% |
 | V3.6.0 新モジュール (AnchorChecker/RetrospectiveEngine等) | 45 | 100% |
-| **合計** | **1548+** | **100%** |
+| **合計** | **1662+** | **100%** |
 
 ---
 

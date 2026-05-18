@@ -6,7 +6,7 @@ description: |
   一个任务输入，多角色 AI 协作，一个结论输出。
   7个核心角色（架构师/产品经理/安全专家/测试员/开发人员/运维/UI设计师），
   真实 LLM 后端（OpenAI/Anthropic），CLI + REST API + Dashboard + MCP + Python API。
-  1548+ 测试全部通过。
+  1662+ 测试全部通过。
   V3.6.0 新增: AnchorChecker锚点检查、RetrospectiveEngine独立复盘、
   StructuredGoal结构化目标、FallbackBackend自动故障转移、FeatureUsageTracker功能调用统计。
   ThreadPoolExecutor 并行、CheckpointManager、WorkflowEngine、流式输出、Docker、CI。

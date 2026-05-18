@@ -8,7 +8,7 @@ description: |
   ThreadPoolExecutor parallel, CheckpointManager, WorkflowEngine, streaming, Docker, CI.
   NEW in V3.6.1: FeedbackControlLoop, ExecutionGuard, PerformanceFingerprint,
   SimilarTaskRecommender, AdaptiveRoleSelector — cybernetics enhancement from upstream v2.5,
-  1548+ tests.
+  1662+ tests.
 status: active
 ai_enhanced: true
 ai_capabilities:
@@ -296,7 +296,7 @@ metadata:
         - Layered Sub-Skill Architecture — 6 atomic sub-skills (dispatch/intent/review/security/test/retrospective)
         - SkillRegistry with lazy-loading discovery via importlib
         - Each sub-skill is thin wrapper (~50 lines) importing existing core modules
-        - 1548+ tests all passing
+        - 1662+ tests all passing
 
     - version: 3.6.0
       date: "2026-05-13"
@@ -305,8 +305,8 @@ metadata:
         - RetrospectiveEngine — Independent post-dispatch retrospective with pattern extraction
         - StructuredGoal — Structured goal management with hierarchical decomposition
         - FallbackBackend — Automatic LLM backend failover with health monitoring
-        - 1548+ tests all passing
-        - 47 core modules
+        - 1662+ tests all passing
+      - 47 core modules
 
     - version: 3.6.0
       date: "2026-05-05"
@@ -317,7 +317,7 @@ metadata:
         - Enhanced Lifecycle Protocol (spec-init/spec-analyze/spec-validate)
         - Multi-Language Code Map (Python/JS/TS/Go/Java/Rust)
         - Project Understanding Enhancement (agent_briefing.py)
-        - 1548+ tests all passing
+        - 1662+ tests all passing
 
     - version: 3.6.0
       date: "2026-04-27"
@@ -325,7 +325,7 @@ metadata:
         - Authentication (RBAC), Alert System, History Storage
         - Interactive Setup Wizard, User-Friendly Errors
         - Performance Monitoring, REST API, Web Dashboard
-        - 1548+ tests passing
+        - 1662+ tests passing
 
     - version: 3.0.0
       date: "2026-04-16"

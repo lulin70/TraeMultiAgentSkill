@@ -7,7 +7,7 @@
 <p align="center">
   <img alt="Python" src="https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white" />
   <img alt="License" src="https://img.shields.io/badge/License-MIT-green" />
-  <img alt="Tests" src="https://img.shields.io/badge/Tests-1561%20passing-brightgreen" />
+  <img alt="Tests" src="https://img.shields.io/badge/Tests-1662%20passing-brightgreen" />
   <img alt="Version" src="https://img.shields.io/badge/V3.6.1-success" />
   <img alt="CI" src="https://img.shields.io/badge/CI-GitHub_Actions-blue?logo=githubactions" />
 </p>
@@ -360,7 +360,7 @@ P1 → P2 ──┬──→ P3 ──→ P6 ──→ P7 ──→ P8 ──→
 - **GitHub Actions CI**: Python 3.9-3.12マトリックステスト
 - **pipインストール可能**: `pip install devsquad` + オプション依存関係
 
-## 📦 モジュール参照 (53 モジュール)
+## 📦 モジュール参照 (60+ モジュール)
 
 | # | モジュール | ファイル | 責任 |
 |---|----------|---------|------|
@@ -454,8 +454,20 @@ llm:
 ## テスト実行
 
 ```bash
-# コアテスト（1561+ 全テスト合格）
+# コアテスト（1662+ 全テスト合格）
 python3 -m pytest tests/ -q --tb=short
+```
+
+### 🔄 アップグレード後スモークテスト
+DevSquadのアップグレード後、以下のコマンドを実行して環境を検証してください：
+```bash
+# クイックヘルスチェック（30秒以内で完了）
+python3 scripts/cli.py --version       # 期待される出力: DevSquad 3.6.1
+python3 scripts/cli.py status          # 期待される出力: システム準備完了
+python3 scripts/cli.py roles           # 期待される出力: 7つのコアロールが表示
+
+# 完全テストスイート
+python3 -m pytest tests/ -q --tb=line # 期待される出力: 1662 passed
 ```
 
 ## ドキュメント
@@ -474,13 +486,13 @@ python3 -m pytest tests/ -q --tb=short
 
 | 日付 | バージョン | ハイライト |
 |------|-----------|-----------|
-| 2026-05-17 | **V3.6.1** | 🔄 **サイバネティクス強化** — 5つの新モジュール(フィードバックループ/実行ガード/性能フィンガープリント/タスク推奨/適応型ロール)、アップストリームv2.5サイバネティクスアーキテクチャ分析由来。110新規テスト、計1561。Mockモードゼロ依存で動作可能。 |
-| 2026-05-16 | **V3.6.0** | 🧩 **レイヤードサブスキルアーキテクチャ** — 6つの原子サブスキル(dispatch/intent/review/security/test/retrospective)、遅延ロードレジストリ、各~50行の薄いラッパー。クロスプラットフォーム対応：Claude Code/Cursor/OpenClaw/純Python/Docker/MCP 全サポート。Mockモードゼロ依存で動作可能。 |
-| 2026-05-13 | **V3.6.0** | ⚓ AnchorChecker（マイルストーンアンカー検証+ドリフト検出）、RetrospectiveEngine（独立レトロスペクティブ+パターン抽出）、StructuredGoal（階層的目標分解+進捗追跡）、FallbackBackend（自動LLMフェイルオーバー+ヘルスモニタリング）、FeatureUsageTracker（機能呼び出し統計+使用レポート+自動永続化）、7モジュール統合（IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders）、1548+テスト、48コアモジュール |
+| 2026-05-17 | **V3.6.1** | 🔄 **サイバネティクス強化** — 5つの新モジュール(フィードバックループ/実行ガード/性能フィンガープリント/タスク推奨/適応型ロール)、アップストリームv2.5サイバネティクスアーキテクチャ分析由来。110新規テスト、計1662。Mockモードゼロ依存で動作可能。 |
+| 2026-05-16 | **V3.6.0** | 🧩 **レイヤードサブスキルアーキテクチャ + コアモジュール** — 6つの原子サブスキル(dispatch/intent/review/security/test/retrospective)、遅延ロードレジストリ、各~50行の薄いラッパー。追加：AnchorChecker（マイルストーンアンカー検証+ドリフト検出）、RetrospectiveEngine（独立レトロスペクティブ+パターン抽出）、StructuredGoal（階層的目標分解+進捗追跡）、FallbackBackend（自動LLMフェイルオーバー+ヘルスモニタリング）、FeatureUsageTracker（機能呼び出し統計+使用レポート+自動永続化）、7モジュール統合（IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders）、1662+テスト、48コアモジュール。クロスプラットフォーム対応：Claude Code/Cursor/OpenClaw/純Python/Docker/MCP 全サポート。 |
 | 2026-05-05 | **V3.5.0** | 📋 エンハンスメントスプリント — コードウォークスルー強化、ドキュメント整合性チェック、Karpathy原則、プロジェクト理解（AgentBriefing）、CLIライフサイクルコマンド、構造化出力、748+テスト |
 | 2026-05-03 | **V3.4.1** | 🚀 エージェントスキル品質フレームワーク (P0) — AntiRationalizationEngine + VerificationGate + IntentWorkflowMapper + CLIライフサイクルコマンド + 167新規テスト + Googleエージェントスキル統合 + 49コアモジュール |
-| 2026-05-02 | **V3.4.0** | 🆕 11フェーズプロジェクトライフサイクル（full/backend/frontend/internal_tool/minimalテンプレート）、要件変更管理、ゲートメカニズム+ギャップレポート、560+テスト合格 |
-| 2026-04-27 | V3.4.0 | リアルLLMバックエンド、並列実行、セキュリティ強化、チェックポイント、ワークフロー、ストリーミング、Docker、CI、CarryMem統合 |
+| 2026-05-02 | **V3.4.0** | 🆕 **基盤リリース** — リアルLLMバックエンド、並列実行、セキュリティ強化、チェックポイント、ワークフローエンジン（11フェーズライフサイクルテンプレート：full/backend/frontend/internal_tool/minimal）、タスク完了チェッカー、セマンティックマッチャー、ストリーミング、Docker、CI、設定ファイル、コードマップジェネレーター、デュアルレイヤーコンテキスト、スキルレジストリ、CarryMem統合、AgentBriefing、ConfidenceScorer、EnhancedWorker自動QA、プロトコルインターフェースシステム、234+単体テスト、要件変更管理とゲートメカニズムおよびギャップレポート |
+| 2026-04-17 | V3.2 | E2E Demo、MCE アダプター |
+| 2026-04-16 | V3.0 | 完全再設計 — Coordinator/Worker/Scratchpad アーキテクチャ |
 
 ## ライセンス
 
