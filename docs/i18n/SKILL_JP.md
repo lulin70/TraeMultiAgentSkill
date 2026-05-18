@@ -299,6 +299,37 @@ skills/
 | テスト戦略生成 | `TestSkill` | テスト品質監査+テストケース提案 |
 | スケジューリング後の振り返り | `RetrospectiveSkill` | パターン抽出+改善提案 |
 
+#### Mock Mode の振る舞い
+
+全6つのサブスキルは **APIキーなし** で Mock モード動作可能：
+
+| Skill | Mock 戻り値 | 忠実度 | 備考 |
+|-------|------------|--------|------|
+| **DispatchSkill** | 事前構築済み Markdown レポート（シミュレート済みWorker結果） | 高 | 全7ロールをリアルなコンテンツでシミュレート |
+| **IntentSkill** | 検出された意図 + 信頼度スコア + ワークフロー提案 | 高 | ルールベースのキーワードマッチング、決定論的 |
+| **ReviewSkill** | 5軸レビュースコア + 合格/警告/不合格判定 | 中 | スコアは0.75周辺のガウス分布に従う |
+| **SecuritySkill** | スキャン結果：安全/警告/クリティカル + 一致パターン | 高 | パターンデータベースは実物（21+パターン） |
+| **TestSkill** | テスト戦略 + 品質スコア + 改善提案 | 中 | タスクキーワードから生成 |
+| **RetrospectiveSkill** | ディスパッチ後分析 + パターン抽出 | 低〜中 | 初回実行時は履歴が空、経過とともに蓄積 |
+
+**Mock モードでの主要保証：**
+- ✅ ネットワーク呼び出しなし — 完全オフライン
+- ✅ 同じ入力に対して決定論的出力（RetrospectiveSkillを除く）
+- ✅ リアルモードと同じデータ構造（`DispatchResult`, `ReviewResult` 等）
+- ⚠️ コンテンツはテンプレートベース — LLM生成ではない
+- ⚠️ RetrospectiveSkill は ≥1回のリアルディスパッチ後にパターン表示
+
+**リアルモードへの切り替え：**
+```python
+# Mock モード（デフォルト、設定不要）
+result = skill.run("your task")
+
+# リアルモード（APIキー必要）
+import os
+result = skill.run("your task", backend="openai",
+                    api_key=os.environ["OPENAI_API_KEY"])
+```
+
 ### クイックスタート
 
 ```python

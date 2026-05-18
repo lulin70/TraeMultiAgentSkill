@@ -1,32 +1,25 @@
-# DevSquad V3.6.0-Prod Dependencies
-# ===================================
+# Auto-generated from pyproject.toml dependencies
+# For production: pip install -r requirements.txt
+# For development: pip install -e ".[dev]"
+# =============================================
 
 # Core Dependencies (Required)
 pyyaml>=6.0
 
-# Production Server Stack (V3.6.0 NEW)
+# Production Server Stack
 fastapi>=0.100.0              # REST API server framework
 uvicorn[standard]>=0.23.0     # ASGI HTTP server
-streamlit>=1.28.0             # Web dashboard
 pydantic>=2.0                 # Data validation (for API)
-slack-sdk>=3.21.0             # Alert notifications (optional)
 
-# Optional LLM Backends (install only what you need)
-# openai>=1.0                  # OpenAI backend (pip install devsquad[openai])
-# anthropic>=0.18              # Anthropic backend (pip install devsquad[anthropic])
+# Visualization & Dashboard
+streamlit>=1.28.0             # Web dashboard
+jupyter>=1.0                  # Notebook support
 
-# Optional Memory Layer
-# carrymem>=0.8               # CarryMem portable AI memory (pip install devsquad[carrymem])
+# Monitoring
+psutil>=5.9                   # System monitoring utilities
 
-# Optional MCP Server
-# mcp>=0.9                    # MCP protocol (pip install devsquad[mcp])
-
-# Development & Testing (pip install devsquad[dev])
-# pytest>=7.0
-# pytest-asyncio>=0.21
-# black>=23.0
-# flake8>=6.0
-# mypy>=1.0
+# Alert Notifications (optional)
+slack-sdk>=3.21.0             # Slack alert integration
 
 # Install options:
 #   pip install -e .                    # Core + Production features

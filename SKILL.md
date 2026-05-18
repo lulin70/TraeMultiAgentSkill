@@ -128,6 +128,37 @@ skills/
 | `test` | `TestSkill` | `generate_strategy(module)` | TestQualityGuard |
 | `retrospective` | `RetrospectiveSkill` | `run_retrospective(results)` | RetrospectiveEngine |
 
+#### Mock Mode Behavior
+
+All 6 sub-skills work **without any API key** in Mock mode:
+
+| Skill | Mock Return Value | Fidelity | Notes |
+|-------|-------------------|----------|-------|
+| **DispatchSkill** | Pre-built Markdown report with simulated worker results | High | Simulates all 7 roles with realistic content |
+| **IntentSkill** | Detected intent + confidence score + workflow suggestion | High | Rule-based keyword matching, deterministic |
+| **ReviewSkill** | Five-axis review scores + pass/warn/fail verdict | Medium | Scores follow Gaussian distribution around 0.75 |
+| **SecuritySkill** | Scan result: safe/warning/critical + matched patterns | High | Pattern database is real (21+ patterns) |
+| **TestSkill** | Test strategy + quality score + improvement suggestions | Medium | Generated from task keywords |
+| **RetrospectiveSkill** | Post-dispatch analysis + pattern extraction | Low-Medium | Empty history on first run, builds up over time |
+
+**Key guarantees in Mock mode:**
+- ✅ No network calls — fully offline
+- ✅ Deterministic output for same input (except RetrospectiveSkill)
+- ✅ Same data structure as real mode (`DispatchResult`, `ReviewResult`, etc.)
+- ⚠️ Content is template-based — not LLM-generated
+- ⚠️ RetrospectiveSkill needs ≥ 1 real dispatch before showing patterns
+
+**Switching to real mode:**
+```python
+# Mock mode (default, no config needed)
+result = skill.run("your task")
+
+# Real mode (requires API key)
+import os
+result = skill.run("your task", backend="openai",
+                    api_key=os.environ["OPENAI_API_KEY"])
+```
+
 ### Usage Examples
 
 ```python

@@ -1,5 +1,23 @@
 # DevSquad — Multi-Role AI Task Orchestrator
 
+<details>
+<summary>📑 Table of Contents</summary>
+
+- [Features & Architecture](#-v361-cybernetics-enhancement-release)
+- [Quick Start](#-quick-start-4-ways-to-use-devsquad)
+- [Installation](#-installation)
+- [Key Features](#-key-features-v361)
+- [Cybernetics Modules](#-v361-cybernetics-module-details)
+- [Integration Architecture](#-integration-architecture)
+- [Role System](#-7-core-roles)
+- [Module Reference](#-architecture-overview-60-core-modules)
+- [CLI Usage](#-running-tests)
+- [Python API](#-configuration)
+- [Running Tests](#-running-tests)
+- [Version History](#-version-history)
+
+</details>
+
 <p align="center">
   <strong>One task → Multi-role AI collaboration → One conclusion</strong>
   <br>
@@ -849,6 +867,8 @@ See [GUIDE.md](GUIDE.md) §4 for full lifecycle details with gate conditions and
 
 ## Module Reference (60+ Modules)
 
+> 💡 **Table too wide?** [View modules online](https://github.com/lulin70/DevSquad/blob/main/SKILL.md#L27) or use `devsquad --help modules` for a compact list.
+
 | Module | File | Purpose |
 |--------|------|---------|
 | **MultiAgentDispatcher** | `dispatcher.py` | Unified entry point |
@@ -997,14 +1017,47 @@ python3 scripts/cli.py roles           # Expected: 7 core roles listed
 python3 -m pytest tests/ -q --tb=line # Expected: 1662 passed
 ```
 
+### With Coverage Report
+```bash
+# Install coverage tool first: pip install pytest-cov
+python3 -m pytest tests/ --cov=scripts --cov-report=term-missing --cov-fail-under=80
+# Expected: coverage ≥ 80%, detailed missing-line report
+```
+
+### Test Layering Strategy
+
+DevSquad uses a priority-based test layering strategy:
+
+| Priority | Scope | Examples | Count |
+|----------|-------|----------|-------|
+| **P0** | Quality Framework Core | AntiRationalization (39), VerificationGate (42), IntentWorkflowMapper (58), AuthManager (35) | ~200 |
+| **P1** | Enhancement Modules | FiveAxisConsensus (29), OperationClassifier (27), OutputSlicer (26), CIFeedbackAdapter (22) | ~150 |
+| **P1+** | Cybernetics (V3.6.1) | FeedbackControlLoop (19), ExecutionGuard (40), PerformanceFingerprint (13), SimilarTaskRecommender (17), AdaptiveRoleSelector (21) | **110** |
+| **P2** | Integration & E2E | Full lifecycle dispatch, cross-module integration | ~200 |
+| **P3** | Unit per Module | Core dispatcher, RoleMapping, MCEAdapter, LLM backends | ~400+ |
+
+**Total: 1662 tests**
+
+Run by priority:
+```bash
+# P0 only (critical path, < 10s)
+python3 -m pytest tests/ -k "anti_ratif or verification or intent_workflow or auth" -q
+
+# P0 + P1 (quality + enhancement, < 30s)
+python3 -m pytest tests/ -k "anti_ratif or verification or intent or auth or five_axis or operation" -q
+
+# Full suite
+python3 -m pytest tests/ -q --tb=line
+```
+
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [QUICK_START_EN.md](docs/i18n/QUICK_START_EN.md) | ⚡ Quick start guide (English, 5 minutes) |
-| [REFERENCE_GUIDE_EN.md](docs/i18n/REFERENCE_GUIDE_EN.md) | 📖 Complete reference guide (English) |
-| [QUICK_START_JP.md](docs/i18n/QUICK_START_JP.md) | ⚡ クイックスタートガイド (日本語, 5分) |
-| [REFERENCE_GUIDE_JP.md](docs/i18n/REFERENCE_GUIDE_JP.md) | 📖 完全リファレンスガイド (日本語) |
+| [QUICK_START_EN.md](docs/i18n/QUICK_START_EN.md) | Quick start guide (English, 5 minutes) |
+| [REFERENCE_GUIDE_EN.md](docs/i18n/REFERENCE_GUIDE_EN.md) | Complete reference guide (English) |
+| [QUICK_START_JP.md](docs/i18n/QUICK_START_JP.md) | クイックスタートガイド (日本語, 5分) |
+| [REFERENCE_GUIDE_JP.md](docs/i18n/REFERENCE_GUIDE_JP.md) | 完全リファレンスガイド (日本語) |
 | [GUIDE.md](GUIDE.md) | Complete user guide (Chinese) |
 | [GUIDE_EN.md](docs/i18n/GUIDE_EN.md) | ~~Complete user guide (English)~~ → See QUICK_START + REFERENCE_GUIDE |
 | [GUIDE_JP.md](docs/i18n/GUIDE_JP.md) | ~~完全なユーザーガイド (日本語)~~ → クイックスタート＋リファレンスを参照 |
@@ -1050,13 +1103,13 @@ DevSquad is **not TRAE-exclusive**. It supports 6 integration methods:
 
 | Platform | Integration | Setup Difficulty | Key Features Available |
 |----------|-------------|-----------------|----------------------|
-| **TRAE IDE** | Native Skill (`skill-manifest.yaml`) | ⭐ Zero config | Full: Dispatcher + Dashboard + CLI |
-| **Claude Code** | MCP Server / Python import | ⭐ Low | 6 MCP tools or direct API |
-| **Cursor** | MCP Server (`stdio` mode) | ⭐ Low | Same as Claude Code |
+| **TRAE IDE** | Native Skill (`skill-manifest.yaml`) | Zero config | Full: Dispatcher + Dashboard + CLI |
+| **Claude Code** | MCP Server / Python import | Low | 6 MCP tools or direct API |
+| **Cursor** | MCP Server (`stdio` mode) | Low | Same as Claude Code |
 | **OpenClaw / WorkBuddy Claw** | `WorkBuddyClawSource` bridge | Auto | Read-only memory bridge |
-| **Any MCP Client** | stdio / SSE dual mode | ⭐ Low | 6 tools, configurable port |
-| **Pure Python** | `pip install -e .` | ⭐ Low | CLI + API + Skills + REST |
-| **Docker** | `docker build & run` | ⭐ Low | Isolated container with all features |
+| **Any MCP Client** | stdio / SSE dual mode | Low | 6 tools, configurable port |
+| **Pure Python** | `pip install -e .` | Low | CLI + API + Skills + REST |
+| **Docker** | `docker build & run` | Low | Isolated container with all features |
 
 ### Quick Start per Platform
 
@@ -1083,11 +1136,11 @@ docker build -t devsquad . && docker run -it devsquad dispatch -t "test"
 
 | Date | Version | Highlights |
 |------|---------|-----------|
-| 2026-05-17 | **V3.6.1** | 🔄 **Cybernetics Enhancement** — 5 new modules (FeedbackControlLoop/ExecutionGuard/PerformanceFingerprint/SimilarTaskRecommender/AdaptiveRoleSelector) with feedback loops, execution guards, TF-IDF similarity search, and adaptive role selection. Inspired by upstream TraeMultiAgentSkill v2.5's cybernetics architecture. |
-| 2026-05-16 | **V3.6.0** | 🧩 **Layered Sub-Skill Architecture + Core Modules** — 6 atomic sub-skills (dispatch/intent/review/security/test/retrospective) with lazy-loading registry via importlib, each ~50 lines wrapping existing core modules. Plus: AnchorChecker (milestone anchor verification + drift detection), RetrospectiveEngine (independent retrospective + pattern extraction), StructuredGoal (structured goal decomposition + progress tracking), FallbackBackend (automatic LLM failover + health monitoring), FeatureUsageTracker (feature usage tracking + reporting + auto-persistence), 7 module integrations (IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders), 1662+ tests, 48 core modules. Cross-platform compatibility: Claude Code/Cursor/OpenClaw/Pure Python/Docker/MCP. |
-| 2026-05-05 | **V3.5.0** | 📋 Enhancement Sprint — Code walkthrough enhancement, documentation consistency checks, Karpathy principles, project understanding (AgentBriefing), CLI lifecycle commands, structured output, 748+ tests |
-| 2026-05-03 | **V3.4.1** | 🚀 Agent Skills Quality Framework (P0) — AntiRationalizationEngine + VerificationGate + IntentWorkflowMapper + CLI Lifecycle Commands (spec/plan/build/test/review/ship) + 167 new tests + Google Agent Skills integration + 49 core modules |
-| 2026-05-02 | **V3.4.0** | 🆕 **Foundation Release** — Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine with 11-phase lifecycle templates (full/backend/frontend/internal_tool/minimal), TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, AgentBriefing, ConfidenceScore, EnhancedWorker with auto QA, Protocol interface system, 234+ unit tests, requirement change management with gate mechanism and gap reporting |
+| 2026-05-17 | **V3.6.1** | **Cybernetics Enhancement** — 5 new modules (FeedbackControlLoop/ExecutionGuard/PerformanceFingerprint/SimilarTaskRecommender/AdaptiveRoleSelector) with feedback loops, execution guards, TF-IDF similarity search, and adaptive role selection. Inspired by upstream TraeMultiAgentSkill v2.5's cybernetics architecture. |
+| 2026-05-16 | **V3.6.0** | **Layered Sub-Skill Architecture + Core Modules** — 6 atomic sub-skills (dispatch/intent/review/security/test/retrospective) with lazy-loading registry via importlib, each ~50 lines wrapping existing core modules. Plus: AnchorChecker (milestone anchor verification + drift detection), RetrospectiveEngine (independent retrospective + pattern extraction), StructuredGoal (structured goal decomposition + progress tracking), FallbackBackend (automatic LLM failover + health monitoring), FeatureUsageTracker (feature usage tracking + reporting + auto-persistence), 7 module integrations (IntentWorkflowMapper/AISemanticMatcher/DualLayerContextManager/OperationClassifier/SkillRegistry/FiveAxisConsensusEngine/NullProviders), 1662+ tests, 48 core modules. Cross-platform compatibility: Claude Code/Cursor/OpenClaw/Pure Python/Docker/MCP. |
+| 2026-05-05 | **V3.5.0** | Enhancement Sprint — Code walkthrough enhancement, documentation consistency checks, Karpathy principles, project understanding (AgentBriefing), CLI lifecycle commands, structured output, 748+ tests |
+| 2026-05-03 | **V3.4.1** | Agent Skills Quality Framework (P0) — AntiRationalizationEngine + VerificationGate + IntentWorkflowMapper + CLI Lifecycle Commands (spec/plan/build/test/review/ship) + 167 new tests + Google Agent Skills integration + 49 core modules |
+| 2026-05-02 | **V3.4.0** | **Foundation Release** — Real LLM backend (OpenAI/Anthropic/Mock), ThreadPoolExecutor parallel execution, InputValidator + prompt injection protection, CheckpointManager, WorkflowEngine with 11-phase lifecycle templates (full/backend/frontend/internal_tool/minimal), TaskCompletionChecker, AISemanticMatcher, streaming output, Docker, GitHub Actions CI, config file, CodeMapGenerator, DualLayerContext, SkillRegistry, CarryMem integration, AgentBriefing, ConfidenceScore, EnhancedWorker with auto QA, Protocol interface system, 234+ unit tests, requirement change management with gate mechanism and gap reporting |
 | 2026-04-17 | V3.2 | E2E Demo, MCE Adapter, Dispatcher UX |
 | 2026-04-16 | V3.0 | Complete redesign — Coordinator/Worker/Scratchpad architecture |
 
